@@ -36,7 +36,7 @@ f.write(pid)
 # Start working
 
 try:
-    bot = telepot.Bot('529147082:AAGBGqhIlRetNTszKmfPNeISYFhfRkvNEwE')
+    bot = telepot.Bot(TOKEN)
     bot.message_loop(handle)
 
     print('Da grandi poteri derivano grandi responsabilità...')
