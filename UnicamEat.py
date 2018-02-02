@@ -16,6 +16,17 @@ from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineK
 
 from settings import TOKEN, start_msg, help_msg
 
+# Days of the week
+days_week = { 
+    "Lunedì" : 0,
+    "Martedì" : 1,
+    "Mercoledì" : 2,
+    "Giovedì" : 3,
+    "Venerdì" : 4,
+    "Sabato" : 5,
+    "Domenica" : 6
+}
+
 # State for user
 user_state = {}
 
@@ -27,14 +38,22 @@ def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
 
     chat_id = msg['chat']['id']
-    command_input = msg['text']
+    
+     # Check what type of content was sent
+    if content_type == 'text':
+        command_input = msg['text']
+    else:
+        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prego riprovare")
 
+    # Send start message
     if command_input == "/start" or command_input == "/start@UnicamEatBot":
         bot.sendMessage(chat_id, start_msg)
 
+    # Send help message
     elif command_input == "/help" or command_input == "/help@UnicamEatBot":
         bot.sendMessage(chat_id, help_msg)
 
+    # Get canteen
     elif command_input == "/seleziona_mensa" or command_input == "/seleziona_mensa@UnicamEatBot":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["D'Avack"],
@@ -48,13 +67,26 @@ def handle(msg):
         user_state[chat_id] = 1
 
     elif user_state[chat_id] == 1:
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Lunedì"],
+                        ["Martedì"],
+                        ["Mercoledì"],
+                        ["Giovedì"],
+                        ["Venerdì"],
+                        ["Sabato"],
+                        ["Domenica"]
+                    ])
+
         msg = "Inserisci la data"
 
         # Remove markup keyboard
-        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=markup)
 
         # Set user state
         user_state[chat_id] = 2
+
+    else:
+        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
 # Main
 print("Starting Unicam Eat!...")
