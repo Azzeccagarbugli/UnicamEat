@@ -39,6 +39,6 @@ def convertMultiple(pdfDir, txtDir):
             textFile.write(text) #write text to text file
 			#textFile.close
 
-pdfDir = "/mnt/c/Users/fcopp/Documents/Progetti/Canteen/PDF/"  #mettere il percorso dove deve prendere i pdf
-txtDir = "/mnt/c/Users/fcopp/Documents/Progetti/Canteen/Text/"  #mettere il percorso dove deve mettere il file txt
+pdfDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/"  #mettere il percorso dove deve prendere i pdf
+txtDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/Text/"  #mettere il percorso dove deve mettere il file txt
 convertMultiple(pdfDir, txtDir)
