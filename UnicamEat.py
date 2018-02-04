@@ -8,6 +8,8 @@ Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
 import os
 import sys
 
+import requests
+
 import time
 from datetime import datetime, timedelta
 
@@ -18,19 +20,27 @@ from settings import TOKEN, start_msg, help_msg
 
 # Days of the week
 days_week = { 
-    "Lunedì" : 0,
-    "Martedì" : 1,
-    "Mercoledì" : 2,
-    "Giovedì" : 3,
-    "Venerdì" : 4,
-    "Sabato" : 5,
-    "Domenica" : 6
+    "Lunedì" : "lunedi",
+    "Martedì" : "martedi",
+    "Mercoledì" : "mercoledi",
+    "Giovedì" : "giovedi",
+    "Venerdì" : "venerdi",
+    "Sabato" : "sabato",
+    "Domenica" : "domenica"
+}
+
+# Available canteen in Camerino
+canteen_unicam = {
+    "D'Avack" : "Avack",
+    "Colle Paradiso" : "ColleParadiso"
 }
 
 # State for user
 user_state = {}
 
-url_risolution = ""
+# User server state
+user_server_day = {}
+user_server_canteen = {}
 
 # Message handle funtion
 def handle(msg):
@@ -41,10 +51,6 @@ def handle(msg):
 
     chat_id = msg['chat']['id']
     
-    # Stuff for ERSU's Website
-    global url_risolution
-    URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu"
-
      # Check what type of content was sent
     if content_type == 'text':
         command_input = msg['text']
@@ -74,13 +80,7 @@ def handle(msg):
         user_state[chat_id] = 1
 
     elif user_state[chat_id] == 1:
-        if command_input == "D'Avack":
-            url_risolution = URL + "/Avack"
-        elif command_input == "Colle Paradiso":
-            url_risolution = URL + "/ColleParadiso"
-        else:
-            url_risolution = "Errore nella risoluzione dell'URL"
-
+        user_server_canteen[chat_id] = canteen_unicam[command_input]
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lunedì"],
                         ["Martedì"],
@@ -96,36 +96,34 @@ def handle(msg):
         # Remove markup keyboard
         bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=markup)
 
+        # Debug
+        print(user_server_canteen[chat_id]+ " - " + str(chat_id))
+
         # Set user state
         user_state[chat_id] = 2
 
     elif user_state[chat_id] == 2:
-        if command_input == "Lunedì":
-            url_risolution = "".join([url_risolution, "/lunedi"]) 
-        elif command_input == "Martedì":
-            url_risolution = "".join([url_risolution, "/martedi"]) 
-        elif command_input == "Mercoledì":
-            url_risolution = "".join([url_risolution, "/mercoledi"]) 
-        elif command_input == "Giovedi":
-            url_risolution = "".join([url_risolution, "/giovedi"])
-        elif command_input == "Venerdì":
-            url_risolution = "".join([url_risolution, "/venerdi"])
-        elif command_input == "Sabato":
-            url_risolution = "".join([url_risolution, "/sabato"])
-        elif command_input == "Domenica":
-             url_risolution = "".join([url_risolution, "/domenica"])
-        else:
-            msg = "Errore nella risoluzione dell'URL"
-            bot.sendMessage(chat_id, msg, reply_markup=markup)
+        user_server_day[chat_id] = days_week[command_input]
 
-        print(url_risolution+ " - "+str(chat_id))
+        # Debug
+        print(user_server_day[chat_id] + " - " + str(chat_id))
 
-        # Set user state
-        user_state[chat_id] = 3
+        url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
+        
+        bot.sendMessage(chat_id, url_risolution)
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
+def get_url(canteen, day):
+    """
+    Return the url of the PDF
+    """
+    # Stuff for ERSU's Website
+    URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu" 
+    url_risolution = URL + "/" + canteen + "/" + day + ".pdf"
+
+    return url_risolution
 
 # Main
 print("Starting Unicam Eat!...")
