@@ -108,16 +108,30 @@ def handle(msg):
         # Debug
         print(user_server_day[chat_id] + " - " + str(chat_id))
 
+        # URL's stuff
         url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
-        
-        bot.sendMessage(chat_id, url_risolution)
+        request = ""
+
+        # Directory where put the file, and name of the file itself
+        directory = '/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/' + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
+
+        # Check the existence of the file
+        if(os.path.isfile(directory) == False):
+            # Download the file if is not present
+            request = requests.get(url_risolution)
+            with open(directory, 'wb') as f:  
+                f.write(request.content)
+        else:
+            print("The file already exist!")
+
+        bot.sendMessage(chat_id, url_risolution, reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
 def get_url(canteen, day):
     """
-    Return the url of the PDF
+    Return the URL of the PDF
     """
     # Stuff for ERSU's Website
     URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu" 
