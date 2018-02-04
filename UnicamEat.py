@@ -16,7 +16,13 @@ from datetime import datetime, timedelta
 import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 
-from settings import TOKEN, start_msg, help_msg
+from io import StringIO
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
+
+from settings import TOKEN, start_msg, help_msg, directory_fcopp
 
 # Days of the week
 days_week = { 
@@ -113,7 +119,7 @@ def handle(msg):
         request = ""
 
         # Directory where put the file, and name of the file itself
-        directory = '/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/' + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
+        directory = directory_fcopp + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
 
         # Check the existence of the file
         if(os.path.isfile(directory) == False):
@@ -124,7 +130,7 @@ def handle(msg):
         else:
             print("The file already exist!")
 
-        bot.sendMessage(chat_id, url_risolution, reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+        bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
