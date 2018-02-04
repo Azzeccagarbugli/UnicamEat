@@ -39,6 +39,11 @@ def handle(msg):
 
     chat_id = msg['chat']['id']
     
+    # Stuff
+    URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu" 
+    canteen_choose = ""
+    day_choose = ""
+    
      # Check what type of content was sent
     if content_type == 'text':
         command_input = msg['text']
@@ -61,12 +66,21 @@ def handle(msg):
                     ])
 
         msg = "Seleziona la mensa"
-        bot.sendMessage(chat_id, msg, reply_markup=markup)
 
+        bot.sendMessage(chat_id, msg, reply_markup=markup)
+        
         # Set user state
         user_state[chat_id] = 1
 
     elif user_state[chat_id] == 1:
+        if command_input == "D'Avack":
+            canteen_choose = URL + "/Avack"
+        elif command_input == "Colle Paradiso":
+            canteen_choose == URL + "/ColleParadiso"
+        else:
+            msg = "Errore nella risoluzione dell'URL"
+            bot.sendMessage(chat_id, msg, reply_markup=markup)
+
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lunedì"],
                         ["Martedì"],
@@ -76,7 +90,7 @@ def handle(msg):
                         ["Sabato"],
                         ["Domenica"]
                     ])
-
+            
         msg = "Inserisci la data"
 
         # Remove markup keyboard
