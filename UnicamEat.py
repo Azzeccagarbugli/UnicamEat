@@ -11,7 +11,7 @@ import sys
 import requests
 
 import time
-from datetime import datetime, timedelta
+import datetime
 
 import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
@@ -24,7 +24,7 @@ from pdfminer.pdfpage import PDFPage
 
 from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg
 
-# Days of the week
+# Days of the week (call me genius :3)
 days_week = { 
     "Lunedì" : "lunedi",
     "Martedì" : "martedi",
@@ -60,6 +60,18 @@ def handle(msg):
      # Check what type of content was sent
     if content_type == 'text':
         command_input = msg['text']
+
+        # Try to save username and name
+        try:
+            try:
+                username = msg['chat']['username']
+            except:
+                username = ""
+
+            full_name = msg['chat']['first_name']
+            full_name += ' ' + msg['chat']['last_name']
+        except KeyError:
+            pass
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prego riprovare")
 
@@ -80,78 +92,93 @@ def handle(msg):
 
         msg = "Seleziona la mensa"
 
-        bot.sendMessage(chat_id, msg, reply_markup=markup)
+        bot.sendMessage(chat_id, msg, reply_markup = markup)
         
         # Set user state
         user_state[chat_id] = 1
 
     elif user_state[chat_id] == 1:
-        user_server_canteen[chat_id] = canteen_unicam[command_input]
-        markup = ReplyKeyboardMarkup(keyboard=[
-                        ["Lunedì"],
-                        ["Martedì"],
-                        ["Mercoledì"],
-                        ["Giovedì"],
-                        ["Venerdì"],
-                        ["Sabato"],
-                        ["Domenica"]
-                    ])
-            
-        msg = "Inserisci la data"
+        # Check right canteen 
+        try:
+            # Canteen's stuff
+            user_server_canteen[chat_id] = canteen_unicam[command_input]
 
-        # Remove markup keyboard
-        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=markup)
+            # Use the function set_markup_keyboard
+            markup = set_markup_keyboard(command_input)
 
-        # Debug
-        print(user_server_canteen[chat_id]+ " - " + str(chat_id))
+            msg = "Inserisci la data"
 
-        # Set user state
-        user_state[chat_id] = 2
+            # Remove markup keyboard
+            bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup = markup)
 
-    elif user_state[chat_id] == 2:
-        user_server_day[chat_id] = days_week[command_input]
-
-        # D'Avack canteen is closed the friday, saturday and the sunday
-        if user_server_day[chat_id] == "venerdi" and user_server_canteen[chat_id] == "Avack":
             # Debug
-            print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
-            
-            bot.sendMessage(chat_id, closed_msg,  parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
-        elif user_server_day[chat_id] == "sabato" and user_server_canteen[chat_id] == "Avack":
-            # Debug
-            print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")            
-            
-            bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
-        elif user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
-            # Debug
-            print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
-            
-            bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
-        else:
-            # Debug
-            print(user_server_day[chat_id] + " - " + str(chat_id))
-
-            # URL's stuff
-            url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
-            request = ""
-
-            # Directory where put the file, and name of the file itself
-            directory = directory_fcopp + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
-
-            # Check the existence of the file
-            if(os.path.isfile(directory) == False):
-                # Download the file if is not present
-                request = requests.get(url_risolution)
-                with open(directory, 'wb') as f:  
-                    f.write(request.content)
-            else:
-                print("The file already exist!")
-
-            bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
+            print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
 
             # Set user state
-            user_state[chat_id] = 3
+            user_state[chat_id] = 2
+
+        except KeyError:
+            bot.sendMessage(chat_id, "Inserisci una mensa valida")
+            pass
         
+    elif user_state[chat_id] == 2:
+        # Check day correct
+        try:
+            if command_input == "Oggi":
+                # Current Day
+                current_day = get_day(command_input)
+                
+                # Day's stuff
+                user_server_day[chat_id] = days_week[current_day]
+            else:
+                # Day's stuff
+                user_server_day[chat_id] = days_week[command_input]
+
+            # D'Avack canteen is closed the friday, saturday and the sunday
+            if user_server_day[chat_id] == "venerdi" and user_server_canteen[chat_id] == "Avack":
+                # Debug
+                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
+                
+                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+            elif user_server_day[chat_id] == "sabato" and user_server_canteen[chat_id] == "Avack":
+                # Debug
+                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")            
+                
+                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+            elif user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
+                # Debug
+                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
+                
+                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+            else:
+                # Debug
+                print(user_server_day[chat_id] + " - " + str(chat_id))
+
+                # URL's stuff
+                url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
+                request = ""
+
+                # Directory where put the file, and name of the file itself
+                directory = directory_fcopp + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
+
+                # Check the existence of the file
+                if(os.path.isfile(directory) == False):
+                    # Download the file if is not present
+                    request = requests.get(url_risolution)
+                    with open(directory, 'wb') as f:  
+                        f.write(request.content)
+                else:
+                    print("The file already exist!")
+
+                bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+                # Set user state
+                user_state[chat_id] = 3
+            
+        except KeyError:
+            bot.sendMessage(chat_id, "Inserisci un girono della settimana valido")
+            pass
+    
     elif user_state[chat_id] == 3:
         print("LOL")
         # pdfDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/"  #mettere il percorso dove deve prendere i pdf
@@ -171,6 +198,99 @@ def get_url(canteen, day):
     url_risolution = URL + "/" + canteen + "/" + day + ".pdf"
 
     return url_risolution
+
+def get_day(day):
+    """
+    Return the current day
+    
+    Notes:
+    0 - MONDAY
+    1 - TUESDAY
+    2 - WEDNESDAY
+    3 - THURSDAY
+    4 - FRIDAY
+    5 - SATURDAY
+    6 - SUNDAY
+    """
+    # Days of the week but in numeric format
+    days_week_int = {
+        0 : "Lunedì",
+        1 : "Martedì",
+        2 : "Mercoledì",
+        3 : "Giovedì",
+        4 : "Venerdì",
+        5 : "Sabato",
+        6 : "Domenica"
+    }
+
+    # Get the day
+    day_int = datetime.datetime.today().weekday()
+
+    # This fucking day
+    current_day = ""
+
+    # Check today
+    if day == "Oggi":
+        current_day = days_week_int[day_int]
+        return current_day
+    
+     # Not more int format
+    days_week_normal = days_week_int[day_int]
+
+    return days_week_normal
+    
+def set_markup_keyboard(day):
+    """
+    Return the custom markup for the keyboard, based on the day of the week
+    """
+    # Get the day
+    days_week_normal = get_day(day)
+    
+    # Markup for the custom keyboard
+    markup = ""
+
+    # Check which day is today and so set the right keyboard
+    if days_week_normal == "Lunedì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Martedì", "Mercoledì", "Giovedì"],
+                        ["Venerdì", "Sabato", "Domenica"]    
+                    ])
+    elif days_week_normal == "Martedì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Mercoledì", "Giovedì", "Venerdì"],
+                        ["Sabato", "Domenica"]
+                    ])
+    elif days_week_normal == "Mercoledì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Giovedì", "Venerdì"],
+                        ["Sabato", "Domenica"]
+                    ])
+    elif days_week_normal == "Giovedì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Venerdì", "Sabato", "Domenica"]
+                    ])
+    elif days_week_normal == "Venerdì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Sabato", "Domenica"]
+                    ])
+    elif days_week_normal == "Sabato":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Domenica"]
+                    ])
+    elif days_week_normal == "Domenica":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"]
+                    ])
+    else:
+        print("Nice shit bro :)")
+
+    return markup
 
 def convert(fname, pages=None):
     """
