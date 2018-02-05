@@ -10,3 +10,8 @@ help_msg = "UNICAM E' VERAMENTE EUFORICA"
 
 # Directory
 directory_fcopp = '***YOUR DIRECTORY***'
+
+# Closed canteen
+closed_msg = "La mensa del D'Avack nei giorni <b>Venerdì</b>, <b>Sabato</b> e <b>Domenica</b> rimane chiusa sia "\
+            "per pranzo che per cena. Riprova a inserire il comando /seleziona_mensa e controlla la mensa "\
+            "di <b>Colle Pardiso</b> per ottenere i menù da te desiderati"
