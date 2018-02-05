@@ -83,8 +83,17 @@ def handle(msg):
     elif command_input == "/help" or command_input == "/help@UnicamEatBot":
         bot.sendMessage(chat_id, help_msg)
 
+    # Send opening time
     elif command_input == "/orari" or command_input == "/orari@UnicamEatBot":
         bot.sendMessage(chat_id, opening_msg, parse_mode = "HTML")
+
+    # Send the position of the Colleparadiso's canteen
+    elif command_input == "/posizione_colleparadiso" or command_input == "/posizione_colleparadiso@UnicamEatBot":
+        bot.sendLocation(chat_id, "43.1437097", "13.0822057")
+
+    # Send the position of the D'Avack's canteen
+    elif command_input == "/posizione_avak" or command_input == "/posizione_avak@UnicamEatBot":
+        bot.sendLocation(chat_id, "43.137908","13.0688287")
 
     # Get canteen
     elif command_input == "/seleziona_mensa" or command_input == "/seleziona_mensa@UnicamEatBot":
@@ -179,7 +188,7 @@ def handle(msg):
                 user_state[chat_id] = 3
             
         except KeyError:
-            bot.sendMessage(chat_id, "Inserisci un girono della settimana valido")
+            bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
             pass
     
     elif user_state[chat_id] == 3:
