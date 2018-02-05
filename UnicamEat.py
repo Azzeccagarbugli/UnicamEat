@@ -22,7 +22,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
-from settings import TOKEN, start_msg, help_msg, directory_fcopp
+from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg
 
 # Days of the week
 days_week = { 
@@ -111,26 +111,53 @@ def handle(msg):
     elif user_state[chat_id] == 2:
         user_server_day[chat_id] = days_week[command_input]
 
-        # Debug
-        print(user_server_day[chat_id] + " - " + str(chat_id))
-
-        # URL's stuff
-        url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
-        request = ""
-
-        # Directory where put the file, and name of the file itself
-        directory = directory_fcopp + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
-
-        # Check the existence of the file
-        if(os.path.isfile(directory) == False):
-            # Download the file if is not present
-            request = requests.get(url_risolution)
-            with open(directory, 'wb') as f:  
-                f.write(request.content)
+        # D'Avack canteen is closed the friday, saturday and the sunday
+        if user_server_day[chat_id] == "venerdi" and user_server_canteen[chat_id] == "Avack":
+            # Debug
+            print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
+            
+            bot.sendMessage(chat_id, closed_msg,  parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
+        elif user_server_day[chat_id] == "sabato" and user_server_canteen[chat_id] == "Avack":
+            # Debug
+            print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")            
+            
+            bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
+        elif user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
+            # Debug
+            print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
+            
+            bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
         else:
-            print("The file already exist!")
+            # Debug
+            print(user_server_day[chat_id] + " - " + str(chat_id))
 
-        bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
+            # URL's stuff
+            url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
+            request = ""
+
+            # Directory where put the file, and name of the file itself
+            directory = directory_fcopp + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
+
+            # Check the existence of the file
+            if(os.path.isfile(directory) == False):
+                # Download the file if is not present
+                request = requests.get(url_risolution)
+                with open(directory, 'wb') as f:  
+                    f.write(request.content)
+            else:
+                print("The file already exist!")
+
+            bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard=True))
+
+            # Set user state
+            user_state[chat_id] = 3
+        
+    elif user_state[chat_id] == 3:
+        print("LOL")
+        # pdfDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/"  #mettere il percorso dove deve prendere i pdf
+        # txtDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/Text/"  #mettere il percorso dove deve mettere il file txt
+        # convertMultiple(pdfDir, txtDir)
+
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
@@ -144,6 +171,44 @@ def get_url(canteen, day):
     url_risolution = URL + "/" + canteen + "/" + day + ".pdf"
 
     return url_risolution
+
+def convert(fname, pages=None):
+    """
+    Convert a .PDF file in a .txt file
+    """
+    if not pages:
+        pagenums = set()
+    else:
+        pagenums = set(pages)
+
+    output = StringIO()
+    manager = PDFResourceManager()
+    converter = TextConverter(manager, output, laparams=LAParams())
+    interpreter = PDFPageInterpreter(manager, converter)
+
+    infile = open(fname, 'rb')
+    for page in PDFPage.get_pages(infile, pagenums):
+        interpreter.process_page(page)
+    infile.close()
+    converter.close()
+    text = output.getvalue()
+    output.close
+    
+    return text
+
+def convertMultiple(pdfDir, txtDir):
+    """
+    Open a directory and convert, .PDF files in .txt files, inside it using convert()
+    """
+    if pdfDir == "": pdfDir = os.getcwd() + "\\" 
+    for pdf in os.listdir(pdfDir): 
+        fileExtension = pdf.split(".")[-1]
+        if fileExtension == "pdf":
+            pdfFilename = pdfDir + pdf
+            text = convert(pdfFilename)
+            textFilename = txtDir + pdf + ".txt"
+            textFile = open(textFilename, "w") 
+            textFile.write(text)
 
 # Main
 print("Starting Unicam Eat!...")
