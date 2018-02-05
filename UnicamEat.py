@@ -22,7 +22,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
-from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg
+from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg
 
 # Days of the week (call me genius :3)
 days_week = { 
@@ -83,6 +83,9 @@ def handle(msg):
     elif command_input == "/help" or command_input == "/help@UnicamEatBot":
         bot.sendMessage(chat_id, help_msg)
 
+    elif command_input == "/orari" or command_input == "/orari@UnicamEatBot":
+        bot.sendMessage(chat_id, opening_msg, parse_mode = "HTML")
+
     # Get canteen
     elif command_input == "/seleziona_mensa" or command_input == "/seleziona_mensa@UnicamEatBot":
         markup = ReplyKeyboardMarkup(keyboard=[
@@ -109,7 +112,7 @@ def handle(msg):
             msg = "Inserisci la data"
 
             # Remove markup keyboard
-            bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup = markup)
+            bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
             # Debug
             print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
