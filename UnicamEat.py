@@ -22,7 +22,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
-from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg
+from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg, settings_msg
 
 # Days of the week (call me genius :3)
 days_week = { 
@@ -107,6 +107,21 @@ def handle(msg):
                      [dict(text='PDF del Regolamento Europeo', url='http://www.sviluppoeconomico.gov.it/images/stories/documenti/Reg%201169-2011-UE_Etichettatura.pdf')]])
         bot.sendPhoto(chat_id, photo = "https://i.imgur.com/OfURcFz.png", caption = allergeni_msg, reply_markup = keyboard)
 
+    # Settings status
+    elif command_input == "/impostazioni" or command_input == "/impostazioni@UnicamEatBot":
+        # A lot of strange stuff
+        language_bot = "Inglese"
+        notification_bot = "Abilita"
+        visualiz_bot = "Minimal"
+
+        # Other strange stuff
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Lingua: " + language_bot],
+                        ["Notifiche: " + notification_bot],
+                        ["Visualizzazione giorni: " + visualiz_bot]    
+                    ])
+        bot.sendMessage(chat_id, settings_msg, parse_mode = "Markdown", reply_markup = markup)
+        
     # Get canteen
     elif command_input == "/seleziona_mensa" or command_input == "/seleziona_mensa@UnicamEatBot":
         markup = ReplyKeyboardMarkup(keyboard=[
@@ -208,7 +223,6 @@ def handle(msg):
         # pdfDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/"  #mettere il percorso dove deve prendere i pdf
         # txtDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/Text/"  #mettere il percorso dove deve mettere il file txt
         # convertMultiple(pdfDir, txtDir)
-
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
