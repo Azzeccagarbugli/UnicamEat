@@ -22,7 +22,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
-from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg
+from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg
 
 # Days of the week (call me genius :3)
 days_week = { 
@@ -95,10 +95,17 @@ def handle(msg):
     elif command_input == "/posizione_avak" or command_input == "/posizione_avak@UnicamEatBot":
         bot.sendLocation(chat_id, "43.137908","13.0688287")
 
+    # Send the info about the bot
     elif command_input == "/info" or command_input == "/info@UnicamEatBot":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                      [dict(text='Dona', url='https://github.com')]])
-        bot.sendMessage(chat_id, info_msg, reply_markup = keyboard) 
+        bot.sendMessage(chat_id, info_msg, reply_markup = keyboard)
+
+    # Send the list of allergens
+    elif command_input == "/allergeni" or command_input == "/allergeni@UnicamEatBot":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                     [dict(text='PDF del Regolamento Europeo', url='http://www.sviluppoeconomico.gov.it/images/stories/documenti/Reg%201169-2011-UE_Etichettatura.pdf')]])
+        bot.sendPhoto(chat_id, photo = "https://i.imgur.com/OfURcFz.png", caption = allergeni_msg, reply_markup = keyboard)
 
     # Get canteen
     elif command_input == "/seleziona_mensa" or command_input == "/seleziona_mensa@UnicamEatBot":
@@ -333,7 +340,7 @@ def convert(fname, pages=None):
     
     return text
 
-def convertMultiple(pdfDir, txtDir):
+def convert_multiple(pdfDir, txtDir):
     """
     Open a directory and convert, .PDF files in .txt files, inside it using convert()
     """
