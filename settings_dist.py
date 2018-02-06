@@ -32,3 +32,6 @@ info_msg = "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unicam
         "\n"\
         "\nÈ possibile trovare il codice sorgente qui: https://github.com/Azzeccagarbugli/UnicamEat\n"\
         "\nSe sei soddisfatto offri una birra agli sviluppatori!"
+
+# Food warning message
+allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
