@@ -35,3 +35,10 @@ info_msg = "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unicam
 
 # Food warning message
 allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
+
+# Settings message
+settings_msg =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORRETTO*"\
+                "\n\nAttraverso le impostazioni potrai cambiare diversi parametri all'interno del bot: "\
+                "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o viceversa"\
+                "\n• *Notifiche*: abilita le notifiche per il menù del giorno"\
+                "\n• *Visualizzazione giorni*: visualizza solamente il menù di oggi o domani, non di tutta la settimana"
