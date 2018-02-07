@@ -22,7 +22,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
-from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg, settings_msg
+from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg, settings_msg, prices_msg
 
 # Days of the week (call me genius :3)
 days_week = { 
@@ -98,14 +98,20 @@ def handle(msg):
     # Send the info about the bot
     elif command_input == "/info" or command_input == "/info@UnicamEatBot":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                     [dict(text='Dona', url='https://github.com')]])
+                     [dict(text = 'Dona', url = 'https://github.com')]])
         bot.sendMessage(chat_id, info_msg, reply_markup = keyboard)
 
     # Send the list of allergens
     elif command_input == "/allergeni" or command_input == "/allergeni@UnicamEatBot":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                     [dict(text='PDF del Regolamento Europeo', url='http://www.sviluppoeconomico.gov.it/images/stories/documenti/Reg%201169-2011-UE_Etichettatura.pdf')]])
+                     [dict(text = 'PDF del Regolamento Europeo', url = 'http://www.sviluppoeconomico.gov.it/images/stories/documenti/Reg%201169-2011-UE_Etichettatura.pdf')]])
         bot.sendPhoto(chat_id, photo = "https://i.imgur.com/OfURcFz.png", caption = allergeni_msg, reply_markup = keyboard)
+
+    # Send the list of the prices
+    elif command_input == "/prezzi" or command_input == "/prezzi@UnicamEatBot":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text = 'Costo di un pasto completo', callback_data = 'notification')]])
+        bot.sendPhoto(chat_id, photo = "https://i.imgur.com/BlDDpAE.png", caption = prices_msg, reply_markup = keyboard)
 
     # Settings status
     elif command_input == "/impostazioni" or command_input == "/impostazioni@UnicamEatBot":
@@ -368,6 +374,21 @@ def convert_multiple(pdfDir, txtDir):
             textFile = open(textFilename, "w") 
             textFile.write(text)
 
+def on_callback_query(msg):
+    """
+    Return the price of a complete launch/dinner
+    """
+    query_id, from_id, data = telepot.glance(msg, flavor = 'callback_query')
+    
+    # Debug
+    print('Callback query:', query_id, from_id, data)
+
+    msg_text = "Studenti: 5,50€ - Non studenti: 8,00€"
+
+    if data == 'notification':
+        bot.answerCallbackQuery(query_id, text = msg_text)
+
+
 # Main
 print("Starting Unicam Eat!...")
 
@@ -388,7 +409,8 @@ f.write(pid)
 
 try:
     bot = telepot.Bot(TOKEN)
-    bot.message_loop(handle)
+    bot.message_loop({'chat': handle,
+                      'callback_query': on_callback_query})
 
     print('Da grandi poteri derivano grandi responsabilità...')
 
