@@ -2,8 +2,10 @@
 TOKEN = 'TOKEN'
 
 # Start message
-start_msg = "Benvenuto su Unicam Eat! Questo Bot ti permetterà di controllare il menù del giorno nelle "\
-            "mense di Colle Paradiso e del D'Avack"
+start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
+            "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al bot. "\
+            "Se hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
+            "\n\n_Il bot e' stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo._"
 
 # Help message
 help_msg = "UNICAM E' VERAMENTE EUFORICA"
