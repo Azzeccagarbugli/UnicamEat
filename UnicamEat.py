@@ -148,16 +148,26 @@ def handle(msg):
             # Canteen's stuff
             user_server_canteen[chat_id] = canteen_unicam[command_input]
 
-            # Use the function set_markup_keyboard
-            markup = set_markup_keyboard(command_input)
-
             msg = "Inserisci la data"
 
-            # Remove markup keyboard
-            bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
+            if command_input == "D'Avack":
+                 # Use the function set_markup_keyboard
+                markup = set_markup_keyboard_davak(command_input)
 
-            # Debug
-            print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
+                # Remove markup keyboard
+                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
+
+                # Debug
+                print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
+            else:
+                # Use the function set_markup_keyboard
+                markup = set_markup_keyboard_colleparadiso(command_input)
+                 
+                 # Remove markup keyboard
+                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
+
+                # Debug
+                print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
 
             # Set user state
             user_state[chat_id] = 2
@@ -283,7 +293,7 @@ def get_day(day):
 
     return days_week_normal
     
-def set_markup_keyboard(day):
+def set_markup_keyboard_colleparadiso(day):
     """
     Return the custom markup for the keyboard, based on the day of the week
     """
@@ -330,6 +340,41 @@ def set_markup_keyboard(day):
     elif days_week_normal == "Domenica":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Oggi"]
+                    ])
+    else:
+        print("Nice shit bro :)")
+
+    return markup
+
+def set_markup_keyboard_davak(day):
+    """
+    Return the custom markup for the keyboard, based on the day of the week
+    """
+    # Get the day
+    days_week_normal = get_day(day)
+    
+    # Markup for the custom keyboard
+    markup = ""
+
+    # Check which day is today and so set the right keyboard
+    if days_week_normal == "Lunedì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Martedì", "Mercoledì", "Giovedì"]  
+                    ])
+    elif days_week_normal == "Martedì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Mercoledì", "Giovedì"]
+                    ])
+    elif days_week_normal == "Mercoledì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
+                        ["Giovedì"]
+                    ])
+    elif days_week_normal == "Giovedì":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Oggi"],
                     ])
     else:
         print("Nice shit bro :)")
