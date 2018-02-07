@@ -77,7 +77,7 @@ def handle(msg):
 
     # Send start message
     if command_input == "/start" or command_input == "/start@UnicamEatBot":
-        bot.sendMessage(chat_id, start_msg)
+        bot.sendMessage(chat_id, start_msg, parse_mode = "Markdown")
 
     # Send help message
     elif command_input == "/help" or command_input == "/help@UnicamEatBot":
@@ -387,7 +387,6 @@ def on_callback_query(msg):
 
     if data == 'notification':
         bot.answerCallbackQuery(query_id, text = msg_text)
-
 
 # Main
 print("Starting Unicam Eat!...")
