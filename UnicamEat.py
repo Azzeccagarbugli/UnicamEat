@@ -123,7 +123,7 @@ def handle(msg):
         bot.sendMessage(chat_id, settings_msg, parse_mode = "Markdown", reply_markup = markup)
         
     # Get canteen
-    elif command_input == "/seleziona_mensa" or command_input == "/seleziona_mensa@UnicamEatBot":
+    elif command_input == "/menu" or command_input == "/menu@UnicamEatBot":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["D'Avack"],
                         ["Colle Paradiso"],
