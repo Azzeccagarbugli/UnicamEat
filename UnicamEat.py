@@ -47,6 +47,7 @@ user_state = {}
 # User server state
 user_server_day = {}
 user_server_canteen = {}
+user_server_launch_dinner = {}
 
 # Message handle funtion
 def handle(msg):
@@ -135,7 +136,7 @@ def handle(msg):
                         ["Colle Paradiso"],
                     ])
 
-        msg = "Seleziona la mensa"
+        msg = "Selezionare la mensa"
 
         bot.sendMessage(chat_id, msg, reply_markup = markup)
 
@@ -223,14 +224,15 @@ def handle(msg):
                     with open(directory, 'wb') as f:
                         f.write(request.content)
                 else:
+                    # Debug
                     print("The file already exist!")
-            
-            # Debug
-            print(user_state[chat_id])
-            
+        
             # Set user state
             user_state[chat_id] = 3
-            
+
+            # Debug
+            print(user_state[chat_id])
+
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
             pass
@@ -260,10 +262,10 @@ def handle(msg):
                 
                 # Directory of the output
                 txtDir = directory_fcopp + "/Text/"
-                # -------------------------------------
-
+                
                 # Start the conversion 
                 convert_multiple(pdfDir, txtDir)
+                # -------------------------------------
 
                 # Name of the .txt file
                 txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
