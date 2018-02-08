@@ -59,7 +59,7 @@ def handle(msg):
     # Get the chat_id
     chat_id = msg['chat']['id']
 
-     # Check what type of content was sent
+    # Check what type of content was sent
     if content_type == 'text':
         command_input = msg['text']
     else:
@@ -193,7 +193,7 @@ def handle(msg):
                 user_server_day[chat_id] = days_week[command_input]
 
             # D'Avack canteen is closed the friday, saturday and the sunday
-            if user_server_day[chat_id] == "venerdi" or user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
+            if (user_server_day[chat_id] == "venerdi" or user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "Avack":
                 # Debug
                 print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
 
@@ -218,8 +218,13 @@ def handle(msg):
                 else:
                     # Debug
                     print("The file already exist, so it will be not downloaded again")
+            
+            # Choose the right time for eat
+            markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id])
 
-            print("command_input is equal to: "+command_input)
+            msg = "Seleziona dalla lista il menù desiderato"
+
+            bot.sendMessage(chat_id, msg, reply_markup = markup)
 
             # Set user state
             user_state[chat_id] = 3
@@ -232,24 +237,6 @@ def handle(msg):
             pass
 
     elif user_state[chat_id] == 3:
-        print("In the state 3 the command_input is equal: "+command_input)
-        # Choose between launch or dinner
-        # markup = ReplyKeyboardMarkup(keyboard=[
-        #             ["Pranzo"],
-        #             ["Cena"]
-        #         ])
-
-        # Choose the right time for eat
-        markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id])
-
-        msg = "Seleziona un qualcosa dalla lista"
-
-        bot.sendMessage(chat_id, msg, reply_markup = markup)
-
-        # Set user state
-        user_state[chat_id] = 4
-
-    elif user_state[chat_id] == 4:
         # A lot of things
         try:
             if command_input == "Pranzo" or command_input == "Cena":
@@ -279,8 +266,6 @@ def handle(msg):
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
             pass
-
-
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
