@@ -1,7 +1,7 @@
 """
 Unicam Eat! - Telegram Bot
 Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
-
+        Porchetta (clarantonio98@gmail.com)
 """
 #!/usr/bin/python3.6
 
@@ -25,7 +25,7 @@ from pdfminer.pdfpage import PDFPage
 from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg, settings_msg, prices_msg
 
 # Days of the week (call me genius :3)
-days_week = { 
+days_week = {
     "Lunedì" : "lunedi",
     "Martedì" : "martedi",
     "Mercoledì" : "mercoledi",
@@ -56,7 +56,7 @@ def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
 
     chat_id = msg['chat']['id']
-    
+
      # Check what type of content was sent
     if content_type == 'text':
         command_input = msg['text']
@@ -124,10 +124,10 @@ def handle(msg):
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lingua: " + language_bot],
                         ["Notifiche: " + notification_bot],
-                        ["Visualizzazione giorni: " + visualiz_bot]    
+                        ["Visualizzazione giorni: " + visualiz_bot]
                     ])
         bot.sendMessage(chat_id, settings_msg, parse_mode = "Markdown", reply_markup = markup)
-        
+
     # Get canteen
     elif command_input == "/menu" or command_input == "/menu@UnicamEatBot":
         markup = ReplyKeyboardMarkup(keyboard=[
@@ -138,12 +138,12 @@ def handle(msg):
         msg = "Seleziona la mensa"
 
         bot.sendMessage(chat_id, msg, reply_markup = markup)
-        
+
         # Set user state
         user_state[chat_id] = 1
 
     elif user_state[chat_id] == 1:
-        # Check right canteen 
+        # Check right canteen
         try:
             # Canteen's stuff
             user_server_canteen[chat_id] = canteen_unicam[command_input]
@@ -162,7 +162,7 @@ def handle(msg):
             else:
                 # Use the function set_markup_keyboard
                 markup = set_markup_keyboard_colleparadiso(command_input)
-                 
+
                  # Remove markup keyboard
                 bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
@@ -175,14 +175,14 @@ def handle(msg):
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
             pass
-        
+
     elif user_state[chat_id] == 2:
         # Check day correct
         try:
             if command_input == "Oggi":
                 # Current Day
                 current_day = get_day(command_input)
-                
+
                 # Day's stuff
                 user_server_day[chat_id] = days_week[current_day]
             else:
@@ -193,17 +193,17 @@ def handle(msg):
             if user_server_day[chat_id] == "venerdi" and user_server_canteen[chat_id] == "Avack":
                 # Debug
                 print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
-                
+
                 bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
             elif user_server_day[chat_id] == "sabato" and user_server_canteen[chat_id] == "Avack":
                 # Debug
-                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")            
-                
+                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
+
                 bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
             elif user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
                 # Debug
                 print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
-                
+
                 bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
             else:
                 # Debug
@@ -214,32 +214,59 @@ def handle(msg):
                 request = ""
 
                 # Directory where put the file, and name of the file itself
-                directory = directory_fcopp + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
+                directory = directory_fcopp + "/PDF/" + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
 
                 # Check the existence of the file
                 if(os.path.isfile(directory) == False):
                     # Download the file if is not present
                     request = requests.get(url_risolution)
-                    with open(directory, 'wb') as f:  
+                    with open(directory, 'wb') as f:
                         f.write(request.content)
                 else:
                     print("The file already exist!")
 
-                bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                # Convert PDF into txt fileExtension
+                # Directory of the output
+                txtDir = directory_fcopp + "/Text/"
+
+                # Directory of the PDFs files
+                pdfDir = directory_fcopp + "/PDF/"
+
+                convert_multiple(pdfDir, txtDir)
+                txtPath = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+
+                #bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                msg_menu = advanced_read_txt(txtPath)
+                # Prints the menu in a kawaii way
+                bot.sendMessage(chat_id, "PRIMI:")
+                for el in msg_menu[0]:
+                    bot.sendMessage(chat_id, el)
+                bot.sendMessage(chat_id, "\nSECONDI:")
+                for el in msg_menu[5]:
+                    bot.sendMessage(chat_id, el)
+                bot.sendMessage(chat_id, "\nPIZZA/PANINI:")
+                for el in msg_menu[1]:
+                    bot.sendMessage(chat_id, el)
+                bot.sendMessage(chat_id, "\nALTRO:")
+                for el in msg_menu[2]:
+                    bot.sendMessage(chat_id, el)
+                bot.sendMessage(chat_id, "\nEXTRA:")
+                for el in msg_menu[3]:
+                    bot.sendMessage(chat_id, el)
+                bot.sendMessage(chat_id, "\nBEVANDE:")
+                for el in msg_menu[4]:
+                    bot.sendMessage(chat_id, el)
 
                 # Set user state
                 user_state[chat_id] = 3
-            
+
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
             pass
-    
-    elif user_state[chat_id] == 3:
-        print("LOL")
-        # pdfDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/PDF/"  #mettere il percorso dove deve prendere i pdf
-        # txtDir = "/mnt/c/Users/fcopp/Documents/Progetti/UnicamEat/Text/"  #mettere il percorso dove deve mettere il file txt
-        # convertMultiple(pdfDir, txtDir)
 
+    elif user_state[chat_id] == 3:
+        # Proseguire con la scelta tra pranzo e cena
+        print("To be continued...")
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
@@ -248,7 +275,7 @@ def get_url(canteen, day):
     Return the URL of the PDF
     """
     # Stuff for ERSU's Website
-    URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu" 
+    URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu"
     url_risolution = URL + "/" + canteen + "/" + day + ".pdf"
 
     return url_risolution
@@ -256,7 +283,7 @@ def get_url(canteen, day):
 def get_day(day):
     """
     Return the current day
-    
+
     Notes:
     0 - MONDAY
     1 - TUESDAY
@@ -287,19 +314,19 @@ def get_day(day):
     if day == "Oggi":
         current_day = days_week_int[day_int]
         return current_day
-    
+
      # Not more int format
     days_week_normal = days_week_int[day_int]
 
     return days_week_normal
-    
+
 def set_markup_keyboard_colleparadiso(day):
     """
     Return the custom markup for the keyboard, based on the day of the week
     """
     # Get the day
     days_week_normal = get_day(day)
-    
+
     # Markup for the custom keyboard
     markup = ""
 
@@ -308,7 +335,7 @@ def set_markup_keyboard_colleparadiso(day):
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Oggi"],
                         ["Martedì", "Mercoledì", "Giovedì"],
-                        ["Venerdì", "Sabato", "Domenica"]    
+                        ["Venerdì", "Sabato", "Domenica"]
                     ])
     elif days_week_normal == "Martedì":
         markup = ReplyKeyboardMarkup(keyboard=[
@@ -352,7 +379,7 @@ def set_markup_keyboard_davak(day):
     """
     # Get the day
     days_week_normal = get_day(day)
-    
+
     # Markup for the custom keyboard
     markup = ""
 
@@ -360,7 +387,7 @@ def set_markup_keyboard_davak(day):
     if days_week_normal == "Lunedì":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Oggi"],
-                        ["Martedì", "Mercoledì", "Giovedì"]  
+                        ["Martedì", "Mercoledì", "Giovedì"]
                     ])
     elif days_week_normal == "Martedì":
         markup = ReplyKeyboardMarkup(keyboard=[
@@ -402,29 +429,153 @@ def convert(fname, pages=None):
     converter.close()
     text = output.getvalue()
     output.close
-    
+
     return text
 
 def convert_multiple(pdfDir, txtDir):
     """
     Open a directory and convert, .PDF files in .txt files, inside it using convert()
     """
-    if pdfDir == "": pdfDir = os.getcwd() + "\\" 
-    for pdf in os.listdir(pdfDir): 
+    if pdfDir == "": pdfDir = os.getcwd() + "\\"
+    for pdf in os.listdir(pdfDir):
         fileExtension = pdf.split(".")[-1]
         if fileExtension == "pdf":
             pdfFilename = pdfDir + pdf
             text = convert(pdfFilename)
             textFilename = txtDir + pdf + ".txt"
-            textFile = open(textFilename, "w") 
+            textFile = open(textFilename, "w")
             textFile.write(text)
+            textFile.close()
+
+def advanced_read_txt(textFile):
+    # DICTIONARIES CONFIGURATION
+    # Primi piatti
+    dic1 = ["pasta", "zuppa", "passato", "tagliatelle", "riso", "chicche", "minestrone", "penne"]
+    # Pizza/Panini
+    dic2 = ["panino", "pizza", "crostini", "piadina"]
+    # Altro
+    dic3 = ["frutta", "yogurt", "contorno", "dolce", "pane", "salse"]
+    # Extra
+    dic4 = ["porzionati", "formaggi", "olio", "confettura", "cioccolat", "asporto"]
+    # Bevande
+    dic5 = ["lattina", "brick", "acqua"]
+
+    # Assembling the full diciontary
+    dictionaries = [dic1, dic2, dic3, dic4, dic5]
+
+
+    # Opens the file .txt
+    my_file = open(textFile, "r")
+
+    # Reads lines in the .txt
+    out = my_file.readlines()
+
+    # Closes .txt
+    my_file.close()
+
+    # Divides by sections the .txt
+    my_char = '\n'.encode("unicode_escape").decode("utf-8")
+    secs = []
+    current_sec = []
+
+    for line in out:
+        line = line.replace("\n", "\\n")
+        if line.startswith(my_char) and current_sec:
+            secs.append(current_sec[:])
+            current_sec = []
+        if not line.startswith(my_char):
+            line = line.replace("\\n", "\n")
+            current_sec.append(line.rstrip())
+
+    # Deletes today date
+    days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
+
+    i = 0
+    for sec in secs:
+        for line in sec:
+            for day in days:
+                if day in line:
+                    secs.pop(i)
+                    break
+        i = i + 1
+
+    # Searches for foods and prices
+    foods     = []
+    prices    = []
+
+    for sec in secs:
+        if sec[0][0].isdigit() and sec[0] != "1 Formaggino":
+            prices.append(sec)
+        else:
+            foods.append(sec)
+
+    # Freeing resources
+    del secs, current_sec
+
+    # IMPORTANT: This will try to understand the structure of the sections produced before
+    for price, food in zip(prices, foods):
+        if len(price) != len(food):
+            if len(prices) == 11: # CASO 1
+                print("Caso 1 di disordine trovato.")
+                prices[2], prices[3], prices[4], prices[5], prices[6], prices[7] = prices[5], prices[6], prices[7], prices[2], prices[3], prices[4]
+                break
+            elif len(prices) == 12:
+                print("Caso 2 di disordine trovato.")
+                prices[0], prices[1], prices[2], prices[6], prices[7], prices[8] = prices[6], prices[7], prices[8], prices[0], prices[1], prices[2]
+                break
+
+    # Checks if it has really managed to reorder the list, printing an error message in case of fail
+    found = True
+    i = 0
+    for price, food in zip(prices, foods):
+        if len(price) != len(food):
+            print("C'è ancora un errore. A: " + str(i))
+            found = False
+            break
+        i = i+1
+
+    # Creates a sorted menu without repetitions with prices and foods together
+    if found == True:
+        myList = []
+        for food, price in zip(foods, prices):
+            for x, y in zip(food, price):
+                if "The" in x:
+                    x = x.replace("The", "Tè")
+                myStr = x + " - " + y
+                myList.append(" ".join(myStr.split()))
+
+        myList = sorted(list(set(myList)))
+    else:
+        print("ERRORE! Non è stato possibile riordinare correttamente la lista.")
+
+    # Freeing resources
+    del foods, prices
+
+    # Splits the menu into the current courses
+    courses = [[],[],[],[],[],[]]
+    i = 0
+    for el in myList:
+        for dictionary in dictionaries:
+            for word in dictionary:
+                if word.lower() in el.lower() and el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
+                    courses[i].append(el)
+            i = i+1
+        i = 0
+    for el in myList:
+        if el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
+            courses[5].append(el)
+
+    # Freeing resources
+    del dictionaries
+
+    return courses
 
 def on_callback_query(msg):
     """
     Return the price of a complete launch/dinner
     """
     query_id, from_id, data = telepot.glance(msg, flavor = 'callback_query')
-    
+
     # Debug
     print('Callback query:', query_id, from_id, data)
 
