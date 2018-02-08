@@ -56,25 +56,26 @@ def handle(msg):
     """
     content_type, chat_type, chat_id = telepot.glance(msg)
 
+    # Get the chat_id
     chat_id = msg['chat']['id']
 
      # Check what type of content was sent
     if content_type == 'text':
         command_input = msg['text']
-
-        # Try to save username and name
-        try:
-            try:
-                username = msg['chat']['username']
-            except:
-                username = ""
-
-            full_name = msg['chat']['first_name']
-            full_name += ' ' + msg['chat']['last_name']
-        except KeyError:
-            pass
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prego riprovare")
+
+    # Try to save username and name
+    try:
+        try:
+            username = msg['chat']['username']
+        except:
+            username = ""
+
+        full_name = msg['chat']['first_name']
+        full_name += ' ' + msg['chat']['last_name']
+    except KeyError:
+        pass
 
     # Send start message
     if command_input == "/start" or command_input == "/start@UnicamEatBot":
@@ -143,6 +144,7 @@ def handle(msg):
         # Set user state
         user_state[chat_id] = 1
 
+    # Get date
     elif user_state[chat_id] == 1:
         # Check right canteen
         try:
@@ -151,12 +153,12 @@ def handle(msg):
 
             msg = "Inserisci la data"
 
+            # Markup of the keyboard
+            markup = ""
+
             if command_input == "D'Avack":
                  # Use the function set_markup_keyboard
                 markup = set_markup_keyboard_davak(command_input)
-
-                # Remove markup keyboard
-                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
                 # Debug
                 print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
@@ -164,11 +166,11 @@ def handle(msg):
                 # Use the function set_markup_keyboard
                 markup = set_markup_keyboard_colleparadiso(command_input)
 
-                 # Remove markup keyboard
-                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
-
                 # Debug
                 print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
+
+            # Set Markup Keyboard layout and send the message
+            bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
             # Set user state
             user_state[chat_id] = 2
@@ -191,17 +193,7 @@ def handle(msg):
                 user_server_day[chat_id] = days_week[command_input]
 
             # D'Avack canteen is closed the friday, saturday and the sunday
-            if user_server_day[chat_id] == "venerdi" and user_server_canteen[chat_id] == "Avack":
-                # Debug
-                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
-
-                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-            elif user_server_day[chat_id] == "sabato" and user_server_canteen[chat_id] == "Avack":
-                # Debug
-                print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
-
-                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-            elif user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
+            if user_server_day[chat_id] == "venerdi" or user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica" and user_server_canteen[chat_id] == "Avack":
                 # Debug
                 print("OK! Canteen of D'Avak is closed during " + command_input + ", so don't panic")
 
@@ -225,8 +217,10 @@ def handle(msg):
                         f.write(request.content)
                 else:
                     # Debug
-                    print("The file already exist!")
-        
+                    print("The file already exist, so it will be not downloaded again")
+
+            print("command_input is equal to: "+command_input)
+
             # Set user state
             user_state[chat_id] = 3
 
@@ -238,19 +232,23 @@ def handle(msg):
             pass
 
     elif user_state[chat_id] == 3:
+        print("In the state 3 the command_input is equal: "+command_input)
         # Choose between launch or dinner
-        markup = ReplyKeyboardMarkup(keyboard=[
-                    ["Pranzo"],
-                    ["Cena"]
-                ])
+        # markup = ReplyKeyboardMarkup(keyboard=[
+        #             ["Pranzo"],
+        #             ["Cena"]
+        #         ])
 
-        msg = "Selezionare pranzo o cena"
+        # Choose the right time for eat
+        markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id])
+
+        msg = "Seleziona un qualcosa dalla lista"
 
         bot.sendMessage(chat_id, msg, reply_markup = markup)
-        
+
         # Set user state
         user_state[chat_id] = 4
-    
+
     elif user_state[chat_id] == 4:
         # A lot of things
         try:
@@ -259,11 +257,11 @@ def handle(msg):
                 # -------------------------------------
                 # Directory of the PDFs files
                 pdfDir = directory_fcopp + "/PDF/"
-                
+
                 # Directory of the output
                 txtDir = directory_fcopp + "/Text/"
-                
-                # Start the conversion 
+
+                # Start the conversion
                 convert_multiple(pdfDir, txtDir)
                 # -------------------------------------
 
@@ -272,33 +270,16 @@ def handle(msg):
 
                 # Use the function advanced_read_txt() for get the menu
                 msg_menu = advanced_read_txt(txtName)
-                
+
                 # Prints the menu in a kawaii way
-                bot.sendMessage(chat_id, "PRIMI:")
-                for el in msg_menu[0]:
-                    bot.sendMessage(chat_id, el)
-                bot.sendMessage(chat_id, "\nSECONDI:")
-                for el in msg_menu[5]:
-                    bot.sendMessage(chat_id, el)
-                bot.sendMessage(chat_id, "\nPIZZA/PANINI:")
-                for el in msg_menu[1]:
-                    bot.sendMessage(chat_id, el)
-                bot.sendMessage(chat_id, "\nALTRO:")
-                for el in msg_menu[2]:
-                    bot.sendMessage(chat_id, el)
-                bot.sendMessage(chat_id, "\nEXTRA:")
-                for el in msg_menu[3]:
-                    bot.sendMessage(chat_id, el)
-                bot.sendMessage(chat_id, "\nBEVANDE:")
-                for el in msg_menu[4]:
-                    bot.sendMessage(chat_id, el, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
             else:
                 bot.sendMessage(chat_id, "Inserisci un parametro valido")
-        
+
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
             pass
-                
+
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
@@ -435,6 +416,28 @@ def set_markup_keyboard_davak(day):
     elif days_week_normal == "Giovedì":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Oggi"],
+                    ])
+    else:
+        print("Nice shit bro :)")
+
+    return markup
+
+def set_markup_keyboard_launch_dinnner(canteen):
+    """
+    Return the custom markup for the launch and the dinner
+    """
+    # Markup for the custom keyboard
+    markup = ""
+
+    # Check the right canteen
+    if canteen == "ColleParadiso":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Pranzo"],
+                        ["Cena"]
+                    ])
+    elif canteen == "Avack":
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Pranzo"]
                     ])
     else:
         print("Nice shit bro :)")
@@ -598,10 +601,25 @@ def advanced_read_txt(textFile):
         if el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
             courses[5].append(el)
 
+    # Correcting mistake
+    courses[1], courses[2], courses[3], courses[4], courses[5] = courses[5], courses[1], courses[2], courses[3], courses[4]
+
     # Freeing resources
     del dictionaries
 
-    return courses
+    msg_menu = ""
+
+    courses_texts = ["*Primi:*\n", "*Secondi:*\n", "*Pizza/Panini:*\n", "*Altro:*\n", "*Extra:*\n", "*Bevande:*\n"]
+
+    # Printing
+    for course_text, course in zip(courses_texts, courses):
+        msg_menu = msg_menu + course_text
+        for el in course:
+            msg_menu = msg_menu + "• " + el + "\n"
+
+        msg_menu = msg_menu + "\n"
+
+    return msg_menu
 
 def on_callback_query(msg):
     """
