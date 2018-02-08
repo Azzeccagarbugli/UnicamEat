@@ -2,6 +2,11 @@
 Unicam Eat! - Telegram Bot
 Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
         Porchetta (clarantonio98@gmail.com)
+
+TO DO:
+- Ottimizzazioni varie al codice
+- Pranzo e cena
+- Confronto tra i file per download
 """
 #!/usr/bin/python3.6
 
@@ -9,6 +14,8 @@ import os
 import sys
 
 import requests
+
+import random
 
 import time
 import datetime
@@ -112,7 +119,7 @@ def handle(msg):
     # Send the list of the prices
     elif command_input == "/prezzi" or command_input == "/prezzi@UnicamEatBot":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                        [dict(text = 'Costo di un pasto completo', callback_data = 'notification')]])
+                    [dict(text = 'Costo di un pasto completo', callback_data = 'notification')]])
         bot.sendPhoto(chat_id, photo = "https://i.imgur.com/BlDDpAE.png", caption = prices_msg, reply_markup = keyboard)
 
     # Settings status
@@ -218,7 +225,7 @@ def handle(msg):
                 else:
                     # Debug
                     print("The file already exist, so it will be not downloaded again")
-            
+
             # Choose the right time for eat
             markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id])
 
@@ -255,17 +262,40 @@ def handle(msg):
                 # Name of the .txt file
                 txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
 
+
                 # Use the function advanced_read_txt() for get the menu
                 msg_menu = advanced_read_txt(txtName)
 
+                bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+                # Random donation into the body of the message
+                # -------------------------------------
+                # Create the variable
+                random_var = random.randint(0, 5)
+                # -------------------------------------
+
+                keyboard = ""
+
+                if random_var:
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
+                else:
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
+                                [dict(text = 'Offrici una birra!', url = "www.google.it")]])
+
                 # Prints the menu in a kawaii way
-                bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                msg = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+
+                # Set user state
+                #user_state[chat_id] = 4
             else:
                 bot.sendMessage(chat_id, "Inserisci un parametro valido")
 
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
             pass
+
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
@@ -598,11 +628,13 @@ def advanced_read_txt(textFile):
 
     # Printing
     for course_text, course in zip(courses_texts, courses):
-        msg_menu = msg_menu + course_text
+        msg_menu += course_text
         for el in course:
-            msg_menu = msg_menu + "• " + el + "\n"
+            msg_menu += "• " + el + "\n"
 
-        msg_menu = msg_menu + "\n"
+        msg_menu += "\n"
+
+    msg_menu += "_Il menù potrebbe subire variazioni_"
 
     return msg_menu
 
