@@ -7,7 +7,10 @@ TO DO:
 - Ottimizzazioni varie al codice
 - Pranzo e cena
 - Confronto tra i file per download
+<<<<<<< HEAD
 - Creazione di folder outupt per migliore efficenza del codice
+=======
+>>>>>>> b4c89bf91dafc362f0bed61f465e1867295f42c6
 """
 #!/usr/bin/python3.6
 
@@ -263,6 +266,7 @@ def handle(msg):
 
                 # Name of the .txt file
                 txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+
 
                 # Use the function advanced_read_txt() for get the menu
                 msg_menu = advanced_read_txt(txtName)
