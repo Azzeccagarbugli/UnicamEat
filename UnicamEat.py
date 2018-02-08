@@ -224,19 +224,53 @@ def handle(msg):
                         f.write(request.content)
                 else:
                     print("The file already exist!")
+            
+            # Debug
+            print(user_state[chat_id])
+            
+            # Set user state
+            user_state[chat_id] = 3
+            
+        except KeyError:
+            bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
+            pass
 
+    elif user_state[chat_id] == 3:
+        # Choose between launch or dinner
+        markup = ReplyKeyboardMarkup(keyboard=[
+                    ["Pranzo"],
+                    ["Cena"]
+                ])
+
+        msg = "Selezionare pranzo o cena"
+
+        bot.sendMessage(chat_id, msg, reply_markup = markup)
+        
+        # Set user state
+        user_state[chat_id] = 4
+    
+    elif user_state[chat_id] == 4:
+        # A lot of things
+        try:
+            if command_input == "Pranzo" or command_input == "Cena":
                 # Convert PDF into txt fileExtension
-                # Directory of the output
-                txtDir = directory_fcopp + "/Text/"
-
+                # -------------------------------------
                 # Directory of the PDFs files
                 pdfDir = directory_fcopp + "/PDF/"
+                
+                # Directory of the output
+                txtDir = directory_fcopp + "/Text/"
+                # -------------------------------------
 
+                # Start the conversion 
                 convert_multiple(pdfDir, txtDir)
-                txtPath = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
 
-                #bot.sendMessage(chat_id, url_risolution, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-                msg_menu = advanced_read_txt(txtPath)
+                # Name of the .txt file
+                txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+
+                # Use the function advanced_read_txt() for get the menu
+                msg_menu = advanced_read_txt(txtName)
+                
                 # Prints the menu in a kawaii way
                 bot.sendMessage(chat_id, "PRIMI:")
                 for el in msg_menu[0]:
@@ -255,18 +289,15 @@ def handle(msg):
                     bot.sendMessage(chat_id, el)
                 bot.sendMessage(chat_id, "\nBEVANDE:")
                 for el in msg_menu[4]:
-                    bot.sendMessage(chat_id, el)
-
-                # Set user state
-                user_state[chat_id] = 3
-
+                    bot.sendMessage(chat_id, el, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+            else:
+                bot.sendMessage(chat_id, "Inserisci un parametro valido")
+        
         except KeyError:
-            bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
+            bot.sendMessage(chat_id, "Inserisci un parametro valido")
             pass
+                
 
-    elif user_state[chat_id] == 3:
-        # Proseguire con la scelta tra pranzo e cena
-        print("To be continued...")
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
