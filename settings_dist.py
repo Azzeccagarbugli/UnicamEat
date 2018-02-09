@@ -47,3 +47,7 @@ settings_msg =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORR
 
 # Prices message
 prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrispondenza"
+
+# Directory PDF and directory .txt
+pdfDir = directory_fcopp + "/PDF/"
+txtDir = directory_fcopp + "/Text/"

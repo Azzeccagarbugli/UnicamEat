@@ -7,7 +7,13 @@ TO DO:
 - Ottimizzazioni varie al codice
 - Pranzo e cena
 - Confronto tra i file per download
-- Creazione di folder outupt per migliore efficenza del codice
+- Creazione di folder output per migliore efficenza del codice
+
+- Prima scarica il pdf
+- poi converte in un file temp.txt
+- temp viene confrontato con tutti i pdf convertiti in txt
+    - se ha un riscontro non fa nient'altro, usa lo stesso
+    - altrimenti converte
 """
 #!/usr/bin/python3.6
 
@@ -30,7 +36,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
-from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg, settings_msg, prices_msg
+from settings import TOKEN, start_msg, help_msg, directory_fcopp, closed_msg, opening_msg, info_msg, allergeni_msg, settings_msg, prices_msg, pdfDir, txtDir
 
 # Days of the week (call me genius :3)
 days_week = {
@@ -264,14 +270,9 @@ def handle(msg):
             if command_input == "Pranzo" or command_input == "Cena":
                 # Convert PDF into txt fileExtension
                 # -------------------------------------
-                # Directory of the PDFs files
-                pdfDir = directory_fcopp + "/PDF/"
-
-                # Directory of the output
-                txtDir = directory_fcopp + "/Text/"
 
                 # Start the conversion
-                convert_multiple(pdfDir, txtDir)
+                convert(str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf")
                 # -------------------------------------
 
                 # Name of the .txt file
@@ -489,35 +490,18 @@ def convert(fname, pages=None):
     converter = TextConverter(manager, output, laparams=LAParams())
     interpreter = PDFPageInterpreter(manager, converter)
 
-    infile = open(fname, 'rb')
+    infile = open(pdfDir+fname, 'rb')
     for page in PDFPage.get_pages(infile, pagenums):
         interpreter.process_page(page)
     infile.close()
     converter.close()
     text = output.getvalue()
-    output.close
+    output.close()
 
-    return text
-
-def convert_multiple(pdfDir, txtDir):
-    """
-    Open a directory and convert, .PDF files in .txt files, inside it using convert()
-    """
-
-    if pdfDir == "": pdfDir = os.getcwd() + "\\"
-    for pdf in os.listdir(pdfDir):
-        pdfFilename = pdfDir + pdf
-        textFilename = txtDir + pdf + ".txt"
-        if(os.path.isfile(textFilename) == False):
-            print("Sto convertendo")
-            fileExtension = pdf.split(".")[-1]
-            if fileExtension == "pdf":
-                text = convert(pdfFilename)
-                textFile = open(textFilename, "w")
-                textFile.write(text)
-                textFile.close()
-        else:
-            print("Ho già convertito")
+    textFilename = txtDir + fname + ".txt"
+    textFile = open(textFilename, "w")
+    textFile.write(text)
+    textFile.close()
 
 def advanced_read_txt(textFile):
     # DICTIONARIES CONFIGURATION
