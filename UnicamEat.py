@@ -7,18 +7,14 @@ TO DO:
 - Ottimizzazioni varie al codice
 - Pranzo e cena
 - Confronto tra i file per download
-- Creazione di folder output per migliore efficenza del codice
-
-- Prima scarica il pdf
-- poi converte in un file temp.txt
-- temp viene confrontato con tutti i pdf convertiti in txt
-    - se ha un riscontro non fa nient'altro, usa lo stesso
-    - altrimenti converte
+- Creazione di folder output per migliore
 """
 #!/usr/bin/python3.6
 
 import os
 import sys
+
+import filecmp
 
 import requests
 
@@ -62,6 +58,7 @@ user_state = {}
 user_server_day = {}
 user_server_canteen = {}
 user_server_launch_dinner = {}
+user_server_boolean = {}
 
 # Message handle funtion
 def handle(msg):
@@ -236,16 +233,10 @@ def handle(msg):
                 # Directory where put the file, and name of the file itself
                 directory = directory_fcopp + "/PDF/" + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
 
-                # CONFRONTO DEI FILE E POI EVENTUALE DOWNLOAD
                 # Check the existence of the file
-                if(os.path.isfile(directory) == False):
-                    # Download the file if is not present
-                    request = requests.get(url_risolution)
-                    with open(directory, 'wb') as f:
-                        f.write(request.content)
-                else:
-                    # Debug
-                    print("The file already exist, so it will be not downloaded again")
+                request = requests.get(url_risolution)
+                with open(directory, 'wb') as f:
+                    f.write(request.content)
 
             # Choose the right time for eat
             markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id])
@@ -257,9 +248,6 @@ def handle(msg):
             # Set user state
             user_state[chat_id] = 3
 
-            # Debug
-            print(user_state[chat_id])
-
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
             pass
@@ -270,41 +258,93 @@ def handle(msg):
             if command_input == "Pranzo" or command_input == "Cena":
                 # Convert PDF into txt fileExtension
                 # -------------------------------------
-
                 # Start the conversion
-                convert(str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf")
+                pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
+                convert(pdfFileName)
                 # -------------------------------------
 
-                # Name of the .txt file
-                txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
-
-
-                # Use the function advanced_read_txt() for get the menu
-                msg_menu = advanced_read_txt(txtName)
-
-                bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-
-                # Random donation into the body of the message
-                # -------------------------------------
-                # Create the variable
-                random_var = random.randint(0, 5)
+                # Check the day
+                #day_int = datetime.datetime.today().weekday()
+                day_int = 0
+                # Check the existence of the life
                 # -------------------------------------
 
-                keyboard = ""
+                user_server_boolean[chat_id] = False
 
-                if random_var:
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
+                if(os.path.isfile(txtDir + pdfFileName + ".txt") == False):
+                    print("Ho aggiunto un nuovo file convertito in txt")
+                    os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+                elif day_int != 0:
+                    if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
+                        # Remove file
+                        print("I due file erano identici, ho cestinato converted.txt")
+                        os.remove(txtDir + "converted.txt")
+                    else:
+                        print("I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato")
+                        # Remove file
+                        os.remove(txtDir + "converted.txt")
+                        # Convert the name of the file
+                        os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
                 else:
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                [dict(text = 'Offrici una birra!', url = "www.google.it")]])
+                    print("Controllo se ho i file aggiornati o meno")
+                    if get_bool_update_menu(directory_fcopp + "/Boolean/update_menu.txt") == False:
+                        if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
+                            print("Messaggio di errore all'utente")
+                            bot.sendMessage(chat_id, "I menu non sono stati aggiornati, la preghiamo di riprovare più tardi", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                            user_server_boolean[chat_id] = True
+                        else:
+                            print("Ho trovato un aggiornamento ed ho sostituito il file")
+                            # Remove file
+                            os.remove(txtDir + "converted.txt")
+                            # Convert the name of the file
+                            os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
-                # Prints the menu in a kawaii way
-                msg = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+                            # Updating boolean value
+                            with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
+                                file.writelines("1")
+                    else:
+                        if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
+                            # Remove file
+                            print("I due file erano identici, ho cestinato converted.txt")
+                            os.remove(txtDir + "converted.txt")
+                        else:
+                            print("I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato")
+                            # Remove file
+                            os.remove(txtDir + "converted.txt")
+                            # Convert the name of the file
+                            os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
-                # Set user state
-                #user_state[chat_id] = 4
+                if user_server_boolean[chat_id] == False:
+                    # -------------------------------------
+                    # Name of the .txt file
+                    txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+
+                    # Use the function advanced_read_txt() for get the menu
+                    msg_menu = advanced_read_txt(txtName)
+
+                    bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+                    # Random donation into the body of the message
+                    # -------------------------------------
+                    # Create the variable
+                    random_var = random.randint(0, 5)
+                    # -------------------------------------
+
+                    keyboard = ""
+
+                    if random_var:
+                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
+                    else:
+                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
+                                    [dict(text = 'Offrici una birra!', url = "www.google.it")]])
+
+                    # Prints the menu in a kawaii way
+                    msg = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+
+                    # Set user state
+                    #user_state[chat_id] = 4
             else:
                 bot.sendMessage(chat_id, "Inserisci un parametro valido")
 
@@ -476,7 +516,31 @@ def set_markup_keyboard_launch_dinnner(canteen):
 
     return markup
 
-def convert(fname, pages=None):
+'''
+- Caso base: zero pdf e zero txt [V]
+    - scarica il pdf
+    - converte in txt
+    - ottiene la stringa di testo formattata
+
+- Secondo caso: c'è il pdf e ci sono i txt e non è lunedì mattina [ ]
+    - scarica il pdf e lo sovrascrive
+    - si salva in una stringa il nome del pdf scaricato
+    - lo converte in txt rinominandolo temp
+    - confronta temp con stringa.pdf.txt
+        - se sono uguali non fa niente
+        - se sono diversi sovrascrive
+
+- Terzo caso: è lunedì mattina [ ]
+    - scarica il pdf e lo sovrascrive
+    - si salva in una stringa il nome del pdf scaricato
+    - lo converte in txt rinominandolo temp
+    - confronta temp con stringa.pdf.txt
+        - se sono uguali dice che non è ancora disponibile il menù aggiornato
+        - se sono diversi sovrascrive e vissero tutti felice e contenti
+            - si tiene da conto che ora sono disponibili i menù aggiornati
+            - 23:55 della domenica sera condizione ritorna falsa
+'''
+def convert(fname, pages = None):
     """
     Convert a .PDF file in a .txt file
     """
@@ -487,7 +551,7 @@ def convert(fname, pages=None):
 
     output = StringIO()
     manager = PDFResourceManager()
-    converter = TextConverter(manager, output, laparams=LAParams())
+    converter = TextConverter(manager, output, laparams = LAParams())
     interpreter = PDFPageInterpreter(manager, converter)
 
     infile = open(pdfDir+fname, 'rb')
@@ -498,7 +562,8 @@ def convert(fname, pages=None):
     text = output.getvalue()
     output.close()
 
-    textFilename = txtDir + fname + ".txt"
+    #textFilename = txtDir + fname + ".txt"
+    textFilename = txtDir + "converted.txt"
     textFile = open(textFilename, "w")
     textFile.write(text)
     textFile.close()
@@ -643,6 +708,14 @@ def advanced_read_txt(textFile):
 
     return msg_menu
 
+# Boolean function
+def get_bool_update_menu(fileName):
+    with open(fileName, 'r') as file:
+        if int(file.readline()) == 1:
+            return True
+        else:
+            return False
+
 def on_callback_query(msg):
     """
     Return the price of a complete launch/dinner
@@ -673,8 +746,19 @@ if os.path.isfile(pidfile):
 f = open(pidfile, 'w')
 f.write(pid)
 
-# Start working
+current_day = datetime.datetime.today().weekday()
 
+# Setting boolean file
+if current_day == 0:
+    with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
+        file.writelines("0")
+else:
+    with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
+        file.writelines("1")
+
+print(current_day)
+
+# Start working
 try:
     bot = telepot.Bot(TOKEN)
     bot.message_loop({'chat': handle,
