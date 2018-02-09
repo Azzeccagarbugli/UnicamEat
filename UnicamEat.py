@@ -112,8 +112,8 @@ def handle(msg):
     elif command_input == "/info" or command_input == "/info@UnicamEatBot":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                      [dict(text = 'GitHub', url = 'https://github.com/Azzeccagarbugli/UnicamEat'), dict(text = 'Developer', url = 'https://t.me/azzeccagarbugli')],
-                     [dict(text = 'Dona una birra!', url = 'www.google.it')]])
-        bot.sendMessage(chat_id, info_msg, reply_markup = keyboard)
+                     [dict(text = 'Dona una birra!', url = 'https://www.paypal.me/azzeccagarbugli')]])
+        bot.sendMessage(chat_id, info_msg, parse_mode = "HTML", reply_markup = keyboard)
 
     # Send the list of allergens
     elif command_input == "/allergeni" or command_input == "/allergeni@UnicamEatBot":
@@ -247,7 +247,7 @@ def handle(msg):
 
             if (user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "ColleParadiso":
                 msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
-                      "il turno del pranzo. Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
+                      "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
                       "di prendere anche la cena!"
             else:
                 msg = "Seleziona dalla lista il menù desiderato"
@@ -379,7 +379,7 @@ def handle(msg):
                     else:
                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                     [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                    [dict(text = 'Offrici una birra!', url = "www.google.it")]])
+                                    [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
 
                     # Prints the menu in a kawaii way
                     msg = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
