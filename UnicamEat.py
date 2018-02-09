@@ -7,10 +7,7 @@ TO DO:
 - Ottimizzazioni varie al codice
 - Pranzo e cena
 - Confronto tra i file per download
-<<<<<<< HEAD
 - Creazione di folder outupt per migliore efficenza del codice
-=======
->>>>>>> b4c89bf91dafc362f0bed61f465e1867295f42c6
 """
 #!/usr/bin/python3.6
 
@@ -168,11 +165,24 @@ def handle(msg):
             markup = ""
 
             if command_input == "D'Avack":
-                 # Use the function set_markup_keyboard
-                markup = set_markup_keyboard_davak(command_input)
+                # Check the day
+                day_int = datetime.datetime.today().weekday()
 
-                # Debug
-                print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
+                if day_int == 4 or day_int == 5 or day_int == 6:
+                    # Closed Canteen
+                    bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                else:
+                    # Use the function set_markup_keyboard
+                    markup = set_markup_keyboard_davak(command_input)
+
+                    # Debug
+                    print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
+
+                    # Set Markup Keyboard layout and send the message
+                    bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
+
+                    # Set user state
+                    user_state[chat_id] = 2
             else:
                 # Use the function set_markup_keyboard
                 markup = set_markup_keyboard_colleparadiso(command_input)
@@ -180,11 +190,11 @@ def handle(msg):
                 # Debug
                 print(user_server_canteen[chat_id]+ " - " + str(chat_id) + " - " +full_name)
 
-            # Set Markup Keyboard layout and send the message
-            bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
+                # Set Markup Keyboard layout and send the message
+                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
-            # Set user state
-            user_state[chat_id] = 2
+                # Set user state
+                user_state[chat_id] = 2
 
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
@@ -460,6 +470,7 @@ def set_markup_keyboard_launch_dinnner(canteen):
                         ["Pranzo"]
                     ])
     else:
+        # Debug
         print("Nice shit bro :)")
 
     return markup
