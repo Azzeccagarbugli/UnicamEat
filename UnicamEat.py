@@ -273,8 +273,8 @@ def handle(msg):
                 # -------------------------------------
 
                 # Check the day
-                #day_int = datetime.datetime.today().weekday()
-                day_int = 0
+                day_int = datetime.datetime.today().weekday()
+
                 # Check the existence of the life
                 # -------------------------------------
                 '''
@@ -352,9 +352,16 @@ def handle(msg):
                     # -------------------------------------
                     # Name of the .txt file
                     txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+                    
+                    # Convert in the right day and the right canteen, just for good appaerence
+                    right_canteen = clean_canteen(user_server_canteen[chat_id])
+                    right_day = clean_day(user_server_day[chat_id])
 
-                    # Use the function advanced_read_txt() for get the menu
-                    msg_menu = advanced_read_txt(txtName)
+                    # Debug
+                    print(right_canteen + " - " + right_day + " - " + command_input + " / " + full_name)
+
+                    msg_menu = "*{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
+                    msg_menu += advanced_read_txt(txtName)
 
                     bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
@@ -377,8 +384,6 @@ def handle(msg):
                     # Prints the menu in a kawaii way
                     msg = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
 
-                    # Set user state
-                    #user_state[chat_id] = 4
             else:
                 bot.sendMessage(chat_id, "Inserisci un parametro valido")
 
@@ -438,6 +443,33 @@ def get_day(day):
     days_week_normal = days_week_int[day_int]
 
     return days_week_normal
+
+def clean_canteen(canteen):
+    # Available canteen in Camerino
+    canteen_unicam = {
+        "Avack" : "D'Avack",
+        "ColleParadiso" : "Colle Paradiso"
+    }
+
+    canteen_clean = canteen_unicam[canteen]
+
+    return canteen_clean
+
+def clean_day(day):
+    # Days of the week (call me genius :3)
+    days_week = {
+        "lunedi" : "Lunedì",
+        "martedi" : "Martedì",
+        "mercoledi" : "Mercoledì",
+        "giovedi" : "Giovedì",
+        "venerdì" : "Venerdì",
+        "sabato" : "Sabato",
+        "domenica" : "Domenica"
+    }
+
+    day_clean = days_week[day]
+
+    return day_clean
 
 def set_markup_keyboard_colleparadiso(day):
     """
@@ -538,15 +570,16 @@ def set_markup_keyboard_launch_dinnner(canteen, day):
     current_day = get_day(day)
 
     # Check the right canteen
-    if canteen == "ColleParadiso" and day != "sabato" and day != "somenica":
-        markup = ReplyKeyboardMarkup(keyboard=[
-                        ["Pranzo"],
-                        ["Cena"]
-                    ])
-    elif canteen == "ColleParadiso" and (day == "sabato" or day != "domenica"):
-        markup = ReplyKeyboardMarkup(keyboard=[
-                        ["Pranzo"],
-                    ])
+    if canteen == "ColleParadiso":
+        if current_day == "sabato" or current_day == "domenica":
+            markup = ReplyKeyboardMarkup(keyboard=[
+                            ["Pranzo"],
+                            ["Cena"]
+                        ])
+        else:
+            markup = ReplyKeyboardMarkup(keyboard=[
+                            ["Pranzo"]
+                        ])
     elif canteen == "Avack":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Pranzo"]
