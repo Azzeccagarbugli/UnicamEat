@@ -206,6 +206,9 @@ def handle(msg):
     elif user_state[chat_id] == 2:
         # Check day correct
         try:
+
+            msg = ""
+
             if command_input == "Oggi":
                 # Current Day
                 current_day = get_day(command_input)
@@ -239,11 +242,16 @@ def handle(msg):
                     f.write(request.content)
 
             # Choose the right time for eat
-            markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id])
+            markup = set_markup_keyboard_launch_dinnner(user_server_canteen[chat_id], user_server_day[chat_id])
 
-            msg = "Seleziona dalla lista il menù desiderato"
+            if (user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "ColleParadiso":
+                msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
+                      "il turno del pranzo. Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
+                      "di prendere anche la cena!"
+            else:
+                msg = "Seleziona dalla lista il menù desiderato"
 
-            bot.sendMessage(chat_id, msg, reply_markup = markup)
+            bot.sendMessage(chat_id, msg, parse_mode = "Markdown", reply_markup = markup)
 
             # Set user state
             user_state[chat_id] = 3
@@ -268,6 +276,30 @@ def handle(msg):
                 day_int = 0
                 # Check the existence of the life
                 # -------------------------------------
+                '''
+                - Caso base: zero pdf e zero txt [V]
+                    - scarica il pdf
+                    - converte in txt
+                    - ottiene la stringa di testo formattata
+
+                - Secondo caso: c'è il pdf e ci sono i txt e non è lunedì mattina [V]
+                    - scarica il pdf e lo sovrascrive
+                    - si salva in una stringa il nome del pdf scaricato
+                    - lo converte in txt rinominandolo temp
+                    - confronta temp con stringa.pdf.txt
+                        - se sono uguali non fa niente
+                        - se sono diversi sovrascrive
+
+                - Terzo caso: è lunedì mattina [V]
+                    - scarica il pdf e lo sovrascrive
+                    - si salva in una stringa il nome del pdf scaricato
+                    - lo converte in txt rinominandolo temp
+                    - confronta temp con stringa.pdf.txt
+                        - se sono uguali dice che non è ancora disponibile il menù aggiornato
+                        - se sono diversi sovrascrive e vissero tutti felice e contenti
+                            - si tiene da conto che ora sono disponibili i menù aggiornati
+                            - 23:55 della domenica sera condizione ritorna falsa
+                '''
 
                 user_server_boolean[chat_id] = False
 
@@ -313,6 +345,7 @@ def handle(msg):
                             os.remove(txtDir + "converted.txt")
                             # Convert the name of the file
                             os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+                 # -------------------------------------
 
                 if user_server_boolean[chat_id] == False:
                     # -------------------------------------
@@ -493,18 +526,25 @@ def set_markup_keyboard_davak(day):
 
     return markup
 
-def set_markup_keyboard_launch_dinnner(canteen):
+def set_markup_keyboard_launch_dinnner(canteen, day):
     """
     Return the custom markup for the launch and the dinner
     """
     # Markup for the custom keyboard
     markup = ""
 
+    # Day of the week
+    current_day = get_day(day)
+
     # Check the right canteen
-    if canteen == "ColleParadiso":
+    if canteen == "ColleParadiso" and day != "sabato" and day != "somenica":
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Pranzo"],
                         ["Cena"]
+                    ])
+    elif canteen == "ColleParadiso" and (day == "sabato" or day != "domenica"):
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Pranzo"],
                     ])
     elif canteen == "Avack":
         markup = ReplyKeyboardMarkup(keyboard=[
@@ -516,30 +556,6 @@ def set_markup_keyboard_launch_dinnner(canteen):
 
     return markup
 
-'''
-- Caso base: zero pdf e zero txt [V]
-    - scarica il pdf
-    - converte in txt
-    - ottiene la stringa di testo formattata
-
-- Secondo caso: c'è il pdf e ci sono i txt e non è lunedì mattina [ ]
-    - scarica il pdf e lo sovrascrive
-    - si salva in una stringa il nome del pdf scaricato
-    - lo converte in txt rinominandolo temp
-    - confronta temp con stringa.pdf.txt
-        - se sono uguali non fa niente
-        - se sono diversi sovrascrive
-
-- Terzo caso: è lunedì mattina [ ]
-    - scarica il pdf e lo sovrascrive
-    - si salva in una stringa il nome del pdf scaricato
-    - lo converte in txt rinominandolo temp
-    - confronta temp con stringa.pdf.txt
-        - se sono uguali dice che non è ancora disponibile il menù aggiornato
-        - se sono diversi sovrascrive e vissero tutti felice e contenti
-            - si tiene da conto che ora sono disponibili i menù aggiornati
-            - 23:55 della domenica sera condizione ritorna falsa
-'''
 def convert(fname, pages = None):
     """
     Convert a .PDF file in a .txt file
