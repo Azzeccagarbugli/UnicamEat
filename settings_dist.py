@@ -29,11 +29,12 @@ opening_msg = "<b>D'Avack</b>\n"\
             "\n<i>Posizione:</i> /posizione_colleparadiso"
 
 # Info message
-info_msg = "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unicam nella visualizzazione dei menù "\
-        "offerti dal servizio di ristorazione dell'Ersu, presso le mense di Colle Paradiso e D'Avack. "\
-        "\n"\
-        "\nÈ possibile trovare il codice sorgente qui: https://github.com/Azzeccagarbugli/UnicamEat\n"\
-        "\nSe sei soddisfatto offri una birra agli sviluppatori!"
+info_msg =  "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unicam nella visualizzazione dei menù "\
+            "offerti dal servizio di ristorazione dell'Ersu, presso le mense di Colle Paradiso e D'Avack. "\
+            "\nÈ possibile utilizzare i pulsanti disponibili di seguito per ottenere informazioni rigurado il codice sorgente del Bot e "\
+            "per segnalare direttamente un problema di malfunzionamento al team di sviluppo. "\
+            "\nInfine, se sei soddisfatto del servizio messo a dispozione e della qualità di quest'ultimo puoi donare una birra agli sviluppatori, "\
+            "ne saranno davvero felici"
 
 # Food warning message
 allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
