@@ -111,7 +111,8 @@ def handle(msg):
     # Send the info about the bot
     elif command_input == "/info" or command_input == "/info@UnicamEatBot":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                     [dict(text = 'Dona', url = 'https://github.com')]])
+                     [dict(text = 'GitHub', url = 'https://github.com/Azzeccagarbugli/UnicamEat'), dict(text = 'Developer', url = 'https://t.me/azzeccagarbugli')],
+                     [dict(text = 'Dona una birra!', url = 'www.google.it')]])
         bot.sendMessage(chat_id, info_msg, reply_markup = keyboard)
 
     # Send the list of allergens
@@ -771,8 +772,6 @@ if current_day == 0:
 else:
     with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
         file.writelines("1")
-
-print(current_day)
 
 # Start working
 try:
