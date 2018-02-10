@@ -71,10 +71,14 @@ def handle(msg):
     chat_id = msg['chat']['id']
 
     # Check what type of content was sent
-    if content_type == 'text':
-        command_input = msg['text']
-    else:
-        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prego riprovare")
+    try:
+        if content_type == 'text':
+            command_input = msg['text']
+        else:
+            bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
+    except UnboundLocalError:
+        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
+        pass
 
     # Try to save username and name
     try:
@@ -102,7 +106,7 @@ def handle(msg):
 
     # Send the position of the Colleparadiso's canteen
     elif command_input == "/posizione_colleparadiso" or command_input == "/posizione_colleparadiso@UnicamEatBot":
-        bot.sendLocation(chat_id, "43.1437097", "13.0822057")
+        bot.sendLocation(chat_id, "4    3.1437097", "13.0822057")
 
     # Send the position of the D'Avack's canteen
     elif command_input == "/posizione_avak" or command_input == "/posizione_avak@UnicamEatBot":
@@ -113,7 +117,7 @@ def handle(msg):
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                      [dict(text = 'GitHub', url = 'https://github.com/Azzeccagarbugli/UnicamEat'), dict(text = 'Developer', url = 'https://t.me/azzeccagarbugli')],
                      [dict(text = 'Dona una birra!', url = 'https://www.paypal.me/azzeccagarbugli')]])
-        bot.sendMessage(chat_id, info_msg, parse_mode = "HTML", reply_markup = keyboard)
+        bot.sendMessage(chat_id, info_msg, parse_mode = "Markdown", reply_markup = keyboard)
 
     # Send the list of allergens
     elif command_input == "/allergeni" or command_input == "/allergeni@UnicamEatBot":
@@ -144,18 +148,23 @@ def handle(msg):
 
     # Get canteen
     elif command_input == "/menu" or command_input == "/menu@UnicamEatBot":
-        markup = ReplyKeyboardMarkup(keyboard=[
-                        ["D'Avack"],
-                        ["Colle Paradiso"],
-                    ])
+        # Check right working
+        try:
+            markup = ReplyKeyboardMarkup(keyboard=[
+                            ["D'Avack"],
+                            ["Colle Paradiso"],
+                        ])
 
-        msg = "Selezionare la mensa"
+            msg = "Selezionare la mensa"
 
-        bot.sendMessage(chat_id, msg, reply_markup = markup)
+            bot.sendMessage(chat_id, msg, reply_markup = markup)
 
-        # Set user state
-        user_state[chat_id] = 1
-
+            # Set user state
+            user_state[chat_id] = 1
+        
+        except KeyError:
+            bot.sendMessage(chat_id, "Inserire un messaggio valido", reply_markup = markup)
+    
     # Get date
     elif user_state[chat_id] == 1:
         # Check right canteen
@@ -175,6 +184,9 @@ def handle(msg):
                 if day_int == 4 or day_int == 5 or day_int == 6:
                     # Closed Canteen
                     bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+                    # Set user state
+                    user_state[chat_id] = 0
                 else:
                     # Use the function set_markup_keyboard
                     markup = set_markup_keyboard_davak(command_input)
@@ -204,6 +216,7 @@ def handle(msg):
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
             pass
 
+    # Get stuff
     elif user_state[chat_id] == 2:
         # Check day correct
         try:
@@ -261,6 +274,7 @@ def handle(msg):
             bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
             pass
 
+    # Get other wonderful stuff
     elif user_state[chat_id] == 3:
         # A lot of things
         try:
@@ -384,6 +398,8 @@ def handle(msg):
                     # Prints the menu in a kawaii way
                     msg = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
 
+                    # Set user state
+                    user_state[chat_id] = 0
             else:
                 bot.sendMessage(chat_id, "Inserisci un parametro valido")
 
@@ -392,7 +408,7 @@ def handle(msg):
             pass
 
     else:
-        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
+        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prova inserendo un comando disponibile nella lista")
 
 def get_url(canteen, day):
     """
