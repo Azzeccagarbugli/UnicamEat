@@ -1,6 +1,6 @@
 # Unicam Eat!
 
-![alt text](https://i.imgur.com/HPCaYrx.png "UnicamEat!")
+![alt text](https://i.imgur.com/oxhwj19.png "UnicamEat!")
 
 Unicam Eat! è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERSU** agli studenti Unicam.
 
@@ -14,7 +14,8 @@ Fondamentalmente i menù universitari dell'ERSU di Camerino, vengono **esclusiva
 ## Struttura di Unicam Eat!
 
 Unicam Eat! come già affermato in precedenza è un bot Telegram. Questa piattafroma di messaggistica, infatti, mette a dispozione delle API che gli sviluppatori possono usufruire per andare a interfacciarsi con Telegram stesso. Il framework adoperato in questo caso è stato **Telepot**.
-Il core del progetto sta nell'andare a scaricare, attraverso delle request, i file PDF contenenti il menù e convertirli, grazie all'aiuto di PDFMiner, in semplici file di testo con i quali è possibile lavorare in maniera decisamente più semplice.
+
+**Il core del progetto** sta nell'andare a scaricare, attraverso delle request, i file PDF contenenti il menù e convertirli, grazie all'aiuto di PDFMiner, in semplici file di testo con i quali è possibile lavorare in maniera decisamente più semplice.
 
 ## Installazione
 
@@ -34,4 +35,5 @@ $ python3 UnicamEat.py
 ## Crediti
 
 Lo sviluppo del codice è stato effettuato da [Francesco Coppola](https://github.com/Azzeccagarbugli) e da [Antonio Strippoli](https://github.com/Porchetta).
+
 *Il bot è stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo*
