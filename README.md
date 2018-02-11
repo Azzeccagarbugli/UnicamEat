@@ -1,8 +1,12 @@
-# Unicam Eat!
+
 
 ![alt text](https://i.imgur.com/oxhwj19.png "UnicamEat!")
 
-Unicam Eat! è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERSU** agli studenti Unicam.
+[![forthebadge](http://forthebadge.com/images/badges/made-with-python.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/cc-by-nd.svg)](http://forthebadge.com)
+
+**Unicam Eat!** è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERSU** agli studenti Unicam.
 
 ***
 
