@@ -1,6 +1,6 @@
 # Unicam Eat!
 
-![alt text](https://i.imgur.com/RpKiAaX.png "UnicamEat!")
+![alt text](https://i.imgur.com/HPCaYrx.png "UnicamEat!")
 
 Unicam Eat! è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERSU** agli studenti Unicam.
 
