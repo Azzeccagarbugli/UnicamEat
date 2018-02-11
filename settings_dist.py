@@ -1,5 +1,7 @@
 # Your token Bot, you can get it on Telegram Bot Father
-TOKEN = 'TOKEN'
+TOKEN = ''
+
+bot_name = "@UnicamEatBot"
 
 # Start message
 start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
@@ -11,7 +13,7 @@ start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno off
 help_msg = "UNICAM E' VERAMENTE EUFORICA"
 
 # Directory
-directory_fcopp = '***YOUR DIRECTORY***'
+directory_fcopp = 'YOUR_PATH'
 
 # Closed canteen
 closed_msg = "La mensa del D'Avack nei giorni <b>Venerdì</b>, <b>Sabato</b> e <b>Domenica</b> rimane chiusa sia "\
@@ -52,3 +54,19 @@ prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrisponde
 # Directory PDF and directory .txt
 pdfDir = directory_fcopp + "/PDF/"
 txtDir = directory_fcopp + "/Text/"
+
+# Admin allowed
+admins_array = {22, 222}
+
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   ITALIC = '\033[3m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
