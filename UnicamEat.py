@@ -113,12 +113,12 @@ def handle(msg):
         if chat_id in admins_array:
             if admin_role[chat_id]:
                 admin_role[chat_id] = False
-                bot.sendMessage(chat_id, "Ruolo da admin disattivato.")
+                bot.sendMessage(chat_id, "Ruolo da admin disattivato")
             else:
                 admin_role[chat_id] = True
-                bot.sendMessage(chat_id, "Ruolo da admin attivato.")
+                bot.sendMessage(chat_id, "Ruolo da admin attivato")
         else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
     elif command_input == "/delfiles" or command_input == "/delfiles" + bot_name:
         if chat_id in admins_array and admin_role[chat_id]:
@@ -126,14 +126,14 @@ def handle(msg):
             delete_files_infolder(txtDir)
             bot.sendMessage(chat_id, "Ho ripulito le folders *pdfDir* e *txtDir*.", parse_mode = "Markdown")
         else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
     elif command_input == "/bool" or command_input == "/bool" + bot_name:
         if chat_id in admins_array and admin_role[chat_id]:
             msg = "Il valore attuale della booleana è: *{}*".format(str(get_bool())) 
             bot.sendMessage(chat_id, msg, parse_mode = "Markdown")
         else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
     # Send opening time
     elif command_input == "/orari" or command_input == "/orari" + bot_name:
@@ -785,6 +785,20 @@ if os.path.isfile(pidfile):
 f = open(pidfile, 'w')
 f.write(pid)
 
+# Create the directory if it dosen't exist 
+if not os.path.exists(pdfDir):
+    print(color.DARKCYAN + "\nI'm creating this folder of the PDF fo you. Stupid human.\n" + color.END)
+    os.makedirs(pdfDir)
+elif not os.path.exists(txtDir):
+    print(color.DARKCYAN + "\nI'm creating this folder of the Text Output fo you. Stupid human.\n" + color.END)
+    os.makedirs(txtDir)
+elif not os.path.exists(boolFile):
+    print(color.DARKCYAN + "\nI'm creating this folder of the Boolean Value fo you. Stupid human.\n" + color.END)    
+    os.makedirs(boolFile)
+else:
+    print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
+
+# Take the current day
 current_day = today_weekend()
 
 # Setting boolean file
