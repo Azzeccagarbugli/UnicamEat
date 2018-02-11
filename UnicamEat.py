@@ -308,8 +308,6 @@ def handle(msg):
             # Check the day
             day_int = today_weekend()
 
-            user_server_boolean[chat_id] = False
-
             if not os.path.isfile(txtDir + pdfFileName + ".txt"):
                 print(color.CYAN + "Ho aggiunto un nuovo file convertito in .txt" + color.END)
 
@@ -352,7 +350,7 @@ def handle(msg):
                         os.remove(txtDir + "converted.txt")
                         os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
-            if user_server_boolean[chat_id] == False:
+            if get_bool() == False:
                 # Name of the .txt file
                 txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
 
