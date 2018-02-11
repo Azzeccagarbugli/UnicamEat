@@ -6,8 +6,6 @@ Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
 TO DO:
 - Ottimizzazioni varie al codice
 - Pranzo e cena
-- Confronto tra i file per download
-- Creazione di folder output per migliore
 """
 #!/usr/bin/python3.6
 
@@ -58,7 +56,6 @@ user_state = {}
 user_server_day = {}
 user_server_canteen = {}
 user_server_launch_dinner = {}
-user_server_boolean = {}
 
 # Admin role
 admin_role = {}
@@ -71,7 +68,6 @@ def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
 
     # Admin role setting
-    global admin_role
     try: admin_role[chat_id]
     except: admin_role[chat_id] = True
 
@@ -121,6 +117,20 @@ def handle(msg):
             else:
                 admin_role[chat_id] = True
                 bot.sendMessage(chat_id, "Ruolo da admin attivato.")
+        else:
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
+
+    elif command_input == "/delfiles" or command_input == "/delfiles"+bot_name:
+        if chat_id in admins_array and admin_role[chat_id]:
+            delete_files_infolder(pdfDir)
+            delete_files_infolder(txtDir)
+            bot.sendMessage(chat_id, "Ho ripulito le folders *pdfDir* e *txtDir*.", parse_mode = "Markdown")
+        else:
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
+
+    elif command_input == "/bool" or command_input == "/bool"+bot_name:
+        if chat_id in admins_array and admin_role[chat_id]:
+            bot.sendMessage(chat_id, "Il valore attuale della booleana è: " + str(get_bool()), parse_mode = "Markdown")
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
 
@@ -290,94 +300,88 @@ def handle(msg):
                     - si tiene da conto che ora sono disponibili i menù aggiornati
                     - 23:55 della domenica sera condizione ritorna falsa
         '''
-        try:
-            if command_input == "Pranzo" or command_input == "Cena":
-                # Start the conversion
-                pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
-                convert_in_txt(pdfFileName)
+        if command_input == "Pranzo" or command_input == "Cena":
+            # Start the conversion
+            pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
+            convert_in_txt(pdfFileName)
 
-                # Check the day
-                day_int = today_weekend()
+            # Check the day
+            day_int = today_weekend()
 
-                user_server_boolean[chat_id] = False
+            user_server_boolean[chat_id] = False
 
-                if(os.path.isfile(txtDir + pdfFileName + ".txt") == False):
-                    print(color.CYAN + "Ho aggiunto un nuovo file convertito in .txt" + color.END)
+            if not os.path.isfile(txtDir + pdfFileName + ".txt"):
+                print(color.CYAN + "Ho aggiunto un nuovo file convertito in .txt" + color.END)
+
+                os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+            elif day_int != 0:
+                if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
+                    print(color.CYAN + "I due file erano identici, ho cestinato converted.txt" + color.END)
+
+                    os.remove(txtDir + "converted.txt")
+                else:
+                    print(color.CYAN + "I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
+
+                    os.remove(txtDir + pdfFileName + ".txt")
                     os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
-                elif day_int != 0:
+            else:
+                print(color.CYAN + "Controllo se ho i file aggiornati o meno..." + color.END)
+
+                if get_bool() == False:
                     if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                        # Remove file
+                        print(color.CYAN + "I due file sono ancora uguali, inviato un msg di errore." + color.END)
+
+                        bot.sendMessage(chat_id, "I menu non sono stati ancora aggiornati sul sito dell'ERSU, la preghiamo di riprovare più tardi.", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                    else:
+                        print(color.CYAN + "Ho trovato un aggiornamento ed ho sostituito il file con quello più recente" + color.END)
+
+                        os.remove(txtDir + pdfFileName + ".txt")
+                        os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+
+                        bool_write(True)
+                else:
+                    print(color.CYAN + "Dovrei avere i file aggiornati online, la booleana era True." + color.END)
+
+                    if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
                         print(color.CYAN + "I due file erano identici, ho cestinato converted.txt" + color.END)
+
                         os.remove(txtDir + "converted.txt")
                     else:
                         print(color.CYAN + "I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
-                        # Remove file
+
                         os.remove(txtDir + "converted.txt")
-                        # Convert the name of the file
                         os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+
+            if user_server_boolean[chat_id] == False:
+                # Name of the .txt file
+                txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+
+                # Convert in the right day and the right canteen, just for good appaerence
+                right_canteen = clean_canteen(user_server_canteen[chat_id])
+                right_day = clean_day(user_server_day[chat_id])
+
+                msg_menu = "*{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
+                msg_menu += advanced_read_txt(txtName)
+
+                bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+                random_donation = random.randint(0, 5)
+
+                if random_donation:
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
                 else:
-                    print(color.CYAN + "Controllo se ho i file aggiornati o meno")
-                    if get_bool_update_menu(directory_fcopp + "/Boolean/update_menu.txt") == False:
-                        if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                            print(color.CYAN + "Messaggio di errore all'utente" + color.END)
-                            bot.sendMessage(chat_id, "I menu non sono stati aggiornati, la preghiamo di riprovare più tardi", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-                            user_server_boolean[chat_id] = True
-                        else:
-                            print(color.CYAN + "Ho trovato un aggiornamento ed ho sostituito il file" + color.END)
-                            # Remove file
-                            os.remove(txtDir + "converted.txt")
-                            # Convert the name of the file
-                            os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
+                                [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
 
-                            # Updating boolean value
-                            with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
-                                file.writelines("1")
-                    else:
-                        if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                            # Remove file
-                            print(color.CYAN + "I due file erano identici, ho cestinato converted.txt" + color.END)
-                            os.remove(txtDir + "converted.txt")
-                        else:
-                            print(color.CYAN + "I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
-                            # Remove file
-                            os.remove(txtDir + "converted.txt")
-                            # Convert the name of the file
-                            os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+                # Prints the menu in a kawaii way
+                bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
 
-                if user_server_boolean[chat_id] == False:
-                    # Name of the .txt file
-                    txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
-
-                    # Convert in the right day and the right canteen, just for good appaerence
-                    right_canteen = clean_canteen(user_server_canteen[chat_id])
-                    right_day = clean_day(user_server_day[chat_id])
-
-                    msg_menu = "*{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
-                    msg_menu += advanced_read_txt(txtName)
-
-                    bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-
-                    random_donation = random.randint(0, 5)
-
-                    if random_donation:
-                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
-                    else:
-                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                    [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
-
-                    # Prints the menu in a kawaii way
-                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
-
-                    # Set user state
-                    user_state[chat_id] = 0
-            else:
-                bot.sendMessage(chat_id, "Inserisci un parametro valido")
-
-        except KeyError:
+                # Set user state
+                user_state[chat_id] = 0
+        else:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
-            pass
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prova inserendo un comando disponibile nella lista")
@@ -445,7 +449,7 @@ def clean_day(day):
         "martedi" : "Martedì",
         "mercoledi" : "Mercoledì",
         "giovedi" : "Giovedì",
-        "venerdì" : "Venerdì",
+        "venerdi" : "Venerdì",
         "sabato" : "Sabato",
         "domenica" : "Domenica"
     }
@@ -460,7 +464,6 @@ def set_markup_keyboard_colleparadiso(chat_id, day):
     days_week_normal = get_day(day)
 
     # Check which day is today and so set the right keyboard
-    global admin_role
     if admin_role[chat_id]:
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lunedì"],
@@ -509,7 +512,6 @@ def set_markup_keyboard_davak(chat_id, day):
     days_week_normal = get_day(day)
 
     # Check which day is today and so set the right keyboard
-    global admin_role
     if admin_role[chat_id]:
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lunedì"],
@@ -543,7 +545,6 @@ def set_markup_keyboard_launch_dinnner(chat_id, canteen, day):
 
     # Check the right canteen
     # Check which day is today and so set the right keyboard
-    global admin_role
     if canteen == "ColleParadiso":
         if current_day != "sabato" and current_day != "domenica" and admin_role[chat_id]:
             markup = ReplyKeyboardMarkup(keyboard=[
@@ -591,15 +592,15 @@ def convert_in_txt(fname, pages = None):
 def advanced_read_txt(textFile):
     # DICTIONARIES CONFIGURATION
     # Primi piatti
-    dic1 = ["pasta", "zuppa", "passato", "tagliatelle", "riso", "chicche", "minestrone", "penne"]
+    dic1 = ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn"]
     # Pizza/Panini
-    dic2 = ["panino", "pizza", "crostini", "piadina"]
+    dic2 = ["panin", "pizz", "crostin", "piadin"]
     # Altro
-    dic3 = ["frutta", "yogurt", "contorno", "dolce", "pane", "salse"]
+    dic3 = ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"]
     # Extra
-    dic4 = ["porzionati", "formaggi", "olio", "confettura", "cioccolat", "asporto"]
+    dic4 = ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"]
     # Bevande
-    dic5 = ["lattina", "brick", "acqua"]
+    dic5 = ["lattin", "brick", "acqua"]
 
     # Assembling the full diciontary
     dictionaries = [dic1, dic2, dic3, dic4, dic5]
@@ -727,13 +728,27 @@ def advanced_read_txt(textFile):
 
     return msg_menu
 
-# Boolean function
-def get_bool_update_menu(fileName):
-    with open(fileName, 'r') as file:
-        if int(file.readline()) == 1:
+# Function for deletion of files in a folder
+def delete_files_infolder(dir):
+    for the_file in os.listdir(dir):
+        the_file_path = os.path.join(dir, the_file)
+        try:
+            if os.path.isfile(the_file_path):
+                os.unlink(the_file_path)
+        except Exception as e:
+            print("Errore nella funzione delete_files_infolder: " + e)
+
+# Get Boolean values stored in boolFile (see settings.py)
+def get_bool():
+    with open(boolFile, 'r') as file:
+        if file.readline() == "True":
             return True
         else:
             return False
+
+def bool_write(bool_value):
+    with open(boolFile, 'w') as file:
+        file.writelines(bool_value)
 
 def today_weekend():
     """
@@ -775,15 +790,21 @@ current_day = today_weekend()
 
 # Setting boolean file
 if current_day == 0:
-    with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
-        file.writelines("0")
+    bool_write("False")
 else:
-    with open(directory_fcopp + "/Boolean/update_menu.txt", 'w') as file:
-        file.writelines("1")
+    bool_write("True")
 
 # Start working
 try:
     bot = telepot.Bot(TOKEN)
+
+    # Checking if some messages has been sent to the bot
+    updates = bot.getUpdates()
+    if updates:
+        last_update_id = updates[-1]['update_id']
+        bot.getUpdates(offset=last_update_id+1)
+
+    # Starting message_loop
     bot.message_loop({'chat': handle,
                       'callback_query': on_callback_query})
 
