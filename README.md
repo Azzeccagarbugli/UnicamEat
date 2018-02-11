@@ -4,8 +4,8 @@
 
 [![forthebadge](http://forthebadge.com/images/badges/made-with-python.svg)](http://forthebadge.com)
 [![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/powered-by-water.svg)](http://forthebadge.com)
 [![forthebadge](http://forthebadge.com/images/badges/cc-by-nd.svg)](http://forthebadge.com)
-[![forthebadge](http://forthebadge.com/images/badges/fo-real.svg)](http://forthebadge.com)
 
 **Unicam Eat!** è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERSU** agli studenti Unicam.
 
@@ -24,7 +24,7 @@ Unicam Eat! come già affermato in precedenza è un bot Telegram. Questa piattaf
 
 ## Installazione
 
-Il bot viene rilasciato con licenza MIT, ciò significa che chiunque voglia modificare o proporre suggerimenti per implementare nuove funzionalità o per risolvere eventuali, può farlo liberamente utilizzando GitHub.
+Il bot viene rilasciato con licenza MIT, ciò significa che chiunque voglia modificare o proporre suggerimenti per implementare nuove funzionalità o per risolvere eventuali problemi, può farlo liberamente utilizzando GitHub.
 
 ---
 
