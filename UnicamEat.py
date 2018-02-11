@@ -120,7 +120,7 @@ def handle(msg):
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
 
-    elif command_input == "/delfiles" or command_input == "/delfiles"+bot_name:
+    elif command_input == "/delfiles" or command_input == "/delfiles" + bot_name:
         if chat_id in admins_array and admin_role[chat_id]:
             delete_files_infolder(pdfDir)
             delete_files_infolder(txtDir)
@@ -128,9 +128,10 @@ def handle(msg):
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
 
-    elif command_input == "/bool" or command_input == "/bool"+bot_name:
+    elif command_input == "/bool" or command_input == "/bool" + bot_name:
         if chat_id in admins_array and admin_role[chat_id]:
-            bot.sendMessage(chat_id, "Il valore attuale della booleana è: " + str(get_bool()), parse_mode = "Markdown")
+            msg = "Il valore attuale della booleana è: *{}*".format(str(get_bool())) 
+            bot.sendMessage(chat_id, msg, parse_mode = "Markdown")
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando.")
 
