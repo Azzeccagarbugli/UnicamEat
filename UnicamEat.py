@@ -328,8 +328,6 @@ def handle(msg):
                 if get_bool() == False:
                     if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
                         print(color.CYAN + "I due file sono ancora uguali, inviato un msg di errore." + color.END)
-
-                        bot.sendMessage(chat_id, "I menu non sono stati ancora aggiornati sul sito dell'ERSU, la preghiamo di riprovare più tardi.", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
                     else:
                         print(color.CYAN + "Ho trovato un aggiornamento ed ho sostituito il file con quello più recente" + color.END)
 
@@ -350,7 +348,9 @@ def handle(msg):
                         os.remove(txtDir + "converted.txt")
                         os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
-            if get_bool() == False:
+            bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+            if get_bool() == True:
                 # Name of the .txt file
                 txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
 
@@ -360,8 +360,6 @@ def handle(msg):
 
                 msg_menu = "*{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
                 msg_menu += advanced_read_txt(txtName)
-
-                bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
                 random_donation = random.randint(0, 5)
 
@@ -375,9 +373,11 @@ def handle(msg):
 
                 # Prints the menu in a kawaii way
                 bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+            else:
+                bot.sendMessage(chat_id, "I menu non sono stati ancora aggiornati sul sito dell'ERSU, la preghiamo di riprovare più tardi.", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
-                # Set user state
-                user_state[chat_id] = 0
+            # Set user state
+            user_state[chat_id] = 0
         else:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
 
