@@ -11,16 +11,15 @@ TO DO:
 
 import os
 import sys
-
 import filecmp
+import random
 
 import requests
 
-import random
-#22
 import time
 import datetime
 
+#22
 import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -130,7 +129,7 @@ def handle(msg):
 
     elif command_input == "/bool" or command_input == "/bool" + bot_name:
         if chat_id in admins_array and admin_role[chat_id]:
-            msg = "Il valore attuale della booleana è: *{}*".format(str(get_bool())) 
+            msg = "Il valore attuale della booleana è: *{}*".format(str(get_bool()))
             bot.sendMessage(chat_id, msg, parse_mode = "Markdown")
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
@@ -346,7 +345,7 @@ def handle(msg):
                     else:
                         print(color.CYAN + "I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
 
-                        os.remove(txtDir + "converted.txt")
+                        os.remove(txtDir + pdfFileName + ".txt")
                         os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
             bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
@@ -589,28 +588,12 @@ def convert_in_txt(fname, pages = None):
     textFile.close()
 
 def advanced_read_txt(textFile):
-    # DICTIONARIES CONFIGURATION
-    # Primi piatti
-    dic1 = ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn"]
-    # Pizza/Panini
-    dic2 = ["panin", "pizz", "crostin", "piadin"]
-    # Altro
-    dic3 = ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"]
-    # Extra
-    dic4 = ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"]
-    # Bevande
-    dic5 = ["lattin", "brick", "acqua"]
+    # Courses names
+    courses_texts = ["*Primi:*\n", "*Secondi:*\n", "*Pizza/Panini:*\n", "*Altro:*\n", "*Extra:*\n", "*Bevande:*\n"]
 
-    # Assembling the full diciontary
-    dictionaries = [dic1, dic2, dic3, dic4, dic5]
-
-    # Opens the file .txt
+    # Getting ready to work
     my_file = open(textFile, "r")
-
-    # Reads lines in the .txt
     out = my_file.readlines()
-
-    # Closes .txt
     my_file.close()
 
     # Divides by sections the .txt
@@ -627,105 +610,128 @@ def advanced_read_txt(textFile):
             line = line.replace("\\n", "\n")
             current_sec.append(line.rstrip())
 
+    del current_sec
+
     # Deletes today date
     days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
-
     i = 0
     for sec in secs:
         for line in sec:
             for day in days:
-                if day in line:
+                if day in line.lower():
                     secs.pop(i)
                     break
         i = i + 1
 
     # Searches for foods and prices
-    foods     = []
-    prices    = []
+    secs_foods     = []
+    secs_prices    = []
 
     for sec in secs:
         if sec[0][0].isdigit() and sec[0] != "1 Formaggino":
-            prices.append(sec)
+            secs_prices.append(sec)
         else:
-            foods.append(sec)
+            secs_foods.append(sec)
 
-    # Freeing resources
-    del secs, current_sec
+    del secs
 
     # IMPORTANT: This will try to understand the structure of the sections produced before
-    for price, food in zip(prices, foods):
-        if len(price) != len(food):
-            if len(prices) == 11: # CASO 1
-                print(color.CYAN + "Caso 1 di disordine trovato." + color.END)
-                prices[2], prices[3], prices[4], prices[5], prices[6], prices[7] = prices[5], prices[6], prices[7], prices[2], prices[3], prices[4]
-                break
-            elif len(prices) == 12:
-                print(color.CYAN + "Caso 2 di disordine trovato." + color.END)
-                prices[0], prices[1], prices[2], prices[6], prices[7], prices[8] = prices[6], prices[7], prices[8], prices[0], prices[1], prices[2]
+    found = True
+    if not foods_prices_are_ordered(secs_prices, secs_foods):
+        c_secs_foods  = secs_foods[:]
+        c_secs_prices = secs_prices[:]
+
+        i1, i2 = 0, 0
+        for i, (prices, foods) in enumerate(zip(c_secs_prices, c_secs_foods)):
+            if len(prices) != len(foods):
+                i1 = i
                 break
 
-    # Checks if it has really managed to reorder the list, printing an error message in case of fail
-    found = True
-    i = 0
-    for price, food in zip(prices, foods):
-        if len(price) != len(food):
-            print(color.CYAN + "C'è ancora un errore. A: " + str(i) + color.END)
-            found = False
-            break
-        i = i+1
+        for i, (prices, foods) in enumerate(zip(c_secs_prices, c_secs_foods)):
+            if len(prices) != len(foods) and i != i1 and i != i1+1 and i!= i1+2:
+                i2 = i
+                break
+
+        if i1 != 0 and i2 != 0:
+            c_secs_prices[i1], c_secs_prices[i1+1], c_secs_prices[i1+2], c_secs_prices[i2], c_secs_prices[i2+1], c_secs_prices[i2+2] = c_secs_prices[i2], c_secs_prices[i2+1], c_secs_prices[i2+2], c_secs_prices[i1], c_secs_prices[i1+1], c_secs_prices[i1+2]
+        else:
+            print("Nice Shit Bro x1000000")
+
+        if not foods_prices_are_ordered(c_secs_prices, c_secs_foods):
+            print(color.CYAN + "ESITO 1: False" + color.END)
+
+            c_secs_foods  = secs_foods[:]
+            c_secs_prices = secs_prices[:]
+            """
+            ... Still working on this second case
+            """
+            if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
+                print(color.CYAN + "ESITO 2: False" + color.END)
+                print(color.RED + "ERRORE!!! - Non è stato possibile riordinare correttamente la lista" + color.END)
+
+                return "Errore, contatta uno dei developer."
+            else:
+                print(color.CYAN + "ESITO 2: True" + color.END)
+                secs_foods  = c_secs_foods[:]
+                secs_prices = c_secs_prices[:]
+        else:
+            print(color.CYAN + "ESITO 1: True" + color.END)
+    else:
+        print("La lista è ordinata, strano...")
 
     # Creates a sorted menu without repetitions with prices and foods together
-    if found == True:
-        myList = []
-        for food, price in zip(foods, prices):
-            for x, y in zip(food, price):
-                if "The" in x:
-                    x = x.replace("The", "Tè")
-                myStr = x + " - " + y
-                myList.append(" ".join(myStr.split()))
+    # Tries to create a menu for launch and another for dinner
+    myList = []
+    for food, price in zip(secs_foods, secs_prices):
+        for x, y in zip(food, price):
+            if "The" in x:
+                x = x.replace("The", "Tè")
+            myStr = x + " - " + y
+            myList.append(" ".join(myStr.split()))
 
-        myList = sorted(list(set(myList)))
-    else:
-        print(color.RED + "ERRORE!!! - Non è stato possibile riordinare correttamente la lista." + color.END)
+    myList = sorted(list(set(myList)))
 
     # Freeing resources
-    del foods, prices
+    del secs_foods, secs_prices
 
     # Splits the menu into the current courses
-    courses = [[],[],[],[],[],[]]
-    i = 0
-    for el in myList:
-        for dictionary in dictionaries:
-            for word in dictionary:
-                if word.lower() in el.lower() and el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
-                    courses[i].append(el)
-            i = i+1
-        i = 0
-    for el in myList:
-        if el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
-            courses[5].append(el)
+    courses = append_courses(myList)
 
-    # Correcting mistake
-    courses[1], courses[2], courses[3], courses[4], courses[5] = courses[5], courses[1], courses[2], courses[3], courses[4]
-
-    # Freeing resources
-    del dictionaries
-
+    # Formatting menu
     msg_menu = ""
-
-    courses_texts = ["*Primi:*\n", "*Secondi:*\n", "*Pizza/Panini:*\n", "*Altro:*\n", "*Extra:*\n", "*Bevande:*\n"]
-
-    # Printing
     for course_text, course in zip(courses_texts, courses):
         msg_menu += course_text
         for el in course:
             msg_menu += "• " + el + "\n"
-
         msg_menu += "\n"
-
     msg_menu += "_Il menù potrebbe subire variazioni_"
 
     return msg_menu
+
+def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
+    for i, (price, food) in enumerate(zip(secs_prices, secs_foods)):
+        if len(price) != len(food):
+            if more_info:
+                print(color.CYAN + "C'è ancora un errore. A: " + str(i) + color.END)
+                print("Dettagli:\n" + str(price) + " - " + str(food))
+            return False
+    return True
+
+def append_courses(my_list, dictionary = courses_dictionaries):
+    courses = [[],[],[],[],[],[]]
+
+    for el in my_list:
+        for ci, course_dictionary in enumerate(dictionary):
+            for word in course_dictionary:
+                if word.lower() in el.lower() and el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
+                    if ci >= 1: courses[ci+1].append(el)
+                    else:       courses[ci].append(el)
+
+    for el in my_list:
+        if el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
+            courses[1].append(el)
+
+    return courses
 
 # Function for deletion of files in a folder
 def delete_files_infolder(dir):
@@ -735,7 +741,7 @@ def delete_files_infolder(dir):
             if os.path.isfile(the_file_path):
                 os.unlink(the_file_path)
         except Exception as e:
-            print("Errore nella funzione delete_files_infolder: " + e)
+            print(color.RED + "Errore nella funzione delete_files_infolder: " + e + color.END)
 
 # Get Boolean values stored in boolFile (see settings.py)
 def get_bool():
@@ -785,7 +791,7 @@ if os.path.isfile(pidfile):
 f = open(pidfile, 'w')
 f.write(pid)
 
-# Create the directory if it dosen't exist 
+# Create the directory if it dosen't exist
 if not os.path.exists(pdfDir):
     print(color.DARKCYAN + "\nI'm creating this folder of the PDF fo you. Stupid human.\n" + color.END)
     os.makedirs(pdfDir)
@@ -793,17 +799,17 @@ elif not os.path.exists(txtDir):
     print(color.DARKCYAN + "\nI'm creating this folder of the Text Output fo you. Stupid human.\n" + color.END)
     os.makedirs(txtDir)
 elif not os.path.exists(boolFile):
-    print(color.DARKCYAN + "\nI'm creating this folder of the Boolean Value fo you. Stupid human.\n" + color.END)    
+    print(color.DARKCYAN + "\nI'm creating this folder of the Boolean Value fo you. Stupid human.\n" + color.END)
     os.makedirs(boolFile)
-else:
-    print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
+#else:
+#    print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
 
 # Take the current day
 current_day = today_weekend()
 
 # Setting boolean file
 if current_day == 0:
-    bool_write("False")
+    bool_write("True")
 else:
     bool_write("True")
 
