@@ -13,7 +13,7 @@ start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno off
 help_msg = "UNICAM E' VERAMENTE EUFORICA"
 
 # Directory
-directory_fcopp = 'YOUR_DIRECTORY'
+directory_fcopp = 'YOUR_PATH'
 
 # Closed canteen
 closed_msg = "La mensa del D'Avack nei giorni <b>Venerdì</b>, <b>Sabato</b> e <b>Domenica</b> rimane chiusa sia "\
@@ -51,7 +51,15 @@ settings_msg =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORR
 # Prices message
 prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrispondenza"
 
-# Directory PDF, directory .txt and boolfile
+courses_dictionaries = [
+["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "prim"],
+["panin", "pizz", "crostin", "piadin"],
+["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
+["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],
+["lattin", "brick", "acqua"]
+]
+
+# Directory PDF and directory .txt
 pdfDir   = directory_fcopp + "/PDF/"
 txtDir   = directory_fcopp + "/Text/"
 boolFile = directory_fcopp + "/Boolean/update_menu.txt"
