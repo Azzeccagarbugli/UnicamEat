@@ -51,12 +51,13 @@ settings_msg =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORR
 # Prices message
 prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrispondenza"
 
+# Dictionaries
 courses_dictionaries = [
-["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "prim"],
-["panin", "pizz", "crostin", "piadin"],
-["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
-["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],
-["lattin", "brick", "acqua"]
+    ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "prim"],
+    ["panin", "pizz", "crostin", "piadin", "focacci"],
+    ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
+    ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],
+    ["lattin", "brick", "acqua"]
 ]
 
 # Directory PDF and directory .txt

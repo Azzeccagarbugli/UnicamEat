@@ -2,10 +2,6 @@
 Unicam Eat! - Telegram Bot
 Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
         Porchetta (clarantonio98@gmail.com)
-
-TO DO:
-- Ottimizzazioni varie al codice
-- Pranzo e cena
 """
 #!/usr/bin/python3.6
 
@@ -19,7 +15,6 @@ import requests
 import time
 import datetime
 
-#22
 import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -246,13 +241,22 @@ def handle(msg):
                 # Directory where put the file, and name of the file itself
                 directory = directory_fcopp + "/PDF/" + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
 
-                # Check the existence of the file
+                bot.sendChatAction(chat_id, "typing")
+
+                # Check the existence of the files
                 url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
                 request = requests.get(url_risolution)
 
-                # Writing pdf
-                with open(directory, 'wb') as f:
-                    f.write(request.content)
+                # Try to ping the server
+                response = os.system("ping -c 1 www.ersucam.it > /dev/null")
+
+                if response == 0:
+                    # Writing pdf
+                    with open(directory, 'wb') as f:
+                        f.write(request.content)
+                else:
+                    bot.sendMessage(chat_id, "*Il server dell'ERSU attualmente è down*, la preghiamo di riprovare più tardi", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                    user_state[chat_id] = 0
 
             if user_state[chat_id] != 0:
                 # Choose the right time for eat
@@ -299,8 +303,14 @@ def handle(msg):
                 - se sono diversi sovrascrive e vissero tutti felice e contenti
                     - si tiene da conto che ora sono disponibili i menù aggiornati
                     - 23:55 della domenica sera condizione ritorna falsa
+
+        - Pranzo    -> Posizione [0] nell'Array
+        - Cena      -> Posizione [1] nell'Array
         '''
         if command_input == "Pranzo" or command_input == "Cena":
+
+            bot.sendChatAction(chat_id, "typing")
+
             # Start the conversion
             pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
             convert_in_txt(pdfFileName)
@@ -359,22 +369,35 @@ def handle(msg):
                 right_day = clean_day(user_server_day[chat_id])
 
                 msg_menu = "*{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
-                msg_menu += advanced_read_txt(txtName)
 
-                random_donation = random.randint(0, 5)
+                # Check choose between launch and dinner
+                out_advanced_read = advanced_read_txt(txtName, command_input)
 
-                if random_donation:
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
+                # Try to see if there is a possible error
+                if out_advanced_read == "Errore!":
+                    msg_menu += "_Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. Segnala gentilmente l'errore agli sviluppatori che provederrano a risolvere quest'ultimo_"
+                    keyboard  = InlineKeyboardMarkup(inline_keyboard=[
+                                 [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
+                                 [dict(text = "Segnala l'errore ai developer", url = 'https://t.me/azzeccagarbugli')]])
+
+                    # Prints the menu in a kawaii way
+                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
                 else:
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
+                    msg_menu += out_advanced_read
+                    random_donation = random.randint(0, 5)
 
-                # Prints the menu in a kawaii way
-                bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+                    if random_donation:
+                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
+                    else:
+                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
+                                    [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
+
+                    # Prints the menu in a kawaii way
+                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
             else:
-                bot.sendMessage(chat_id, "I menu non sono stati ancora aggiornati sul sito dell'ERSU, la preghiamo di riprovare più tardi.", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                bot.sendMessage(chat_id, "I menu non sono stati ancora aggiornati sul sito dell'ERSU, la preghiamo di riprovare più tardi", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
             # Set user state
             user_state[chat_id] = 0
@@ -587,7 +610,7 @@ def convert_in_txt(fname, pages = None):
     textFile.write(text)
     textFile.close()
 
-def advanced_read_txt(textFile):
+def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
     # Courses names
     courses_texts = ["*Primi:*\n", "*Secondi:*\n", "*Pizza/Panini:*\n", "*Altro:*\n", "*Extra:*\n", "*Bevande:*\n"]
 
@@ -635,6 +658,8 @@ def advanced_read_txt(textFile):
 
     del secs
 
+    #print(str(secs_foods) + "\n\n" + str(secs_prices))
+
     # IMPORTANT: This will try to understand the structure of the sections produced before
     found = True
     if not foods_prices_are_ordered(secs_prices, secs_foods):
@@ -653,29 +678,69 @@ def advanced_read_txt(textFile):
                 break
 
         if i1 != 0 and i2 != 0:
-            c_secs_prices[i1], c_secs_prices[i1+1], c_secs_prices[i1+2], c_secs_prices[i2], c_secs_prices[i2+1], c_secs_prices[i2+2] = c_secs_prices[i2], c_secs_prices[i2+1], c_secs_prices[i2+2], c_secs_prices[i1], c_secs_prices[i1+1], c_secs_prices[i1+2]
+            c_secs_prices[i1:i1+3], c_secs_prices[i2:i2+3] = c_secs_prices[i2:i2+3], c_secs_prices[i1:i1+3]
         else:
             print("Nice Shit Bro x1000000")
+
+        #print(str(c_secs_foods) + "\n\n" + str(c_secs_prices))
 
         if not foods_prices_are_ordered(c_secs_prices, c_secs_foods):
             print(color.CYAN + "ESITO 1: False" + color.END)
 
             c_secs_foods  = secs_foods[:]
             c_secs_prices = secs_prices[:]
-            """
-            ... Still working on this second case
-            """
+
+            #print(str(c_secs_foods) + "\n\n" + str(c_secs_prices))
+
             if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
                 print(color.CYAN + "ESITO 2: False" + color.END)
                 print(color.RED + "ERRORE!!! - Non è stato possibile riordinare correttamente la lista" + color.END)
 
-                return "Errore, contatta uno dei developer."
+                return "Errore!"
             else:
                 print(color.CYAN + "ESITO 2: True" + color.END)
                 secs_foods  = c_secs_foods[:]
                 secs_prices = c_secs_prices[:]
         else:
             print(color.CYAN + "ESITO 1: True" + color.END)
+            secs_foods  = c_secs_foods[:]
+            secs_prices = c_secs_prices[:]
+
+            moment_foods, moment_prices = [], []
+            if launch_or_dinner == "Pranzo":
+                if is_course(secs_foods[2]) == "Primi":
+                    moment_foods.extend(secs_foods[0:2])
+                    moment_prices.extend(secs_prices[0:2])
+                else:
+                    moment_foods.extend(secs_foods[0:3])
+                    moment_prices.extend(secs_prices[0:3])
+
+                moment_foods.extend(secs_foods[-6:-3])
+                moment_prices.extend(secs_prices[-6:-3])
+            else:
+                if is_course(secs_foods[2]) == "Primi":
+                    if is_course(secs_foods[4]) == "Altro":
+                        moment_foods.extend(secs_foods[2:4])
+                        moment_prices.extend(secs_prices[2:4])
+                    else:
+                        moment_foods.extend(secs_foods[2:5])
+                        moment_prices.extend(secs_prices[2:5])
+                else:
+                    if is_course(secs_foods[4]) == "Altro":
+                        moment_foods.extend(secs_foods[3:5])
+                        moment_prices.extend(secs_prices[3:5])
+                    else:
+                        moment_foods.extend(secs_foods[3:6])
+                        moment_prices.extend(secs_prices[3:6])
+
+                moment_foods.extend(secs_foods[-4:-1])
+                moment_prices.extend(secs_prices[-4:-1])
+
+            secs_foods = moment_foods[:]
+            secs_prices = moment_prices[:]
+
+            # Non scrivo niente
+            #print(str(secs_foods) + "\n\n" + str(secs_prices))
     else:
         print("La lista è ordinata, strano...")
 
@@ -690,6 +755,8 @@ def advanced_read_txt(textFile):
             myList.append(" ".join(myStr.split()))
 
     myList = sorted(list(set(myList)))
+
+    print(str(myList))
 
     # Freeing resources
     del secs_foods, secs_prices
@@ -732,6 +799,29 @@ def append_courses(my_list, dictionary = courses_dictionaries):
             courses[1].append(el)
 
     return courses
+
+
+def is_course(list, dictionary = courses_dictionaries):
+    """
+    LISTA:  ["past", "zupp"]
+    OUT:    "Primi"
+    """
+    for el in list:
+        for ci, course_dictionary in enumerate(dictionary):
+            for word in course_dictionary:
+                if word.lower() in el.lower():
+                    if ci == 0:
+                        return "Primi"
+                    elif ci == 1:
+                        return "Pizza/Panini"
+                    elif ci == 2:
+                        return "Altro"
+                    elif ci == 3:
+                        return "Extra"
+                    elif ci == 4:
+                        return "Bevande"
+                    else:
+                        return "Secondi"
 
 # Function for deletion of files in a folder
 def delete_files_infolder(dir):
@@ -801,8 +891,8 @@ elif not os.path.exists(txtDir):
 elif not os.path.exists(boolFile):
     print(color.DARKCYAN + "\nI'm creating this folder of the Boolean Value fo you. Stupid human.\n" + color.END)
     os.makedirs(boolFile)
-#else:
-#    print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
+else:
+    print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
 
 # Take the current day
 current_day = today_weekend()
