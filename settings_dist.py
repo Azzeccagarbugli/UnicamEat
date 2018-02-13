@@ -64,6 +64,7 @@ courses_dictionaries = [
 pdfDir   = directory_fcopp + "/PDF/"
 txtDir   = directory_fcopp + "/Text/"
 boolFile = directory_fcopp + "/Boolean/update_menu.txt"
+logFile  = directory_fcopp + "/Log/errors.txt"
 
 # Admin allowed
 admins_array = {22, 222}
