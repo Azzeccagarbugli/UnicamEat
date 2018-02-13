@@ -16,7 +16,7 @@ import time
 import datetime
 
 import telepot
-from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup
 
 from io import StringIO
 #22
@@ -78,7 +78,6 @@ def handle(msg):
             bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido.")
     except UnboundLocalError:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido.")
-        pass
 
     # Try to save username and name
     try:
@@ -220,7 +219,6 @@ def handle(msg):
 
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
-            pass
 
     # Get launch or dinner
     elif user_state[chat_id] == 2:
@@ -418,9 +416,6 @@ def get_day(day):
 
     # Get the day
     day_int = today_weekend()
-
-    # This fucking day
-    current_day = ""
 
     # Check today
     if day == "Oggi":
@@ -634,7 +629,6 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
     del secs
 
     # IMPORTANT: This will try to understand the structure of the sections produced before
-    found = True
     if not foods_prices_are_ordered(secs_prices, secs_foods):
         c_secs_foods  = secs_foods[:]
         c_secs_prices = secs_prices[:]
@@ -825,12 +819,12 @@ def append_courses(my_list, dictionary = courses_dictionaries):
     return courses
 
 
-def is_course(list, dictionary = courses_dictionaries):
+def is_course(my_list, dictionary = courses_dictionaries):
     """
     LISTA:  ["past", "zupp"]
     OUT:    "Primi"
     """
-    for el in list:
+    for el in my_list:
         for ci, course_dictionary in enumerate(dictionary):
             for word in course_dictionary:
                 if word.lower() in el.lower():
@@ -848,9 +842,9 @@ def is_course(list, dictionary = courses_dictionaries):
                         return "Secondi"
 
 # Function for deletion of files in a folder
-def delete_files_infolder(dir):
-    for the_file in os.listdir(dir):
-        the_file_path = os.path.join(dir, the_file)
+def delete_files_infolder(folder_dir):
+    for the_file in os.listdir(folder_dir):
+        the_file_path = os.path.join(folder_dir, the_file)
         try:
             if os.path.isfile(the_file_path):
                 os.unlink(the_file_path)
@@ -859,15 +853,15 @@ def delete_files_infolder(dir):
 
 # Get Boolean values stored in boolFile (see settings.py)
 def get_bool():
-    with open(boolFile, 'r') as file:
-        if file.readline() == "True":
+    with open(boolFile, 'r') as f:
+        if f.readline() == "True":
             return True
         else:
             return False
 
 def bool_write(bool_value):
-    with open(boolFile, 'w') as file:
-        file.writelines(bool_value)
+    with open(boolFile, 'w') as f:
+        f.writelines(bool_value)
 
 def today_weekend():
     """
@@ -903,9 +897,9 @@ def report_error(textFile, query_id, from_id):
 
     file_name_error = "log_" + str(logname.replace(" ", "_"))
 
-    file = open(logDir + file_name_error + ".txt", "w")
-    file.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
-    file.close()
+    f = open(logDir + file_name_error + ".txt", "w")
+    f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
+    f.close()
 
 def on_callback_query(msg):
     """
