@@ -204,20 +204,15 @@ def handle(msg):
 
                 user_state[chat_id] = 0
             else:
-                # Set Markup Keyboard layout and send the message
                 markup = set_markup_keyboard_davak(chat_id)
                 bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
-                # Set user state
                 user_state[chat_id] = 2
         elif command_input == "Colle Paradiso":
-            # Set Markup Keyboard layout and send the message
             markup = set_markup_keyboard_colleparadiso(chat_id)
             bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
-            # Set user state
             user_state[chat_id] = 2
-
         else:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
 
