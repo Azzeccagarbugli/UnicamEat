@@ -1,7 +1,7 @@
 """
 Unicam Eat! - Telegram Bot
 Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
-        Porchetta (clarantonio98@gmail.com)
+        Porchetta        (clarantonio98@gmail.com)
 """
 #!/usr/bin/python3.6
 
@@ -62,11 +62,11 @@ def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
 
     # Admin role setting
-    try: admin_role[chat_id]
+    try:    admin_role[chat_id]
     except: admin_role[chat_id] = True
 
     # User role setting
-    try: user_state[chat_id]
+    try:    user_state[chat_id]
     except: user_state[chat_id] = 0
 
     # Check what type of content was sent
@@ -737,6 +737,8 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
     else:
         print("La lista è ordinata, strano...")
 
+    print(secs_foods + " - " + secs_prices)
+
     # Creates a sorted menu without repetitions with prices and foods together
     # Tries to create a menu for launch and another for dinner
     myList = []
@@ -857,13 +859,13 @@ def on_callback_query(msg):
     if data == 'notification_prices':
         bot.answerCallbackQuery(query_id, text = msg_text_prices)
     elif data == 'notification_developer':
-        file = open(logFile, "w") 
+        file = open(logDir + "errors.txt", "w")
         file.write("Hello World")
-        file.close() 
+        file.close()
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
 
 # Main
-print(color.BOLD + "Starting Unicam Eat!...", color.END)
+print(color.BOLD + "Starting Unicam Eat!...\n", color.END)
 
 # PID file
 pid = str(os.getpid())
@@ -880,19 +882,17 @@ f.write(pid)
 
 # Create the directory if it dosen't exist
 if not os.path.exists(pdfDir):
-    print(color.DARKCYAN + "\nI'm creating this folder of the PDF fo you. Stupid human.\n" + color.END)
+    print(color.DARKCYAN + "I'm creating this folder of the PDF fo you. Stupid human." + color.END)
     os.makedirs(pdfDir)
-elif not os.path.exists(txtDir):
-    print(color.DARKCYAN + "\nI'm creating this folder of the Text Output fo you. Stupid human.\n" + color.END)
+if not os.path.exists(txtDir):
+    print(color.DARKCYAN + "I'm creating this folder of the Text Output fo you. Stupid human." + color.END)
     os.makedirs(txtDir)
-elif not os.path.exists(boolFile):
-    print(color.DARKCYAN + "\nI'm creating this folder of the Boolean Value fo you. Stupid human.\n" + color.END)
-    os.makedirs(boolFile)
-elif not os.path.exists(logFile):
-    print(color.DARKCYAN + "\nI'm creating this folder of the Log Info fo you. Stupid human.\n" + color.END)
-    os.makedirs(logFile)
-else:
-    print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
+if not os.path.exists(boolDir):
+    print(color.DARKCYAN + "I'm creating this folder of the Boolean Value fo you. Stupid human." + color.END)
+    os.makedirs(boolDir)
+if not os.path.exists(logDir):
+    print(color.DARKCYAN + "I'm creating this folder of the Log Info fo you. Stupid human." + color.END)
+    os.makedirs(logDir)
 
 # Take the current day
 current_day = today_weekend()
@@ -917,7 +917,7 @@ try:
     bot.message_loop({'chat': handle,
                       'callback_query': on_callback_query})
 
-    print(color.ITALIC + 'Da grandi poteri derivano grandi responsabilità...\n' + color.END)
+    print(color.ITALIC + '\nDa grandi poteri derivano grandi responsabilità...\n' + color.END)
 
     while(1):
         time.sleep(10)
