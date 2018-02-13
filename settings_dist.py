@@ -60,7 +60,7 @@ prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrisponde
 
 # Dictionaries
 courses_dictionaries = [
-    ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "prim"],
+    ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim"],
     ["panin", "pizz", "crostin", "piadin", "focacci"],
     ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
     ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],

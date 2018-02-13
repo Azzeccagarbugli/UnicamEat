@@ -341,7 +341,7 @@ def handle(msg):
                 right_canteen = clean_canteen(user_server_canteen[chat_id])
                 right_day = clean_day(user_server_day[chat_id])
 
-                msg_menu = "*{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
+                msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
 
                 # Check choose between launch and dinner
                 out_advanced_read = advanced_read_txt(txtName, command_input)
@@ -583,9 +583,6 @@ def convert_in_txt(fname, pages = None):
     textFile.close()
 
 def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
-    # Courses names
-    courses_texts = ["*Primi:*\n", "*Secondi:*\n", "*Pizza/Panini:*\n", "*Altro:*\n", "*Extra:*\n", "*Bevande:*\n"]
-
     # Getting ready to work
     my_file = open(textFile, "r")
     out = my_file.readlines()
@@ -688,78 +685,11 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
             else:
                 print(color.CYAN + "ESITO 2: True" + color.END)
 
-                secs_foods  = c_secs_foods[:]
-                secs_prices = c_secs_prices[:]
-
-                moment_foods, moment_prices = [], []
-                if launch_or_dinner == "Pranzo":
-                    if is_course(secs_foods[2]) == "Primi":
-                        moment_foods.extend(secs_foods[0:2])
-                        moment_prices.extend(secs_prices[0:2])
-                    else:
-                        moment_foods.extend(secs_foods[0:3])
-                        moment_prices.extend(secs_prices[0:3])
-
-                    moment_foods.extend(secs_foods[-6:-3])
-                    moment_prices.extend(secs_prices[-6:-3])
-                else:
-                    if is_course(secs_foods[2]) == "Primi":
-                        if is_course(secs_foods[4]) == "Altro":
-                            moment_foods.extend(secs_foods[2:4])
-                            moment_prices.extend(secs_prices[2:4])
-                        else:
-                            moment_foods.extend(secs_foods[2:5])
-                            moment_prices.extend(secs_prices[2:5])
-                    else:
-                        if is_course(secs_foods[4]) == "Altro":
-                            moment_foods.extend(secs_foods[3:5])
-                            moment_prices.extend(secs_prices[3:5])
-                        else:
-                            moment_foods.extend(secs_foods[3:6])
-                            moment_prices.extend(secs_prices[3:6])
-
-                    moment_foods.extend(secs_foods[-4:-1])
-                    moment_prices.extend(secs_prices[-4:-1])
-
-                secs_foods  = moment_foods[:]
-                secs_prices = moment_prices[:]
+                secs_foods, secs_prices = from_menu_lord(launch_or_dinner, c_secs_foods, c_secs_prices)
         else:
             print(color.CYAN + "ESITO 1: True" + color.END)
-            secs_foods  = c_secs_foods[:]
-            secs_prices = c_secs_prices[:]
 
-            moment_foods, moment_prices = [], []
-            if launch_or_dinner == "Pranzo":
-                if is_course(secs_foods[2]) == "Primi":
-                    moment_foods.extend(secs_foods[0:2])
-                    moment_prices.extend(secs_prices[0:2])
-                else:
-                    moment_foods.extend(secs_foods[0:3])
-                    moment_prices.extend(secs_prices[0:3])
-
-                moment_foods.extend(secs_foods[-6:-3])
-                moment_prices.extend(secs_prices[-6:-3])
-            else:
-                if is_course(secs_foods[2]) == "Primi":
-                    if is_course(secs_foods[4]) == "Altro":
-                        moment_foods.extend(secs_foods[2:4])
-                        moment_prices.extend(secs_prices[2:4])
-                    else:
-                        moment_foods.extend(secs_foods[2:5])
-                        moment_prices.extend(secs_prices[2:5])
-                else:
-                    if is_course(secs_foods[4]) == "Altro":
-                        moment_foods.extend(secs_foods[3:5])
-                        moment_prices.extend(secs_prices[3:5])
-                    else:
-                        moment_foods.extend(secs_foods[3:6])
-                        moment_prices.extend(secs_prices[3:6])
-
-                moment_foods.extend(secs_foods[-4:-1])
-                moment_prices.extend(secs_prices[-4:-1])
-
-            secs_foods  = moment_foods[:]
-            secs_prices = moment_prices[:]
+            secs_foods, secs_prices = from_menu_lord(launch_or_dinner, c_secs_foods, c_secs_prices)
 
     else:
         print("La lista è ordinata, strano...")
@@ -801,6 +731,40 @@ def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
                 print(color.CYAN + "Dettagli:\n" + str(price) + " - " + str(food) + color.END)
             return False
     return True
+
+# from menu get launch or dinner
+def from_menu_lord(launch_or_dinner, secs_foods, secs_prices):
+    moment_foods, moment_prices = [], []
+    if launch_or_dinner == "Pranzo":
+        if is_course(secs_foods[2]) == "Primi":
+            moment_foods.extend(secs_foods[0:2])
+            moment_prices.extend(secs_prices[0:2])
+        else:
+            moment_foods.extend(secs_foods[0:3])
+            moment_prices.extend(secs_prices[0:3])
+
+        moment_foods.extend(secs_foods[-6:-3])
+        moment_prices.extend(secs_prices[-6:-3])
+    else:
+        if is_course(secs_foods[2]) == "Primi":
+            if is_course(secs_foods[4]) == "Altro":
+                moment_foods.extend(secs_foods[2:4])
+                moment_prices.extend(secs_prices[2:4])
+            else:
+                moment_foods.extend(secs_foods[2:5])
+                moment_prices.extend(secs_prices[2:5])
+        else:
+            if is_course(secs_foods[4]) == "Altro":
+                moment_foods.extend(secs_foods[3:5])
+                moment_prices.extend(secs_prices[3:5])
+            else:
+                moment_foods.extend(secs_foods[3:6])
+                moment_prices.extend(secs_prices[3:6])
+
+        moment_foods.extend(secs_foods[-4:-1])
+        moment_prices.extend(secs_prices[-4:-1])
+
+    return moment_foods[:], moment_prices[:]
 
 def append_courses(my_list, dictionary = courses_dictionaries):
     courses = [[],[],[],[],[],[]]
