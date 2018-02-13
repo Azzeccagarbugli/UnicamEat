@@ -161,6 +161,10 @@ def handle(msg):
                     [dict(text = 'Costo di un pasto completo', callback_data = 'notification_prices')]])
         bot.sendPhoto(chat_id, photo = "https://i.imgur.com/BlDDpAE.png", caption = prices_msg, reply_markup = keyboard)
 
+    # Send the warnings written by the cateens
+    elif command_input == "/avvertenze" or command_input == "/avvertenze" + bot_name:
+        bot.sendMessage(chat_id, warning_msg, parse_mode = "HTML")
+
     # Settings status
     elif command_input == "/impostazioni" or command_input == "/impostazioni" + bot_name:
         language_bot = "Inglese"
