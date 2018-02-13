@@ -696,7 +696,7 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
                     c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
                 else:
                     c_secs_prices[3:6], c_secs_prices[6:9] = c_secs_prices[6:9], c_secs_prices[3:6]
-                    c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10], secs_foods[11]
+                    c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
 
             # Checks if we don't have pizza/panini at dinner
             elif '1,00€' in c_secs_prices[9] or '0,80€' in c_secs_prices[9]:
@@ -910,10 +910,10 @@ def modification_date(textFile):
 
     # Take today date
     days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
-    
+
     # String for the date of the error
     date_of_the_error = ""
-    
+
     for line in out:
         for day in days:
             if day in line.lower():
@@ -950,12 +950,12 @@ def report_error(canteen):
     file.close()
 
     add_date_to_file = str(modification_date(logDir + file_name_error + ".txt"))
-    
+
     final_file_name_error = file_name_error + "_" + add_date_to_file
 
     os.rename(logDir + file_name_error + ".txt", logDir + final_file_name_error + ".txt")
 
-    return 
+    return
 
 def on_callback_query(msg):
     """
