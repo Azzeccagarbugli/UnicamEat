@@ -11,13 +11,14 @@ start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno off
 
 # Help message
 help_msg = "Il servizio offerto da *Unicam Eat!* permette di accedere a diversi contenuti, raggiungibili attraverso determinati comandi tra cui:\n\n"\
-           "/info: fornisce ulteriori informazioni sul bot e sui suoi creatori\n\n"\
-           "/menu: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
+           "*/info*: fornisce ulteriori informazioni sul bot e sui suoi creatori\n\n"\
+           "*/menu*: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
            "succesivamente il *giorno* e infine il parametro *pranzo* o *cena* in base alle proprie esigenze\n\n"\
-           "/orari: visualizza gli orari delle mense disponibili nel bot\n\n"\
-           "/prezzi: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
-           "/allergeni: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
-           "/impostazioni: comando che permette di modificare alcuni settaggi del bot secondo le proprie necessità"\
+           "*/orari*: visualizza gli orari delle mense disponibili nel bot\n\n"\
+           "*/prezzi*: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
+           "*/avvertenze*: inoltra all'utente delle avvertenze predisposte dalla mensa operante\n\n"\
+           "*/allergeni*: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
+           "*/impostazioni*: comando che permette di modificare alcuni settaggi del bot secondo le proprie necessità"\
 
 # Directory
 directory_fcopp = 'YOUR_PATH'
@@ -47,6 +48,20 @@ info_msg =  "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unica
 
 # Food warning message
 allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
+
+# General warning
+warning_msg = "<b>Avvertenze Generali</b>\n\nSi avvisano gli utenti che, nel personalizzare il proprio pasto, è consentito ritirare <b>al massimo 2 porzioni di ciascuna pietanza o prodotto</b>, "\
+              "nel modo indicato: \n"\
+              "• <b>Max n. 2</b> - Primi piatti\n"\
+              "• <b>Max n. 2</b> - Secondi piatti\n"\
+              "• <b>Max n. 2</b> - Contorni\n"\
+              "• <b>Max n. 2</b> - Panini\n"\
+              "• <b>Max n. 2</b> - Prodotti confezionati\n"\
+              "• <b>Max n. 2</b> - Prodotti a scelta fra Frutta, Yogurt e Dolce\n\n"\
+              "<i>È severamente vietato</i>, <b>agli utenti in attesa del ritiro del pasto, toccare piatti e pietanze disponibili sul bancone self-service, senza ritirarli."\
+              "Qualora venissero ritirati non sarà più possibile riconsegnarli.</b>\n\n"\
+              "<i>È possibile </i><b>riconsegnare il pasto durante il percorso self-service, solamente prodotti confezionati.</b>\n\n"\
+              "<i>È altresì assolutamente vietato</i> <b>prelevare più di tre tovaglioli ed un bicchiere, a pasto.</b>"
 
 # Settings message
 settings_msg  =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORRETTO*"\
