@@ -638,14 +638,12 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
 
     # Deletes today date
     days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
-    i = 0
-    for sec in secs:
+    for i, sec in enumerate(secs):
         for line in sec:
             for day in days:
                 if day in line.lower():
                     secs.pop(i)
                     break
-        i = i + 1
 
     # Searches for foods and prices
     secs_foods     = []
@@ -687,6 +685,31 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
             c_secs_foods  = secs_foods[:]
             c_secs_prices = secs_prices[:]
 
+            # Checks if we have pizza/panini at launch
+            if '1,00€' in c_secs_prices[5] or '0,80€' in c_secs_prices[5]:
+                # Checks if we don't have pizza/panini at dinner
+                if '1,00€' in c_secs_prices[10] or '0,80€' in c_secs_prices[10]:
+                    c_secs_prices[3:5], c_secs_prices[6:8] = c_secs_prices[6:8], c_secs_prices[3:5]
+                    c_secs_prices[5],   c_secs_prices[6]   = c_secs_prices[6],   c_secs_prices[5]
+                    c_secs_prices[6],   c_secs_prices[7]   = c_secs_prices[7],   c_secs_prices[6]
+
+                    c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
+                else:
+                    c_secs_prices[3:6], c_secs_prices[6:9] = c_secs_prices[6:9], c_secs_prices[3:6]
+                    c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10], secs_foods[11]
+
+            # Checks if we don't have pizza/panini at dinner
+            elif '1,00€' in c_secs_prices[9] or '0,80€' in c_secs_prices[9]:
+                print("No pizza no party")
+                c_secs_prices[2:4], c_secs_prices[5:7] = c_secs_prices[5:7], c_secs_prices[2:4]
+                c_secs_prices[4],   c_secs_prices[5]   = c_secs_prices[5],   c_secs_prices[4]
+                c_secs_prices[5],   c_secs_prices[6]   = c_secs_prices[6],   c_secs_prices[5]
+
+                c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[1], secs_foods[3], secs_foods[4], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9]
+            else:
+                c_secs_prices[2:5], c_secs_prices[5:8] = c_secs_prices[5:8], c_secs_prices[2:5]
+                c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[1], secs_foods[3], secs_foods[4], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
+
             if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
                 print(color.CYAN + "ESITO 2: False" + color.END)
                 print(color.RED + "ERRORE!!! - Non è stato possibile riordinare correttamente la lista" + color.END)
@@ -694,8 +717,42 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
                 return "Errore!"
             else:
                 print(color.CYAN + "ESITO 2: True" + color.END)
+
                 secs_foods  = c_secs_foods[:]
                 secs_prices = c_secs_prices[:]
+
+                moment_foods, moment_prices = [], []
+                if launch_or_dinner == "Pranzo":
+                    if is_course(secs_foods[2]) == "Primi":
+                        moment_foods.extend(secs_foods[0:2])
+                        moment_prices.extend(secs_prices[0:2])
+                    else:
+                        moment_foods.extend(secs_foods[0:3])
+                        moment_prices.extend(secs_prices[0:3])
+
+                    moment_foods.extend(secs_foods[-6:-3])
+                    moment_prices.extend(secs_prices[-6:-3])
+                else:
+                    if is_course(secs_foods[2]) == "Primi":
+                        if is_course(secs_foods[4]) == "Altro":
+                            moment_foods.extend(secs_foods[2:4])
+                            moment_prices.extend(secs_prices[2:4])
+                        else:
+                            moment_foods.extend(secs_foods[2:5])
+                            moment_prices.extend(secs_prices[2:5])
+                    else:
+                        if is_course(secs_foods[4]) == "Altro":
+                            moment_foods.extend(secs_foods[3:5])
+                            moment_prices.extend(secs_prices[3:5])
+                        else:
+                            moment_foods.extend(secs_foods[3:6])
+                            moment_prices.extend(secs_prices[3:6])
+
+                    moment_foods.extend(secs_foods[-4:-1])
+                    moment_prices.extend(secs_prices[-4:-1])
+
+                secs_foods  = moment_foods[:]
+                secs_prices = moment_prices[:]
         else:
             print(color.CYAN + "ESITO 1: True" + color.END)
             secs_foods  = c_secs_foods[:]
@@ -731,13 +788,11 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
                 moment_foods.extend(secs_foods[-4:-1])
                 moment_prices.extend(secs_prices[-4:-1])
 
-            secs_foods = moment_foods[:]
+            secs_foods  = moment_foods[:]
             secs_prices = moment_prices[:]
 
     else:
         print("La lista è ordinata, strano...")
-
-    print(secs_foods + " - " + secs_prices)
 
     # Creates a sorted menu without repetitions with prices and foods together
     # Tries to create a menu for launch and another for dinner
