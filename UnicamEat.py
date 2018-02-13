@@ -309,7 +309,7 @@ def handle(msg):
         '''
         if command_input == "Pranzo" or command_input == "Cena":
 
-            bot.sendChatAction(chat_id, "typing")
+            bot.sendChatAction(chat_id, "upload_document")
 
             # Start the conversion
             pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
