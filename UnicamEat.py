@@ -568,7 +568,7 @@ def set_markup_keyboard_launch_dinnner(chat_id, canteen, day):
     # Check the right canteen
     # Check which day is today and so set the right keyboard
     if canteen == "ColleParadiso":
-        if current_day != "sabato" and current_day != "domenica" and admin_role[chat_id]:
+        if (current_day != "sabato" and current_day != "domenica") or admin_role[chat_id]:
             markup = ReplyKeyboardMarkup(keyboard=[
                             ["Pranzo"],
                             ["Cena"]])
