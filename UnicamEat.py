@@ -157,7 +157,7 @@ def handle(msg):
     # Send the list of the prices
     elif command_input == "/prezzi" or command_input == "/prezzi" + bot_name:
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [dict(text = 'Costo di un pasto completo', callback_data = 'notification')]])
+                    [dict(text = 'Costo di un pasto completo', callback_data = 'notification_prices')]])
         bot.sendPhoto(chat_id, photo = "https://i.imgur.com/BlDDpAE.png", caption = prices_msg, reply_markup = keyboard)
 
     # Settings status
@@ -375,13 +375,14 @@ def handle(msg):
 
                 # Try to see if there is a possible error
                 if out_advanced_read == "Errore!":
-                    msg_menu += "_Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. Segnala gentilmente l'errore agli sviluppatori che provederrano a risolvere quest'ultimo_"
+                    msg_menu += "_Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. Segnala gentilmente l'errore agli sviluppatori "\
+                                "che provederrano a risolvere quest'ultimo_"
                     keyboard  = InlineKeyboardMarkup(inline_keyboard=[
                                  [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                 [dict(text = "Segnala l'errore ai developer", url = 'https://t.me/azzeccagarbugli')]])
+                                 [dict(text = "Segnala l'errore ai developer", callback_data = 'notification_developer')]])
 
                     # Prints the menu in a kawaii way
-                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+                    msg_id = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
                 else:
                     msg_menu += out_advanced_read
                     random_donation = random.randint(0, 5)
@@ -658,8 +659,6 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
 
     del secs
 
-    #print(str(secs_foods) + "\n\n" + str(secs_prices))
-
     # IMPORTANT: This will try to understand the structure of the sections produced before
     found = True
     if not foods_prices_are_ordered(secs_prices, secs_foods):
@@ -682,15 +681,11 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
         else:
             print("Nice Shit Bro x1000000")
 
-        #print(str(c_secs_foods) + "\n\n" + str(c_secs_prices))
-
         if not foods_prices_are_ordered(c_secs_prices, c_secs_foods):
             print(color.CYAN + "ESITO 1: False" + color.END)
 
             c_secs_foods  = secs_foods[:]
             c_secs_prices = secs_prices[:]
-
-            #print(str(c_secs_foods) + "\n\n" + str(c_secs_prices))
 
             if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
                 print(color.CYAN + "ESITO 2: False" + color.END)
@@ -739,8 +734,6 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
             secs_foods = moment_foods[:]
             secs_prices = moment_prices[:]
 
-            # Non scrivo niente
-            #print(str(secs_foods) + "\n\n" + str(secs_prices))
     else:
         print("La lista è ordinata, strano...")
 
@@ -755,8 +748,6 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
             myList.append(" ".join(myStr.split()))
 
     myList = sorted(list(set(myList)))
-
-    print(str(myList))
 
     # Freeing resources
     del secs_foods, secs_prices
@@ -780,7 +771,7 @@ def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
         if len(price) != len(food):
             if more_info:
                 print(color.CYAN + "C'è ancora un errore. A: " + str(i) + color.END)
-                print("Dettagli:\n" + str(price) + " - " + str(food))
+                print(color.CYAN + "Dettagli:\n" + str(price) + " - " + str(food) + color.END)
             return False
     return True
 
@@ -860,10 +851,16 @@ def on_callback_query(msg):
     # Debug
     print(color.PURPLE + 'Callback query:', query_id, from_id, data, color.END)
 
-    msg_text = "Studenti: 5,50€ - Non studenti: 8,00€"
+    msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
+    msg_text_warn = "Una segnalazione è stata inviata ai developer, grazie mille"
 
-    if data == 'notification':
-        bot.answerCallbackQuery(query_id, text = msg_text)
+    if data == 'notification_prices':
+        bot.answerCallbackQuery(query_id, text = msg_text_prices)
+    elif data == 'notification_developer':
+        file = open(logFile, "w") 
+        file.write("Hello World")
+        file.close() 
+        bot.answerCallbackQuery(query_id, text = msg_text_warn)
 
 # Main
 print(color.BOLD + "Starting Unicam Eat!...", color.END)
@@ -891,6 +888,9 @@ elif not os.path.exists(txtDir):
 elif not os.path.exists(boolFile):
     print(color.DARKCYAN + "\nI'm creating this folder of the Boolean Value fo you. Stupid human.\n" + color.END)
     os.makedirs(boolFile)
+elif not os.path.exists(logFile):
+    print(color.DARKCYAN + "\nI'm creating this folder of the Log Info fo you. Stupid human.\n" + color.END)
+    os.makedirs(logFile)
 else:
     print(color.DARKCYAN + "\nYou're lucky man, I will not diss you this time because all these folder are present :)\n" + color.END)
 
