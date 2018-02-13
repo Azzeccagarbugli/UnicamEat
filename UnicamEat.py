@@ -382,7 +382,7 @@ def handle(msg):
                                  [dict(text = "Segnala l'errore ai developer", callback_data = 'notification_developer')]])
 
                     # Prints the menu in a kawaii way
-                    msg_id = bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
                 else:
                     msg_menu += out_advanced_read
                     random_donation = random.randint(0, 5)
@@ -843,6 +843,64 @@ def today_weekend():
     Return the number of the week
     """
     return datetime.datetime.today().weekday()
+
+def modification_date(textFile):
+    """
+    Return the last modification of a file
+    """
+    # Getting ready to work
+    my_file = open(textFile, "r")
+    out = my_file.readlines()
+    my_file.close()
+
+    # Take today date
+    days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
+    
+    # String for the date of the error
+    date_of_the_error = ""
+    
+    for line in out:
+        for day in days:
+            if day in line.lower():
+                date_of_the_error = line
+                break
+
+    return str(date_of_the_error.replace(" ", "_"))
+
+def report_error(canteen):
+    """
+    Create error file based on this type of syntax: - log_CP_13-02-2018.txt
+                                                    - log_DA_22-02-2018.txt
+    """
+    # Available canteen in Camerino
+    canteen_unicam = {
+        "D'Avack" : "DA",
+        "Colle Paradiso" : "CP"
+    }
+
+    file_name_error = "log_"
+
+    # Take the canteen where the error happens
+    canteen_error = canteen_unicam[canteen]
+
+    if canteen_error == "DA":
+        file_name_error += canteen_error
+    elif canteen_error == "CP":
+        file_name_error += canteen_error
+    else:
+        print("Nice shit bro :)")
+
+    file = open(logDir + file_name_error + ".txt", "w")
+    file.write("ERROR!")
+    file.close()
+
+    add_date_to_file = str(modification_date(logDir + file_name_error + ".txt"))
+    
+    final_file_name_error = file_name_error + "_" + add_date_to_file
+
+    os.rename(logDir + file_name_error + ".txt", logDir + final_file_name_error + ".txt")
+
+    return 
 
 def on_callback_query(msg):
     """
