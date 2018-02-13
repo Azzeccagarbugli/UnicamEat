@@ -187,37 +187,34 @@ def handle(msg):
 
     # Get date
     elif user_state[chat_id] == 1:
-        try:
-            # Canteen's stuff
-            user_server_canteen[chat_id] = canteen_unicam[command_input]
+        # Canteen's stuff
+        user_server_canteen[chat_id] = canteen_unicam[command_input]
 
-            msg = "Inserisci la data"
+        msg = "Inserisci la data"
 
-            if command_input == "D'Avack":
-                # Check the day
-                day_int = today_weekend()
+        if command_input == "D'Avack":
+            day_int = today_weekend()
+            # Is Canteen closed?
+            if (day_int == 4 or day_int == 5 or day_int == 6) and not admin_role[chat_id]:
+                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
-                # Is Canteen closed?
-                if (day_int == 4 or day_int == 5 or day_int == 6) and not admin_role[chat_id]:
-                    bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-
-                    user_state[chat_id] = 0
-                else:
-                    # Set Markup Keyboard layout and send the message
-                    markup = set_markup_keyboard_davak(chat_id, command_input)
-                    bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
-
-                    # Set user state
-                    user_state[chat_id] = 2
+                user_state[chat_id] = 0
             else:
                 # Set Markup Keyboard layout and send the message
-                markup = set_markup_keyboard_colleparadiso(chat_id, command_input)
+                markup = set_markup_keyboard_davak(chat_id)
                 bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
                 # Set user state
                 user_state[chat_id] = 2
+        elif command_input == "Colle Paradiso":
+            # Set Markup Keyboard layout and send the message
+            markup = set_markup_keyboard_colleparadiso(chat_id)
+            bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
-        except KeyError:
+            # Set user state
+            user_state[chat_id] = 2
+
+        else:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
 
     # Get launch or dinner
@@ -234,7 +231,7 @@ def handle(msg):
                 user_server_day[chat_id] = days_week[command_input]
 
             # Is D'Avack closed?
-            if (user_server_day[chat_id] == "venerdi" or user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "Avack":
+            if (user_server_day[chat_id] == "venerdi" or user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica" or command_input == "domenica" or command_input == "sabato" or command_input == "venerdì") and user_server_canteen[chat_id] == "Avack":
                 bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
                 user_state[chat_id] = 0
             else:
@@ -422,7 +419,7 @@ def get_day(day):
         return days_week_int[day_int]
 
     # Other day of the week
-    days_week_normal = days_week_int[day_int]
+    days_week_normal = days_week_int[day]
 
     return days_week_normal
 
@@ -449,12 +446,12 @@ def clean_day(day):
 
     return days_week[day]
 
-def set_markup_keyboard_colleparadiso(chat_id, day):
+def set_markup_keyboard_colleparadiso(chat_id):
     """
     Return the custom markup for the keyboard, based on the day of the week
     """
     # Get the day
-    days_week_normal = get_day(day)
+    days_week_normal = get_day(today_weekend())
 
     # Check which day is today and so set the right keyboard
     if admin_role[chat_id]:
@@ -497,12 +494,12 @@ def set_markup_keyboard_colleparadiso(chat_id, day):
 
     return markup
 
-def set_markup_keyboard_davak(chat_id, day):
+def set_markup_keyboard_davak(chat_id):
     """
     Return the custom markup for the keyboard, based on the day of the week
     """
     # Get the day
-    days_week_normal = get_day(day)
+    days_week_normal = get_day(today_weekend())
 
     # Check which day is today and so set the right keyboard
     if admin_role[chat_id]:
@@ -533,13 +530,9 @@ def set_markup_keyboard_launch_dinnner(chat_id, canteen, day):
     """
     Return the custom markup for the launch and the dinner
     """
-    # Day of the week
-    current_day = get_day(day)
-
-    # Check the right canteen
-    # Check which day is today and so set the right keyboard
+    # Launch or supper based on the choose of the user
     if canteen == "ColleParadiso":
-        if (current_day != "sabato" and current_day != "domenica") or admin_role[chat_id]:
+        if (day != "sabato" and day != "domenica") or admin_role[chat_id]:
             markup = ReplyKeyboardMarkup(keyboard=[
                             ["Pranzo"],
                             ["Cena"]])
