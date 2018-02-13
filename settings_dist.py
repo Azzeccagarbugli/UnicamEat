@@ -1,7 +1,7 @@
 # Your token Bot, you can get it on Telegram Bot Father
 TOKEN = 'YOUR_TOKEN'
 
-bot_name = "@UnicamEatBot"
+bot_name  = "@UnicamEatBot"
 
 # Start message
 start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
@@ -10,15 +10,22 @@ start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno off
             "\n\n_Il bot e' stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo._"
 
 # Help message
-help_msg = "UNICAM E' VERAMENTE EUFORICA"
+help_msg = "Il servizio offerto da *Unicam Eat!* permette di accedere a diversi contenuti, raggiungibili attraverso determinati comandi tra cui:\n\n"\
+           "/info: fornisce ulteriori informazioni sul bot e sui suoi creatori\n\n"\
+           "/menu: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
+           "succesivamente il *giorno* e infine il parametro *pranzo* o *cena* in base alle proprie esigenze\n\n"\
+           "/orari: visualizza gli orari delle mense disponibili nel bot\n\n"\
+           "/prezzi: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
+           "/allergeni: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
+           "/impostazioni: comando che permette di modificare alcuni settaggi del bot secondo le proprie necessità"\
 
 # Directory
 directory_fcopp = 'YOUR_PATH'
 
 # Closed canteen
 closed_msg = "La mensa del D'Avack nei giorni <b>Venerdì</b>, <b>Sabato</b> e <b>Domenica</b> rimane chiusa sia "\
-            "per pranzo che per cena. Riprova a inserire il comando /menu e controlla la mensa "\
-            "di <b>Colle Pardiso</b> per ottenere i menù da te desiderati"
+             "per pranzo che per cena. Riprova a inserire il comando /menu e controlla la mensa "\
+             "di <b>Colle Pardiso</b> per ottenere i menù da te desiderati"
 
 # Opening time
 opening_msg = "<b>D'Avack</b>\n"\
@@ -42,11 +49,11 @@ info_msg =  "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unica
 allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
 
 # Settings message
-settings_msg =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORRETTO*"\
-                "\n\nAttraverso le impostazioni potrai cambiare diversi parametri all'interno del bot: "\
-                "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o viceversa"\
-                "\n• *Notifiche*: abilita le notifiche per il menù del giorno"\
-                "\n• *Visualizzazione giorni*: visualizza solamente il menù di oggi o domani, non di tutta la settimana"
+settings_msg  =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON CORRETTO*"\
+                 "\n\nAttraverso le impostazioni potrai cambiare diversi parametri all'interno del bot: "\
+                 "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o viceversa"\
+                 "\n• *Notifiche*: abilita le notifiche per il menù del giorno"\
+                 "\n• *Visualizzazione giorni*: visualizza solamente il menù di oggi o domani, non di tutta la settimana"
 
 # Prices message
 prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrispondenza"
@@ -72,14 +79,14 @@ boolFile = boolDir + "update_menu.txt"
 admins_array = {22, 222}
 
 class color:
-   PURPLE = '\033[95m'
-   CYAN = '\033[96m'
-   DARKCYAN = '\033[36m'
-   BLUE = '\033[94m'
-   GREEN = '\033[92m'
-   YELLOW = '\033[93m'
-   RED = '\033[91m'
-   BOLD = '\033[1m'
-   ITALIC = '\033[3m'
+   PURPLE    = '\033[95m'
+   CYAN      = '\033[96m'
+   DARKCYAN  = '\033[36m'
+   BLUE      = '\033[94m'
+   GREEN     = '\033[92m'
+   YELLOW    = '\033[93m'
+   RED       = '\033[91m'
+   BOLD      = '\033[1m'
+   ITALIC    = '\033[3m'
    UNDERLINE = '\033[4m'
-   END = '\033[0m'
+   END       = '\033[0m'

@@ -19,6 +19,7 @@ import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 
 from io import StringIO
+#22
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
@@ -28,18 +29,18 @@ from settings import *
 
 # Days of the week (call me genius :3)
 days_week = {
-    "Lunedì" : "lunedi",
-    "Martedì" : "martedi",
+    "Lunedì"    : "lunedi",
+    "Martedì"   : "martedi",
     "Mercoledì" : "mercoledi",
-    "Giovedì" : "giovedi",
-    "Venerdì" : "venerdi",
-    "Sabato" : "sabato",
-    "Domenica" : "domenica"
+    "Giovedì"   : "giovedi",
+    "Venerdì"   : "venerdi",
+    "Sabato"    : "sabato",
+    "Domenica"  : "domenica"
 }
 
 # Available canteen in Camerino
 canteen_unicam = {
-    "D'Avack" : "Avack",
+    "D'Avack"        : "Avack",
     "Colle Paradiso" : "ColleParadiso"
 }
 
@@ -63,7 +64,7 @@ def handle(msg):
 
     # Admin role setting
     try:    admin_role[chat_id]
-    except: admin_role[chat_id] = True
+    except: admin_role[chat_id] = False
 
     # User role setting
     try:    user_state[chat_id]
@@ -100,7 +101,7 @@ def handle(msg):
 
     # Send help message
     elif command_input == "/help" or command_input == "/help" + bot_name:
-        bot.sendMessage(chat_id, help_msg)
+        bot.sendMessage(chat_id, help_msg, parse_mode = "Markdown")
 
     # Toggle/Untoggle admin role
     elif command_input == "/admin" or command_input == "/admin" + bot_name:
@@ -118,7 +119,8 @@ def handle(msg):
         if chat_id in admins_array and admin_role[chat_id]:
             delete_files_infolder(pdfDir)
             delete_files_infolder(txtDir)
-            bot.sendMessage(chat_id, "Ho ripulito le folders *pdfDir* e *txtDir*.", parse_mode = "Markdown")
+            delete_files_infolder(logDir)
+            bot.sendMessage(chat_id, "Ho ripulito le folders *pdfDir*, *txtDir* e *logDir*.", parse_mode = "Markdown")
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
@@ -280,33 +282,6 @@ def handle(msg):
     # Print menu
     elif user_state[chat_id] == 3:
         # Check the existence of the life (see line 22)
-        '''
-        - CASO BASE [V]: zero pdf e zero txt
-            - scarica il pdf
-            - converte in txt
-            - ottiene la stringa di testo formattata
-
-        - CASO PRIMO [V]: c'è il pdf e ci sono i txt e non è lunedì mattina
-            - scarica il pdf e lo sovrascrive
-            - si salva in una stringa il nome del pdf scaricato
-            - lo converte in txt rinominandolo temp
-            - confronta temp con stringa.pdf.txt
-                - se sono uguali non fa niente
-                - se sono diversi sovrascrive
-
-        - CASO SECONDO [V]: è lunedì mattina
-            - scarica il pdf e lo sovrascrive
-            - si salva in una stringa il nome del pdf scaricato
-            - lo converte in txt rinominandolo temp
-            - confronta temp con stringa.pdf.txt
-                - se sono uguali dice che non è ancora disponibile il menù aggiornato
-                - se sono diversi sovrascrive e vissero tutti felice e contenti
-                    - si tiene da conto che ora sono disponibili i menù aggiornati
-                    - 23:55 della domenica sera condizione ritorna falsa
-
-        - Pranzo    -> Posizione [0] nell'Array
-        - Cena      -> Posizione [1] nell'Array
-        '''
         if command_input == "Pranzo" or command_input == "Cena":
 
             bot.sendChatAction(chat_id, "upload_document")
@@ -377,9 +352,10 @@ def handle(msg):
                 if out_advanced_read == "Errore!":
                     msg_menu += "_Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. Segnala gentilmente l'errore agli sviluppatori "\
                                 "che provederrano a risolvere quest'ultimo_"
+                    callback_name = 'notification_developer ' + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
                     keyboard  = InlineKeyboardMarkup(inline_keyboard=[
                                  [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                 [dict(text = "Segnala l'errore ai developer", callback_data = 'notification_developer')]])
+                                 [dict(text = "Segnala l'errore ai developer", callback_data = callback_name)]])
 
                     # Prints the menu in a kawaii way
                     bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
@@ -695,8 +671,8 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
 
                     c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
                 else:
-                    c_secs_prices[3:6], c_secs_prices[6:9] = c_secs_prices[6:9], c_secs_prices[3:6]
-                    c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
+                    c_secs_prices[3:6], c_secs_prices[6:8] = c_secs_prices[6:9], c_secs_prices[3:5]
+                    c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10], secs_foods[11]
 
             # Checks if we don't have pizza/panini at dinner
             elif '1,00€' in c_secs_prices[9] or '0,80€' in c_secs_prices[9]:
@@ -838,7 +814,7 @@ def append_courses(my_list, dictionary = courses_dictionaries):
     for el in my_list:
         for ci, course_dictionary in enumerate(dictionary):
             for word in course_dictionary:
-                if word.lower() in el.lower() and el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
+                if word.lower() in el.lower() and "pizzaiola" not in el.lower() and el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
                     if ci >= 1: courses[ci+1].append(el)
                     else:       courses[ci].append(el)
 
@@ -899,9 +875,10 @@ def today_weekend():
     """
     return datetime.datetime.today().weekday()
 
-def modification_date(textFile):
+def report_error(textFile, query_id, from_id):
     """
-    Return the last modification of a file
+    Create error file based on this type of syntax: - log_CP_lunedi_21_febbraio_2018.txt
+                                                    - log_DA_lunedi_14_febbraio_2018.txt
     """
     # Getting ready to work
     my_file = open(textFile, "r")
@@ -911,51 +888,24 @@ def modification_date(textFile):
     # Take today date
     days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
 
-    # String for the date of the error
-    date_of_the_error = ""
+    # String for the canteen and date of the error
+    logname = ""
+    if "Avack" in textFile:
+        logname = "DA"
+    else:
+        logname = "CP"
 
     for line in out:
         for day in days:
             if day in line.lower():
-                date_of_the_error = line
+                logname += "_" + line
                 break
 
-    return str(date_of_the_error.replace(" ", "_"))
-
-def report_error(canteen):
-    """
-    Create error file based on this type of syntax: - log_CP_13-02-2018.txt
-                                                    - log_DA_22-02-2018.txt
-    """
-    # Available canteen in Camerino
-    canteen_unicam = {
-        "D'Avack" : "DA",
-        "Colle Paradiso" : "CP"
-    }
-
-    file_name_error = "log_"
-
-    # Take the canteen where the error happens
-    canteen_error = canteen_unicam[canteen]
-
-    if canteen_error == "DA":
-        file_name_error += canteen_error
-    elif canteen_error == "CP":
-        file_name_error += canteen_error
-    else:
-        print("Nice shit bro :)")
+    file_name_error = "log_" + str(logname.replace(" ", "_"))
 
     file = open(logDir + file_name_error + ".txt", "w")
-    file.write("ERROR!")
+    file.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
     file.close()
-
-    add_date_to_file = str(modification_date(logDir + file_name_error + ".txt"))
-
-    final_file_name_error = file_name_error + "_" + add_date_to_file
-
-    os.rename(logDir + file_name_error + ".txt", logDir + final_file_name_error + ".txt")
-
-    return
 
 def on_callback_query(msg):
     """
@@ -969,12 +919,13 @@ def on_callback_query(msg):
     msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
     msg_text_warn = "Una segnalazione è stata inviata ai developer, grazie mille"
 
+    print(data)
+
     if data == 'notification_prices':
         bot.answerCallbackQuery(query_id, text = msg_text_prices)
-    elif data == 'notification_developer':
-        file = open(logDir + "errors.txt", "w")
-        file.write("Hello World")
-        file.close()
+    elif 'notification_developer' in data:
+        txtname = data.replace("notification_developer ", "")
+        report_error(txtDir + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
 
 # Main
