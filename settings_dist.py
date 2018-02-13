@@ -58,6 +58,9 @@ settings_msg  =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON COR
 # Prices message
 prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrispondenza"
 
+# Courses names
+courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
+
 # Dictionaries
 courses_dictionaries = [
     ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim"],
