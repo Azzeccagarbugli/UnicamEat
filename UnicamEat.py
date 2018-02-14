@@ -75,9 +75,9 @@ def handle(msg):
         if content_type == 'text':
             command_input = msg['text']
         else:
-            bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido.")
+            bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
     except UnboundLocalError:
-        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido.")
+        bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
     # Try to save username and name
     try:
@@ -374,6 +374,10 @@ def handle(msg):
             user_state[chat_id] = 0
         else:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
+
+    elif command_input == "Questa mensa fa schifo" or command_input == "Che schifo" or command_input == "Siete inutili":
+        bot.sendSticker(chat_id, "CAADBAADdwADzISpCY36P9nASV4cAg")
+        bot.sendMessage(chat_id, "_Cikò non è d'accordo con te ma ti vuole bene lo stesso, perchè lui vuole bene a tutti_", parse_mode = "Markdown")
 
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prova inserendo un comando disponibile nella lista")
