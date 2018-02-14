@@ -50,7 +50,7 @@ info_msg =  "Unicam Eat! nasce con l'idea di aiutare tutti gli studenti di Unica
 allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
 
 # General warning
-warning_msg = "<b>Avvertenze Generali</b>\n\nSi avvisano gli utenti che, nel personalizzare il proprio pasto, è consentito ritirare <b>al massimo 2 porzioni di ciascuna pietanza o prodotto</b>, "\
+warning_msg = "Si avvisano gli utenti che, nel personalizzare il proprio pasto, è consentito ritirare <b>al massimo 2 porzioni di ciascuna pietanza o prodotto</b>, "\
               "nel modo indicato: \n"\
               "• <b>Max n. 2</b> - Primi piatti\n"\
               "• <b>Max n. 2</b> - Secondi piatti\n"\
@@ -58,7 +58,7 @@ warning_msg = "<b>Avvertenze Generali</b>\n\nSi avvisano gli utenti che, nel per
               "• <b>Max n. 2</b> - Panini\n"\
               "• <b>Max n. 2</b> - Prodotti confezionati\n"\
               "• <b>Max n. 2</b> - Prodotti a scelta fra Frutta, Yogurt e Dolce\n\n"\
-              "<i>È severamente vietato</i>, <b>agli utenti in attesa del ritiro del pasto, toccare piatti e pietanze disponibili sul bancone self-service, senza ritirarli."\
+              "<i>È severamente vietato</i>, <b>agli utenti in attesa del ritiro del pasto, toccare piatti e pietanze disponibili sul bancone self-service, senza ritirarli. "\
               "Qualora venissero ritirati non sarà più possibile riconsegnarli.</b>\n\n"\
               "<i>È possibile </i><b>riconsegnare il pasto durante il percorso self-service, solamente prodotti confezionati.</b>\n\n"\
               "<i>È altresì assolutamente vietato</i> <b>prelevare più di tre tovaglioli ed un bicchiere, a pasto.</b>"
