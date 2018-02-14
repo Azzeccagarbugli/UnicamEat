@@ -167,15 +167,51 @@ def handle(msg):
 
     # Settings status
     elif command_input == "/impostazioni" or command_input == "/impostazioni" + bot_name:
-        language_bot = "Inglese"
-        notification_bot = "Abilita"
-        visualiz_bot = "Minimal"
+        language_bot = "English"
+
+        not_txt_cp, not_txt_da = "", ""
+        if user_in_users_notifications(chat_id, "cp"):
+            not_txt_cp = "Disabilita"
+        else:
+            not_txt_cp = "Abilita"
+
+        if user_in_users_notifications(chat_id, "da"):
+            not_txt_da = "Disabilita"
+        else:
+            not_txt_da = "Abilita"
 
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lingua: " + language_bot],
-                        ["Notifiche: " + notification_bot],
-                        ["Visualizzazione giorni: " + visualiz_bot]])
+                        ["Notifiche Colle Paradiso: " + not_txt_cp],
+                        ["Notifiche D'Avack: "        + not_txt_da]])
         bot.sendMessage(chat_id, settings_msg, parse_mode = "Markdown", reply_markup = markup)
+
+        user_state[chat_id] = 1
+
+    elif user_state[chat_id] == 1:
+        if "Lingua" in command_input:
+            wanted_language = command_input.replace("Lingua: ", "")
+            bot.sendMessage(chat_id, "Funzione ancora non implementata", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+            user_state[chat_id] = 0
+
+        elif "Notifiche" in command_input:
+            wanted_notification = command_input.replace("Notifiche ", "")
+            if "Colle Paradiso" in wanted_notification:
+                if "Abilita" in wanted_notification:
+                    bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* sono state *abilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                    set_users_notifications(chat_id, "cp", True)
+                else:
+                    bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                    set_users_notifications(chat_id, "cp", False)
+            elif "D'Avack" in wanted_notification:
+                if "Abilita" in wanted_notification:
+                    bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *abilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                    set_users_notifications(chat_id, "da", True)
+                else:
+                    bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                    set_users_notifications(chat_id, "da", False)
+        else:
+            bot.sendMessage(chat_id, "Sei uno stupido bamboccio")
 
     # Get canteen
     elif command_input == "/menu" or command_input == "/menu" + bot_name:
@@ -187,16 +223,17 @@ def handle(msg):
         bot.sendMessage(chat_id, msg, reply_markup = markup)
 
         # Set user state
-        user_state[chat_id] = 1
+        user_state[chat_id] = 2
 
     # Get date
-    elif user_state[chat_id] == 1:
+    elif user_state[chat_id] == 2:
         # Canteen's stuff
         user_server_canteen[chat_id] = canteen_unicam[command_input]
 
         msg = "Inserisci la data"
 
         if command_input == "D'Avack":
+            # Get the date
             day_int = today_weekend()
             # Is Canteen closed?
             if (day_int == 4 or day_int == 5 or day_int == 6) and not admin_role[chat_id]:
@@ -205,19 +242,20 @@ def handle(msg):
                 user_state[chat_id] = 0
             else:
                 markup = set_markup_keyboard_davak(chat_id)
-                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
+                msg_avack = "Ti ricordiamo che la mensa del *D'Avack* è aperta _escluisivamente_ per il turno del pranzo, inserisci comunque una data"
+                bot.sendMessage(chat_id, msg_avack, parse_mode = "Markdown", reply_markup = markup)
 
-                user_state[chat_id] = 2
+                user_state[chat_id] = 3
         elif command_input == "Colle Paradiso":
             markup = set_markup_keyboard_colleparadiso(chat_id)
             bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
-            user_state[chat_id] = 2
+            user_state[chat_id] = 3
         else:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
 
     # Get launch or dinner
-    elif user_state[chat_id] == 2:
+    elif user_state[chat_id] == 3:
         try:
             # Setting day
             if command_input == "Oggi":
@@ -268,13 +306,13 @@ def handle(msg):
                 bot.sendMessage(chat_id, msg, parse_mode = "Markdown", reply_markup = markup)
 
                 # Set user state
-                user_state[chat_id] = 3
+                user_state[chat_id] = 4
 
         except KeyError:
             bot.sendMessage(chat_id, "Inserisci un giorno della settimana valido")
 
     # Print menu
-    elif user_state[chat_id] == 3:
+    elif user_state[chat_id] == 4:
         # Check the existence of the life (see line 22)
         if command_input == "Pranzo" or command_input == "Cena":
 
@@ -861,6 +899,49 @@ def report_error(textFile, query_id, from_id):
     f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
     f.close()
 
+
+# chat_id, "da", "cp"
+def user_in_users_notifications(chat_id, canteen):
+    """
+    Return the value of the boolean for the presence of the user in the text file
+    """
+    found = False
+
+    for user in get_users_notifications(usNoDir + "user_notification_" + canteen + ".txt"):
+        if str(chat_id) == user.replace("\n", ""):
+            found = True
+            break
+
+    return found
+
+def get_users_notifications(path):
+    """
+    Retrun the user that are inside the file for the notification
+    """
+    f = open(path, "r")
+    out = f.readlines()
+    f.close()
+
+    return out
+
+def set_users_notifications(chat_id, canteen, value):
+    """
+    Add or remove the chat_id of theuser from the file of the notification
+    """
+    if value:
+        f = open(usNoDir + "user_notification_" + canteen + ".txt", "a")
+        f.write(str(chat_id) + "\n")
+    else:
+        # Remove the chat_id from the file
+        f = open(usNoDir + "user_notification_" + canteen + ".txt", "r")
+        out = f.readlines()
+        f.close()
+        f = open(usNoDir + "user_notification_" + canteen + ".txt", "w")
+        for line in out:
+            if str(chat_id) + "\n" != line:
+                f.write(line)
+    f.close()
+
 def on_callback_query(msg):
     """
     Return the price of a complete launch/dinner
@@ -882,6 +963,27 @@ def on_callback_query(msg):
         report_error(txtDir + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
 
+def update():
+    """
+    Send the notificationto the users
+    """
+    curr_time = {datetime.datetime.now().time().hour, datetime.datetime.now().time().minute}
+
+    have_to_send = 0
+
+    if curr_time == notification_launch:
+        have_to_send = 1
+    elif curr_time == notification_dinner:
+        have_to_send = 2
+
+    if have_to_send:
+        for user in get_users_notifications(usNoDir + "user_notification_cp.txt"):
+            bot.sendMessage(user, "Bravi paradisiani")
+        for user in get_users_notifications(usNoDir + "user_notification_da.txt"):
+            bot.sendMessage(user, "Bravi davacchini")
+
+    time.sleep(60)
+
 # Main
 print(color.BOLD + "Starting Unicam Eat!...\n", color.END)
 
@@ -900,17 +1002,29 @@ f.write(pid)
 
 # Create the directory if it dosen't exist
 if not os.path.exists(pdfDir):
-    print(color.DARKCYAN + "I'm creating this folder of the PDF fo you. Stupid human." + color.END)
+    print(color.DARKCYAN + "I'm creating this folder of the PDF for you. Stupid human." + color.END)
     os.makedirs(pdfDir)
 if not os.path.exists(txtDir):
-    print(color.DARKCYAN + "I'm creating this folder of the Text Output fo you. Stupid human." + color.END)
+    print(color.DARKCYAN + "I'm creating this folder of the Text Output for you. Stupid human." + color.END)
     os.makedirs(txtDir)
 if not os.path.exists(boolDir):
-    print(color.DARKCYAN + "I'm creating this folder of the Boolean Value fo you. Stupid human." + color.END)
+    print(color.DARKCYAN + "I'm creating this folder of the Boolean Value for you. Stupid human." + color.END)
     os.makedirs(boolDir)
 if not os.path.exists(logDir):
-    print(color.DARKCYAN + "I'm creating this folder of the Log Info fo you. Stupid human." + color.END)
+    print(color.DARKCYAN + "I'm creating this folder of the Log Info for you. Stupid human." + color.END)
     os.makedirs(logDir)
+if not os.path.exists(usNoDir):
+    print(color.DARKCYAN + "I'm creating this folder of the User Notification for you. Stupid human." + color.END)
+    os.makedirs(usNoDir)
+
+# Create the file for the notification
+if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
+    f = open(usNoDir + "user_notification_cp.txt", "w")
+    f.close()
+
+if not os.path.isfile(usNoDir + "user_notification_da.txt"):
+    f = open(usNoDir + "user_notification_da.txt", "w")
+    f.close()
 
 # Take the current day
 current_day = today_weekend()
@@ -938,6 +1052,6 @@ try:
     print(color.ITALIC + '\nDa grandi poteri derivano grandi responsabilità...\n' + color.END)
 
     while(1):
-        time.sleep(10)
+        update()
 finally:
     os.unlink(pidfile)

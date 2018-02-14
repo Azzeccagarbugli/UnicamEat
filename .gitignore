@@ -2,5 +2,6 @@ Boolean/
 PDF/
 Text/
 Log/
+UserNotification/
 __pycache__
 settings.py

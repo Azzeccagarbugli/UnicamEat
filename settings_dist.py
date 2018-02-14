@@ -90,8 +90,12 @@ pdfDir   = directory_fcopp + "/PDF/"
 txtDir   = directory_fcopp + "/Text/"
 boolDir  = directory_fcopp + "/Boolean/"
 logDir   = directory_fcopp + "/Log/"
+usNoDir  = directory_fcopp + "/UserNotification/"
 
 boolFile = boolDir + "update_menu.txt"
+
+notification_launch = {12, 20}
+notification_dinner = {19, 20}
 
 # Admin allowed
 admins_array = {22, 222}
