@@ -1,6 +1,6 @@
 """
 Unicam Eat! - Telegram Bot
-Author: Azzeccaggarbugli (f.coppola1998@gmail.com)
+Author: Azzeccagarbugli (f.coppola1998@gmail.com)
         Porchetta        (clarantonio98@gmail.com)
 """
 #!/usr/bin/python3.6
