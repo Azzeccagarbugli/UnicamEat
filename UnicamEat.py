@@ -186,14 +186,13 @@ def handle(msg):
                         ["Notifiche D'Avack: "        + not_txt_da]])
         bot.sendMessage(chat_id, settings_msg, parse_mode = "Markdown", reply_markup = markup)
 
+        # Set user state
         user_state[chat_id] = 1
 
     elif user_state[chat_id] == 1:
         if "Lingua" in command_input:
             wanted_language = command_input.replace("Lingua: ", "")
             bot.sendMessage(chat_id, "Funzione ancora non implementata", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-            user_state[chat_id] = 0
-
         elif "Notifiche" in command_input:
             wanted_notification = command_input.replace("Notifiche ", "")
             if "Colle Paradiso" in wanted_notification:
@@ -211,7 +210,10 @@ def handle(msg):
                     bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
                     set_users_notifications(chat_id, "da", False)
         else:
-            bot.sendMessage(chat_id, "Sei uno stupido bamboccio")
+            bot.sendMessage(chat_id, "Sei uno stupido bamboccio, " + username, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+        
+        # Set user state
+        user_state[chat_id] = 0
 
     # Get canteen
     elif command_input == "/menu" or command_input == "/menu" + bot_name:
