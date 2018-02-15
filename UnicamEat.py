@@ -242,8 +242,7 @@ def handle(msg):
                 user_state[chat_id] = 0
             else:
                 markup = set_markup_keyboard_davak(chat_id)
-                msg_avack = "Ti ricordiamo che la mensa del *D'Avack* è aperta _escluisivamente_ per il turno del pranzo, inserisci comunque una data"
-                bot.sendMessage(chat_id, msg_avack, parse_mode = "Markdown", reply_markup = markup)
+                bot.sendMessage(chat_id, msg, parse_mode = "Markdown", reply_markup = markup)
 
                 user_state[chat_id] = 3
         elif command_input == "Colle Paradiso":
@@ -300,6 +299,8 @@ def handle(msg):
                     msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
                           "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
                           "di prendere anche la cena!"
+                elif user_server_canteen[chat_id] == "Avack":
+                    msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _escluisivamente_ per il turno del pranzo"
                 else:
                     msg = "Seleziona dalla lista il menù desiderato"
 
