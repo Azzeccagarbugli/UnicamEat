@@ -138,6 +138,7 @@ def handle(msg):
 
     # Send the info about the bot
     elif command_input == "/info" or command_input == "/info" + bot_name or command_input == bot_name:
+        bot.sendPhoto(chat_id, photo = "https://i.imgur.com/6d6Sdtx.png")
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                      [dict(text = 'GitHub', url = 'https://github.com/Azzeccagarbugli/UnicamEat'), dict(text = 'Developer', url = 'https://t.me/azzeccagarbugli')],
                      [dict(text = 'Dona una birra!', url = 'https://www.paypal.me/azzeccagarbugli')]])
@@ -386,17 +387,16 @@ def update():
     # Supper or launch
     have_to_send = ""
 
+    # Error message
+    err_msg = "Si è verificato un errore all'interno di UnicamEatBot, il menù non è stato convertito correttamente"
+
     if curr_time == notification_launch:
         have_to_send = "Pranzo"
     elif curr_time == notification_dinner:
         have_to_send = "Cena"
 
-    print(have_to_send)
-
     if have_to_send:
-        #############################################
-        # Controllare comunque se il server è up!!! #
-        #############################################
+        # Get the day
         day = days_week[get_day(today_weekend())]
 
         if day != "venerdi" and day != "sabato" and day != "domenica":
@@ -405,7 +405,7 @@ def update():
 
             if msg_menu == "Errore":
                 for chat_id in admins_array:
-                    bot.sendMessage(chat_id, "Si è verificato un errore all'interno di UnicamEatBot, il menù non è stato convertito correttamente", parse_mode = "Markdown")
+                    bot.sendMessage(chat_id, err_msg, parse_mode = "Markdown")
             else:
                 for chat_id in get_users_notifications(usNoDir + "user_notification_da.txt"):
                     print(color.YELLOW + "[SENDING AVACK] Sto inviando un messaggio a: " + chat_id + color.END)
@@ -424,7 +424,7 @@ def update():
 
             if msg_menu == "Errore":
                 for chat_id in admins_array:
-                    bot.sendMessage(chat_id, "Si è verficato un errore all'interno di UnicamEat, prego controllare la funzione relativa delle notifiche", parse_mode = "Markdown")
+                    bot.sendMessage(chat_id, err_msg, parse_mode = "Markdown")
             else:
                 for chat_id in get_users_notifications(usNoDir + "user_notification_cp.txt"):
                     print(color.YELLOW + "[SENDING COLLEPARADISO] Sto inviando un messaggio a: " + chat_id + color.END)
@@ -487,7 +487,7 @@ try:
     updates = bot.getUpdates()
     if updates:
         last_update_id = updates[-1]['update_id']
-        bot.getUpdates(offset=last_update_id+1)
+        bot.getUpdates(offset = last_update_id + 1)
 
     # Starting message_loop
     bot.message_loop({'chat': handle,
