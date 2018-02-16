@@ -13,6 +13,20 @@ from pdfminer.pdfpage import PDFPage
 
 from settings import *
 
+def server_status():
+    """
+    Return the status of the server:
+    0 => No error
+    1 => The server is down
+    """  
+     # Try to ping the server
+    response = os.system("ping -c 1 www.ersucam.it > /dev/null")
+
+    if response == 0:
+        return True
+    else:
+        return False
+
 def dl_updated_pdf(canteen, day):
     """
     Return true or false if it have already downloaded the file or not
@@ -20,10 +34,7 @@ def dl_updated_pdf(canteen, day):
     # Directory where put the file, and name of the file itself
     filename = pdfDir + canteen + '_' + day + '.pdf'
 
-    # Try to ping the server
-    response = os.system("ping -c 1 www.ersucam.it > /dev/null")
-
-    if response == 0:
+    if server_status:
         # Check the existence of the files
         url = get_url(canteen, day)
         request = requests.get(url)
