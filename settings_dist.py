@@ -68,7 +68,6 @@ settings_msg  =  "*FUNZIONI SPERIMENTALI NON IMPLEMENTATE, FUNZIONAMENTO NON COR
                  "\n\nAttraverso le impostazioni potrai cambiare diversi parametri all'interno del bot: "\
                  "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o viceversa"\
                  "\n• *Notifiche*: abilita le notifiche per il menù del giorno"\
-                 "\n• *Visualizzazione giorni*: visualizza solamente il menù di oggi o domani, non di tutta la settimana"
 
 # Prices message
 prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrispondenza"
