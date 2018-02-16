@@ -17,9 +17,9 @@ from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineK
 from functions import *
 from settings  import *
 
-# Days of the week (call me genius :3)
+# Days of the week
 days_week = {
-#22
+    # 22 is the new 42
     "Lunedì"    : "lunedi",
     "Martedì"   : "martedi",
     "Mercoledì" : "mercoledi",
@@ -237,12 +237,12 @@ def handle(msg):
 
                 user_state[chat_id] = 0
             else:
-                markup = ReplyKeyboardMarkup(keyboard=set_markup_keyboard_davak(admin_role[chat_id]))
+                markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_davak(admin_role[chat_id]))
                 bot.sendMessage(chat_id, msg, parse_mode = "Markdown", reply_markup = markup)
 
                 user_state[chat_id] = 3
         elif command_input == "Colle Paradiso":
-            markup = ReplyKeyboardMarkup(keyboard=set_markup_keyboard_colleparadiso(admin_role[chat_id]))
+            markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_colleparadiso(admin_role[chat_id]))
             bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
             user_state[chat_id] = 3
@@ -267,37 +267,16 @@ def handle(msg):
                 bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
                 user_state[chat_id] = 0
             else:
-
-                """
-                    @return true/false se è riuscito o meno a scaricare il file
-                    # Se è lunedì mattina scarica comunque, altrimenti usa quello che c'è già SE PRESENTE
-                    def dl_updated_pdf(str(user_server_canteen[chat_id]), str(user_server_day[chat_id])):
-                        directory_filename = directory_fcopp + "/PDF/" + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
-                """
-
-                # Directory where put the file, and name of the file itself
-                directory_filename = directory_fcopp + "/PDF/" + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + '.pdf'
-
+                # Bot send activity for nice appaerence
                 bot.sendChatAction(chat_id, "typing")
 
-                # Try to ping the server
-                response = os.system("ping -c 1 www.ersucam.it > /dev/null")
-
-                if response == 0:
-                    # Check the existence of the files
-                    url_risolution = get_url(user_server_canteen[chat_id], user_server_day[chat_id])
-                    request = requests.get(url_risolution)
-
-                    # Writing pdf
-                    with open(directory_filename, 'wb') as f:
-                        f.write(request.content)
-                else:
+                if not dl_updated_pdf(str(user_server_canteen[chat_id]), str(user_server_day[chat_id])):
                     bot.sendMessage(chat_id, "*Il server dell'ERSU attualmente è down*, la preghiamo di riprovare più tardi", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
                     user_state[chat_id] = 0
 
             if user_state[chat_id] != 0:
                 # Choose the right time for eat
-                markup = ReplyKeyboardMarkup(keyboard=set_markup_keyboard_launch_dinnner(admin_role[chat_id], user_server_canteen[chat_id], user_server_day[chat_id]))
+                markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_launch_dinnner(admin_role[chat_id], user_server_canteen[chat_id], user_server_day[chat_id]))
 
                 if (user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "ColleParadiso":
                     msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
@@ -320,75 +299,24 @@ def handle(msg):
     elif user_state[chat_id] == 4:
         # Check the existence of the life (see line 22)
         if command_input == "Pranzo" or command_input == "Cena":
-
+            # Bot send activity for nice appaerence
             bot.sendChatAction(chat_id, "upload_document")
 
             # Start the conversion
             pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
+
+            # Convert the PDF
             convert_in_txt(pdfFileName)
-
-            # Check the day
-            day_int = today_weekend()
-
-            if not os.path.isfile(txtDir + pdfFileName + ".txt"):
-                print(color.CYAN + "[FILE] Ho aggiunto un nuovo file convertito in .txt" + color.END)
-
-                os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
-            elif day_int != 0:
-                if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                    print(color.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt" + color.END)
-
-                    os.remove(txtDir + "converted.txt")
-                else:
-                    print(color.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
-
-                    os.remove(txtDir + pdfFileName + ".txt")
-                    os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
-            else:
-                print(color.CYAN + "[FILE] Controllo se ho i file aggiornati o meno..." + color.END)
-
-                if get_bool() == False:
-                    if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                        print(color.CYAN + "[FILE] I due file sono ancora uguali, inviato un msg di errore." + color.END)
-                    else:
-                        print(color.CYAN + "[FILE] Ho trovato un aggiornamento ed ho sostituito il file con quello più recente" + color.END)
-
-                        os.remove(txtDir + pdfFileName + ".txt")
-                        os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
-
-                        bool_write(True)
-                else:
-                    print(color.CYAN + "[FILE] Dovrei avere i file aggiornati online, la booleana era True." + color.END)
-
-                    if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                        print(color.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt" + color.END)
-
-                        os.remove(txtDir + "converted.txt")
-                    else:
-                        print(color.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
-
-                        os.remove(txtDir + pdfFileName + ".txt")
-                        os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
             bot.sendMessage(chat_id, "_Stiamo processando la tua richiesta..._", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
-            if get_bool() == True:
-                # Name of the .txt file
-                txtName = txtDir + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
-
-                # Convert in the right day and the right canteen, just for good appaerence
-                right_canteen = clean_canteen(user_server_canteen[chat_id])
-                right_day = clean_day(user_server_day[chat_id])
-
-                msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(right_canteen, right_day, command_input)
-
-                # Check choose between launch and dinner
-                out_advanced_read = advanced_read_txt(txtName, command_input)
+            if check_updated_txt(pdfFileName) == True:
+                # Send the message that contain the meaning of the life
+                msg_menu = advanced_read_txt(str(user_server_canteen[chat_id]), str(user_server_day[chat_id]), command_input)
 
                 # Try to see if there is a possible error
-                if out_advanced_read == "Errore!":
-                    msg_menu += "_Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. Segnala gentilmente l'errore agli sviluppatori "\
-                                "che provederrano a risolvere quest'ultimo_"
+                if "Errore!" in msg_menu:
+                    msg_menu = msg_menu.replace("Errore!", fail_conversion_msg)
                     callback_name = 'notification_developer ' + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
                     keyboard  = InlineKeyboardMarkup(inline_keyboard=[
                                  [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
@@ -397,7 +325,7 @@ def handle(msg):
                     # Prints the menu in a kawaii way
                     bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
                 else:
-                    msg_menu += out_advanced_read
+                    # Take random number for the donation
                     random_donation = random.randint(0, 5)
 
                     if random_donation:
@@ -444,31 +372,68 @@ def on_callback_query(msg):
         report_error(txtDir + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
 
-"""
-1) Prende il giorno corrente e pranzo/cena                                      [ V ]
-2) scarica il pdf del giorno se non già presente                                [WIP]
-3) Controllo sui txt convertendo il pdf scaricato                               [   ]
-4) Legge il txt e ricava il menù del giorno attraverso la funzione già presente [WIP]
-5) Invia il messaggio del menù del giorno all'utente all'ora selezionata        [   ]
-"""
 def update():
     """
-    Send the notificationto the users
+    Send the notification to the users
     """
     curr_time = {datetime.datetime.now().time().hour, datetime.datetime.now().time().minute}
 
-    have_to_send = 0
+    if today_weekend() != 0:
+        write_bool("#22")
+    elif get_bool() != "True":
+        write_bool("False")
+
+    # Supper or launch
+    have_to_send = ""
 
     if curr_time == notification_launch:
-        have_to_send = 1
+        have_to_send = "Pranzo"
     elif curr_time == notification_dinner:
-        have_to_send = 2
+        have_to_send = "Cena"
+
+    print(have_to_send)
 
     if have_to_send:
-        for user in get_users_notifications(usNoDir + "user_notification_cp.txt"):
-            bot.sendMessage(user, "Bravi paradisiani")
-        for user in get_users_notifications(usNoDir + "user_notification_da.txt"):
-            bot.sendMessage(user, "Bravi davacchini")
+        #############################################
+        # Controllare comunque se il server è up!!! #
+        #############################################
+        day = days_week[get_day(today_weekend())]
+
+        if day != "venerdi" and day != "sabato" and day != "domenica":
+            canteen = "Avack"
+            msg_menu = get_menu_updated(canteen, day, have_to_send)
+
+            if msg_menu == "Errore":
+                for chat_id in admins_array:
+                    bot.sendMessage(chat_id, "Si è verificato un errore all'interno di UnicamEatBot, il menù non è stato convertito correttamente", parse_mode = "Markdown")
+            else:
+                for chat_id in get_users_notifications(usNoDir + "user_notification_da.txt"):
+                    print(color.YELLOW + "[SENDING AVACK] Sto inviando un messaggio a: " + chat_id + color.END)
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [dict(text = 'PDF del menù del giorno', url = get_url(canteen, day))],
+                                [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
+
+                    # Prints the menu in a kawaii way
+                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
+
+        if (day == "sabato" or day == "domenica") and have_to_send == "Cena":
+            pass
+        else:
+            canteen = "ColleParadiso"
+            msg_menu = get_menu_updated(canteen, day, have_to_send)
+
+            if msg_menu == "Errore":
+                for chat_id in admins_array:
+                    bot.sendMessage(chat_id, "Si è verficato un errore all'interno di UnicamEat, prego controllare la funzione relativa delle notifiche", parse_mode = "Markdown")
+            else:
+                for chat_id in get_users_notifications(usNoDir + "user_notification_cp.txt"):
+                    print(color.YELLOW + "[SENDING COLLEPARADISO] Sto inviando un messaggio a: " + chat_id + color.END)
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                [dict(text = 'PDF del menù del giorno', url = get_url(canteen, day))],
+                                [dict(text = 'Offrici una birra!', url = "https://www.paypal.me/azzeccagarbugli")]])
+
+                    # Prints the menu in a kawaii way
+                    bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
 
     time.sleep(60)
 
@@ -514,15 +479,6 @@ if not os.path.isfile(usNoDir + "user_notification_da.txt"):
     f = open(usNoDir + "user_notification_da.txt", "w")
     f.close()
 
-# Take the current day
-current_day = today_weekend()
-
-# Setting boolean file
-if current_day == 0:
-    bool_write("True")
-else:
-    bool_write("True")
-
 # Start working
 try:
     bot = telepot.Bot(TOKEN)
@@ -539,6 +495,7 @@ try:
 
     print(color.ITALIC + '\nDa grandi poteri derivano grandi responsabilità...\n' + color.END)
 
+    # Notification system
     while(1):
         update()
 finally:
