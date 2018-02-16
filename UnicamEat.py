@@ -91,8 +91,11 @@ def handle(msg):
     except KeyError:
         pass
 
+    # Take instant of the message
+    now = datetime.datetime.now()
+
     # Debug
-    print("Msg from {}@{}{}[{}]: \t\"{}{}{}\"".format(color.BOLD, username, color.END, str(chat_id), color.ITALIC, command_input, color.END))
+    print("{} - Msg from {}@{}{}[{}]: \t\"{}{}{}\"".format(now.strftime("%Y-%m-%d %H:%M"), color.BOLD, username, color.END, str(chat_id), color.ITALIC, command_input, color.END))
 
     # Send start message
     if command_input == "/start" or command_input == "/start" + bot_name:
@@ -329,41 +332,41 @@ def handle(msg):
             day_int = today_weekend()
 
             if not os.path.isfile(txtDir + pdfFileName + ".txt"):
-                print(color.CYAN + "Ho aggiunto un nuovo file convertito in .txt" + color.END)
+                print(color.CYAN + "[FILE] Ho aggiunto un nuovo file convertito in .txt" + color.END)
 
                 os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
             elif day_int != 0:
                 if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                    print(color.CYAN + "I due file erano identici, ho cestinato converted.txt" + color.END)
+                    print(color.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt" + color.END)
 
                     os.remove(txtDir + "converted.txt")
                 else:
-                    print(color.CYAN + "I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
+                    print(color.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
 
                     os.remove(txtDir + pdfFileName + ".txt")
                     os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
             else:
-                print(color.CYAN + "Controllo se ho i file aggiornati o meno..." + color.END)
+                print(color.CYAN + "[FILE] Controllo se ho i file aggiornati o meno..." + color.END)
 
                 if get_bool() == False:
                     if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                        print(color.CYAN + "I due file sono ancora uguali, inviato un msg di errore." + color.END)
+                        print(color.CYAN + "[FILE] I due file sono ancora uguali, inviato un msg di errore." + color.END)
                     else:
-                        print(color.CYAN + "Ho trovato un aggiornamento ed ho sostituito il file con quello più recente" + color.END)
+                        print(color.CYAN + "[FILE] Ho trovato un aggiornamento ed ho sostituito il file con quello più recente" + color.END)
 
                         os.remove(txtDir + pdfFileName + ".txt")
                         os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
 
                         bool_write(True)
                 else:
-                    print(color.CYAN + "Dovrei avere i file aggiornati online, la booleana era True." + color.END)
+                    print(color.CYAN + "[FILE] Dovrei avere i file aggiornati online, la booleana era True." + color.END)
 
                     if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                        print(color.CYAN + "I due file erano identici, ho cestinato converted.txt" + color.END)
+                        print(color.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt" + color.END)
 
                         os.remove(txtDir + "converted.txt")
                     else:
-                        print(color.CYAN + "I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
+                        print(color.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
 
                         os.remove(txtDir + pdfFileName + ".txt")
                         os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
@@ -534,7 +537,7 @@ def set_markup_keyboard_colleparadiso(chat_id):
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Oggi"]])
     else:
-        print(color.RED + "Nice shit bro :)" + color.END)
+        print(color.RED + "[COLLEPARADISO KEYBOARD] Nice shit bro :)" + color.END)
 
     return markup
 
@@ -566,7 +569,7 @@ def set_markup_keyboard_davak(chat_id):
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Oggi"]])
     else:
-        print(color.RED + "Nice shit bro :)" + color.END)
+        print(color.RED + "[AVACK KEYBOARD] Nice shit bro :)" + color.END)
 
     return markup
 
@@ -587,7 +590,7 @@ def set_markup_keyboard_launch_dinnner(chat_id, canteen, day):
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Pranzo"]])
     else:
-        print(color.RED + "Nice shit bro :)" + color.END)
+        print(color.RED + "[SET KEYBOARD LAUNCH/DINNER] Nice shit bro :)" + color.END)
 
     return markup
 
@@ -681,10 +684,10 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
         if i1 != 0 and i2 != 0:
             c_secs_prices[i1:i1+3], c_secs_prices[i2:i2+3] = c_secs_prices[i2:i2+3], c_secs_prices[i1:i1+3]
         else:
-            print("Nice Shit Bro x1000000")
+            print(color.RED + "[ERROR] Nice Shit Bro x1000000" + color.END)
 
         if not foods_prices_are_ordered(c_secs_prices, c_secs_foods):
-            print(color.CYAN + "ESITO 1: False" + color.END)
+            print(color.CYAN + "[CONVERSION] ESITO 1: False" + color.END)
 
             c_secs_foods  = secs_foods[:]
             c_secs_prices = secs_prices[:]
@@ -704,7 +707,7 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
 
             # Checks if we don't have pizza/panini at dinner
             elif '1,00€' in c_secs_prices[9] or '0,80€' in c_secs_prices[9]:
-                print("No pizza no party")
+                print(color.YELLOW + "[PIZZA STYLE] No pizza no party" + color.END)
                 c_secs_prices[2:4], c_secs_prices[5:7] = c_secs_prices[5:7], c_secs_prices[2:4]
                 c_secs_prices[4],   c_secs_prices[5]   = c_secs_prices[5],   c_secs_prices[4]
                 c_secs_prices[5],   c_secs_prices[6]   = c_secs_prices[6],   c_secs_prices[5]
@@ -715,21 +718,21 @@ def advanced_read_txt(textFile, launch_or_dinner = "Pranzo"):
                 c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[1], secs_foods[3], secs_foods[4], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
 
             if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
-                print(color.CYAN + "ESITO 2: False" + color.END)
-                print(color.RED + "ERRORE!!! - Non è stato possibile riordinare correttamente la lista" + color.END)
+                print(color.CYAN + "[CONVERSION] ESITO 2: False" + color.END)
+                print(color.RED + "[CONVERSION] Non è stato possibile riordinare correttamente la lista" + color.END)
 
                 return "Errore!"
             else:
-                print(color.CYAN + "ESITO 2: True" + color.END)
+                print(color.CYAN + "[CONVERSION] ESITO 2: True" + color.END)
 
                 secs_foods, secs_prices = from_menu_lord(launch_or_dinner, c_secs_foods, c_secs_prices)
         else:
-            print(color.CYAN + "ESITO 1: True" + color.END)
+            print(color.CYAN + "[CONVERSION] ESITO 1: True" + color.END)
 
             secs_foods, secs_prices = from_menu_lord(launch_or_dinner, c_secs_foods, c_secs_prices)
 
     else:
-        print("La lista è ordinata, strano...")
+        print(color.GREEN + "[SUCCESS CONVERSION] La lista è ordinata, strano..." + color.END)
 
     # Creates a sorted menu without repetitions with prices and foods together
     # Tries to create a menu for launch and another for dinner
@@ -764,8 +767,8 @@ def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
     for i, (price, food) in enumerate(zip(secs_prices, secs_foods)):
         if len(price) != len(food):
             if more_info:
-                print(color.CYAN + "C'è ancora un errore. A: " + str(i) + color.END)
-                print(color.CYAN + "Dettagli:\n" + str(price) + " - " + str(food) + color.END)
+                print(color.CYAN + "[CONVERSION BUG] C'è ancora un errore. A: " + str(i) + color.END)
+                print(color.CYAN + "[CONVERSION BUG] Dettagli:\n" + str(price) + " - " + str(food) + color.END)
             return False
     return True
 
@@ -850,7 +853,7 @@ def delete_files_infolder(folder_dir):
             if os.path.isfile(the_file_path):
                 os.unlink(the_file_path)
         except Exception as e:
-            print(color.RED + "Errore nella funzione delete_files_infolder: " + e + color.END)
+            print(color.RED + "[ERROR] Errore nella funzione delete_files_infolder: " + e + color.END)
 
 # Get Boolean values stored in boolFile (see settings.py)
 def get_bool():
@@ -952,12 +955,10 @@ def on_callback_query(msg):
     query_id, from_id, data = telepot.glance(msg, flavor = 'callback_query')
 
     # Debug
-    print(color.PURPLE + 'Callback query:', query_id, from_id, data, color.END)
+    print(color.PURPLE + '[CALLBACK QUERY] Callback query:', query_id, from_id, data, color.END)
 
     msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
     msg_text_warn = "Una segnalazione è stata inviata ai developer, grazie mille"
-
-    print(data)
 
     if data == 'notification_prices':
         bot.answerCallbackQuery(query_id, text = msg_text_prices)
@@ -996,7 +997,7 @@ pidfile = "/tmp/unicameat.pid"
 
 # Check if PID exist
 if os.path.isfile(pidfile):
-    print(("{}{} already exists, exiting!{}").format(color.RED, pidfile, color.END))
+    print(("[PID PROCESS] {}{} already exists, exiting!{}").format(color.RED, pidfile, color.END))
     sys.exit()
 
 # Create PID file
@@ -1005,19 +1006,19 @@ f.write(pid)
 
 # Create the directory if it dosen't exist
 if not os.path.exists(pdfDir):
-    print(color.DARKCYAN + "I'm creating this folder of the PDF for you. Stupid human." + color.END)
+    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the PDF for you. Stupid human." + color.END)
     os.makedirs(pdfDir)
 if not os.path.exists(txtDir):
-    print(color.DARKCYAN + "I'm creating this folder of the Text Output for you. Stupid human." + color.END)
+    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Text Output for you. Stupid human." + color.END)
     os.makedirs(txtDir)
 if not os.path.exists(boolDir):
-    print(color.DARKCYAN + "I'm creating this folder of the Boolean Value for you. Stupid human." + color.END)
+    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Boolean Value for you. Stupid human." + color.END)
     os.makedirs(boolDir)
 if not os.path.exists(logDir):
-    print(color.DARKCYAN + "I'm creating this folder of the Log Info for you. Stupid human." + color.END)
+    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Log Info for you. Stupid human." + color.END)
     os.makedirs(logDir)
 if not os.path.exists(usNoDir):
-    print(color.DARKCYAN + "I'm creating this folder of the User Notification for you. Stupid human." + color.END)
+    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the User Notification for you. Stupid human." + color.END)
     os.makedirs(usNoDir)
 
 # Create the file for the notification
