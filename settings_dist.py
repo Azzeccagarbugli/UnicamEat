@@ -44,7 +44,7 @@ info_msg =  "*Unicam Eat!* nasce con l'idea di aiutare tutti gli studenti di Uni
             "\nÈ possibile utilizzare i pulsanti disponibili di seguito per ottenere informazioni rigurado il codice sorgente del Bot e "\
             "per segnalare direttamente un problema di malfunzionamento al team di sviluppo. "\
             "\n\nInfine, se sei soddisfatto del servizio messo a dispozione e della qualità di quest'ultimo puoi donare una birra agli sviluppatori, "\
-            "ne saremo davvero felici"
+            "ne saremmo davvero felici"
 
 # Food warning message
 allergeni_msg = "In allegato la lista degli allergeni approvata dal Regolamento Europeo n.1169/2011"
