@@ -34,7 +34,7 @@ def dl_updated_pdf(canteen, day):
     # Directory where put the file, and name of the file itself
     filename = pdfDir + canteen + '_' + day + '.pdf'
 
-    if server_status:
+    if server_status():
         # Check the existence of the files
         url = get_url(canteen, day)
         request = requests.get(url)
