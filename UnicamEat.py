@@ -86,7 +86,7 @@ def handle(msg):
     now = datetime.datetime.now()
 
     # Debug
-    print("{} - Msg from {}@{}{}[{}]: \"{}{}{}\"".format(now.strftime("%d/%m %H:%M"), color.BOLD, username, color.END, str(chat_id), color.ITALIC, command_input, color.END))
+    print("[UNICAM EAT BOT][{}] - Msg from {}@{}{}[{}]: \"{}{}{}\"".format(now.strftime("%d/%m %H:%M"), color.BOLD, username.ljust(20), color.END, str(chat_id), color.ITALIC, command_input, color.END))
 
     # Send start message
     if command_input == "/start" or command_input == "/start" + bot_name:
