@@ -92,6 +92,18 @@ def handle(msg):
     if command_input == "/start" or command_input == "/start" + bot_name:
         bot.sendMessage(chat_id, start_msg, parse_mode = "Markdown")
 
+        my_file = open(usersFile, "r")
+        out = my_file.readlines()
+        my_file.close()
+
+        for line in out:
+            if str(chat_id) + "\n" == line:
+                break
+        else:
+            f = open(usersFile, "a")
+            f.write(str(chat_id) + "\n")
+            f.close()
+
     # Send help message
     elif command_input == "/help" or command_input == "/help" + bot_name:
         bot.sendMessage(chat_id, help_msg, parse_mode = "Markdown")
@@ -123,6 +135,24 @@ def handle(msg):
             bot.sendMessage(chat_id, msg, parse_mode = "Markdown")
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
+
+    elif command_input == "/sendmessage" or command_input == "/sendmessage" + bot_name:
+        if chat_id in admins_array and admin_role[chat_id]:
+            bot.sendMessage(chat_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
+            user_state[chat_id] = 22
+        else:
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
+
+    elif user_state[chat_id] == 22:
+        my_file = open(usersFile, "r")
+        out = my_file.readlines()
+        my_file.close()
+
+        for line in out:
+            user_chat_id = line.replace("\n", "")
+            bot.sendMessage(user_chat_id, command_input)
+
+        bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo"_, parse_mode = "Markdown")
 
     # Send opening time
     elif command_input == "/orari" or command_input == "/orari" + bot_name:
@@ -341,7 +371,7 @@ def handle(msg):
                     # Prints the menu in a kawaii way
                     bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
             else:
-                bot.sendMessage(chat_id, "I menu non sono stati ancora aggiornati sul sito dell'ERSU, la preghiamo di riprovare più tardi", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                bot.sendMessage(chat_id, "*I menu non sono stati ancora aggiornati sul sito dell'ERSU*, riprova più tardi", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
             # Set user state
             user_state[chat_id] = 0
@@ -470,6 +500,9 @@ if not os.path.exists(logDir):
 if not os.path.exists(usNoDir):
     print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the User Notification for you. Stupid human." + color.END)
     os.makedirs(usNoDir)
+if not os.path.exists(usersDir):
+    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the DB of the Users for you. Stupid human." + color.END)
+    os.makedirs(usersDir)
 
 # Create the file for the notification
 if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
@@ -478,6 +511,10 @@ if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
 
 if not os.path.isfile(usNoDir + "user_notification_da.txt"):
     f = open(usNoDir + "user_notification_da.txt", "w")
+    f.close()
+
+if not os.path.isfile(usersFile):
+    f = open(usersFile, "w")
     f.close()
 
 # Start working
