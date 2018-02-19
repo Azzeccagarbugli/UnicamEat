@@ -102,7 +102,7 @@ boolFile = boolDir + "update_menu.txt"
 usersFile = usersDir + "users_db.txt"
 
 # Times for the notification
-notification_launch = {12, 30}
+notification_lunch = {12, 30}
 notification_dinner = {18, 30}
 
 # Admin allowed
