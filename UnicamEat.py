@@ -148,11 +148,24 @@ def handle(msg):
         out = my_file.readlines()
         my_file.close()
 
+        # Flag
+        success = False
+
         for line in out:
             user_chat_id = line.replace("\n", "")
-            bot.sendMessage(user_chat_id, command_input)
+            # Tries to send the message
+            try:
+                bot.sendMessage(user_chat_id, command_input, parse_mode = "Markdown")
+            except telepot.exception.TelegramError:
+                bot.sendMessage(chat_id, "Il testo che hai inviato non è formattato bene, riprova")
+                break
 
-        bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo_", parse_mode = "Markdown")
+            success = True
+
+        if success:
+            bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo_", parse_mode = "Markdown")
+            # Set user state
+            user_state[chat_id] = 0
 
     # Send opening time
     elif command_input == "/orari" or command_input == "/orari" + bot_name:
