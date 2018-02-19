@@ -423,7 +423,7 @@ def update():
     """
     curr_time = {datetime.datetime.now().time().hour, datetime.datetime.now().time().minute}
 
-    if today_weekend() != 0:
+    if today_weekend() != 0 and today_weekend() != 1:
         write_bool("#22")
     elif get_bool() != "True":
         write_bool("False")
