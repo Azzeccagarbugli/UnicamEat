@@ -8,6 +8,7 @@ import os
 import requests
 import filecmp
 
+import time
 import datetime
 
 from io import StringIO
@@ -471,7 +472,7 @@ def get_menu_updated(canteen, day, lunch_or_dinner):
             continue
 
         pdfFileName = canteen + '_' + day + ".pdf"
-        print(pdfFileName)
+        print(color.YELLOW + "[SENDING FILE] Sto provando a inviare il PDF - " + pdfFileName + color.END)
         convert_in_txt(pdfFileName)
 
         if check_updated_txt(pdfFileName) == True:
