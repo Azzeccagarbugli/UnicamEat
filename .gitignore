@@ -3,5 +3,6 @@ PDF/
 Text/
 Log/
 UserNotification/
+Users/
 __pycache__
 settings.py
