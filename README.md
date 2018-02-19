@@ -31,9 +31,19 @@ Di seguito le principali caratteristiche di **Unicam Eat!**:
 
 ## Struttura di Unicam Eat!
 
-Unicam Eat! come già affermato in precedenza è un bot Telegram. Questa piattaforma di messaggistica, infatti, mette a disposizione delle API che gli sviluppatori possono usufruire per andare a interfacciarsi con Telegram stesso. Il framework adoperato in questo caso è stato **Telepot**.
+Unicam Eat! come già affermato in precedenza è un bot Telegram. Questa piattaforma di messaggistica, infatti, mette a disposizione delle API che gli sviluppatori possono usufruire per andare a interfacciarsi con Telegram stesso. 
 
+Il framework adoperato in questo caso è stato **Telepot**.
+
+---
 ### Gli elementi cardini del progetto
+
+Abbiamo strutturato il nostro codice sorgente seguendo dei canoni **scrupolosi** e **ferrei**, e il risultato è stato eccelente.
+
+In questo modo il software è diviso in sezioni, ben distinguibili tra loro. Questo **stile di coding** consente una maggiore facilità di studio e sopratutto una fase di *debugging* davvero alla portata di chiunque.
+
+
+#### Il download dei file
 
 Il core del progetto sta nell'andare a scaricare, attraverso delle request, i file PDF contenenti il menù richiesto e convertirli, grazie all'aiuto di **PDFMiner**, in semplici file di testo con i quali è possibile lavorare in maniera decisamente più semplice.
 
@@ -65,12 +75,14 @@ def convert_in_txt(fname, pages = None):
     textFile.write(text)
     textFile.close()
 ```
-### Algoritmo di sorting
+#### Algoritmo di sorting
 
 Una volta effettuata la conversione, e quindi ottenuto il file di testo desiderato, si passa alla fase più delicata dell'intero processo, ovvero, andare a riordinare in maniera più affidabile possibile il menù del giorno seguendo le linee guida del PDF originale.
 
-Questa parte del software viene gestita in maniera davvero dettagliata e meticolosa per evitare eventuali problemi di qualsiasi genere. E possibile accedere a questa parte del codice consultando la funzione *advanced_read_txt()*.
+Questa parte del software viene gestita in maniera davvero dettagliata e meticolosa per evitare eventuali problemi di qualsiasi genere. 
 
+
+È possibile accedere a questa parte del codice consultando la funzione *advanced_read_txt()* all'interno del file [functions.py](https://github.com/Azzeccagarbugli/UnicamEat/blob/master/functions.py).
 ```python
 def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
     """
@@ -94,7 +106,7 @@ def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
     ...
 ```
 
-### Invio del menù attraverso Telegram
+#### Invio del menù attraverso Telegram
 
 Una volta completate le prime due fasi si può passare alla fase finale cioè, sostanzialmente, l'invio del messaggio contenente il menù mediante Telegram. 
 
@@ -135,7 +147,9 @@ Per compilare il codice sulla propria macchina basterà installare le dipendenze
 ```bash
 $ sudo pip install -r requirements.txt
 ```
-Una volta installate le dipendenze, sarà necessario modificare i vari parametri all'interno del file *settings_dist.py* per poi infine lanciare il comando:
+Dopodichè sarà necessario andare a importare nel file ``UnicamEat.py`` il file ``settings_dist.py`` invece che il file ``settings.py``, andando a modificare secondo le prorpie scelte i parametri all'interno del file stesso.
+
+Una volta installate le dipendenze e, modificate le varie impostazioni all'interno del file ``settings_dist.py``, basterà lanciare il seguente comando:
 ```bash
 $ python3 UnicamEat.py
 ```
