@@ -93,9 +93,13 @@ txtDir   = directory_fcopp + "/Text/"
 boolDir  = directory_fcopp + "/Boolean/"
 logDir   = directory_fcopp + "/Log/"
 usNoDir  = directory_fcopp + "/UserNotification/"
+usersDir = directory_fcopp + "/Users/"
 
 # Bool file
 boolFile = boolDir + "update_menu.txt"
+
+# Users Database
+usersFile = usersDir + "users_db.txt"
 
 # Times for the notification
 notification_launch = {12, 30}
