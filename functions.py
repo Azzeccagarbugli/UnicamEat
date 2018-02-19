@@ -1,3 +1,9 @@
+"""
+Unicam Eat! - Telegram Bot (Core functions file)
+Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
+         Porchetta       (clarantonio98@gmail.com)
+"""
+
 import os
 import requests
 import filecmp
@@ -15,10 +21,10 @@ from settings import *
 
 def server_status():
     """
-    Return the status of the server:
-    0 => No error
-    1 => The server is down
-    """  
+    This function pings the ERSU's server
+
+    :returns: bool -- **True Success**, **False Error**.
+    """
      # Try to ping the server
     response = os.system("ping -c 1 www.ersucam.it > /dev/null")
 
@@ -29,7 +35,13 @@ def server_status():
 
 def dl_updated_pdf(canteen, day):
     """
-    Return true or false if it have already downloaded the file or not
+    Tries to download the updated pdf from Ersu's website
+
+    :param canteen: Name of the canteen.
+    :type canteen: str.
+    :param day: Day of the week.
+    :type day: str.
+    :returns: bool -- **True Success**, **False Error**.
     """
     # Directory where put the file, and name of the file itself
     filename = pdfDir + canteen + '_' + day + '.pdf'
@@ -48,7 +60,13 @@ def dl_updated_pdf(canteen, day):
 
 def check_updated_txt(pdfFileName):
     """
-    Leave in txtDir the most updated menu of the day, and return true or false based on the succession of the update process
+    Checks the txtDir updating if necessary the txt file containing the menu of the day
+
+    :param pdfFileName: Name of the pdf to check.
+    :type pdfFileName: str.
+    :returns: bool::
+        - **True** -- The update was successfull.
+        - **False** -- There was an error and we don't have the most updated PDF available.
     """
     if not os.path.isfile(txtDir + pdfFileName + ".txt"):
         print(color.CYAN + "[FILE] Ho aggiunto un nuovo file convertito in .txt" + color.END)
@@ -95,7 +113,12 @@ def check_updated_txt(pdfFileName):
 
 def convert_in_txt(fname, pages = None):
     """
-    Convert a .PDF file in a .txt file
+    Converts a .pdf file to a .txt file, using pdfminer.six lib
+
+    :param fname: The name of the PDF to use.
+    :type name: str.
+    :param pages: The number of the pages of the PDF's file.
+    :type name: int.
     """
     if not pages:
         pagenums = set()
@@ -120,14 +143,22 @@ def convert_in_txt(fname, pages = None):
     textFile.write(text)
     textFile.close()
 
-def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
+def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
     """
-    The function that hold the secret of the life
+    Reads the txt of the menu requested, formatting and ordering prices and foods
+
+    :param canteen: The name of the canteen.
+    :type canteen: str.
+    :param day: A day of the week.
+    :type day: str.
+    :param lunch_or_dinner: moment of the day of which we want the menu.
+    :type lunch_or_dinner: str.
+    :returns:  str -- The menu requested given in a string.
     """
     txtName = txtDir + str(canteen) + "_" +  str(day) + ".pdf.txt"
 
     # Convert in the right day and the right canteen, just for good appaerence
-    msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(clean_canteen(canteen), clean_day(day), launch_or_dinner)
+    msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(clean_canteen(canteen), clean_day(day), lunch_or_dinner)
 
     # Getting ready to work
     my_file = open(txtName, "r")
@@ -198,7 +229,7 @@ def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
             c_secs_foods  = secs_foods[:]
             c_secs_prices = secs_prices[:]
 
-            # Checks if we have pizza/panini at launch
+            # Checks if we have pizza/panini at lunch
             if '1,00€' in c_secs_prices[5] or '0,80€' in c_secs_prices[5]:
                 # Checks if we don't have pizza/panini at dinner
                 if '1,00€' in c_secs_prices[10] or '0,80€' in c_secs_prices[10]:
@@ -231,17 +262,17 @@ def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
             else:
                 print(color.CYAN + "[CONVERSION] ESITO 2: True" + color.END)
 
-                secs_foods, secs_prices = from_menu_lord(launch_or_dinner, c_secs_foods, c_secs_prices)
+                secs_foods, secs_prices = from_menu_lord(lunch_or_dinner, c_secs_foods, c_secs_prices)
         else:
             print(color.CYAN + "[CONVERSION] ESITO 1: True" + color.END)
 
-            secs_foods, secs_prices = from_menu_lord(launch_or_dinner, c_secs_foods, c_secs_prices)
+            secs_foods, secs_prices = from_menu_lord(lunch_or_dinner, c_secs_foods, c_secs_prices)
 
     else:
         print(color.GREEN + "[SUCCESS CONVERSION] La lista è ordinata, strano..." + color.END)
 
     # Creates a sorted menu without repetitions with prices and foods together
-    # Tries to create a menu for launch and another for dinner
+    # Tries to create a menu for lunch and another for dinner
     myList = []
     for food, price in zip(secs_foods, secs_prices):
         for x, y in zip(food, price):
@@ -268,6 +299,19 @@ def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
     return msg_menu
 
 def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
+    """
+    Checks if the list of prices corresponds to the list of foods.
+
+    :param secs_prices: The list containing only prices.
+    :type secs_prices: list.
+    :param secs_foods: The list containing only foods.
+    :type secs_foods: list.
+    :param more_info: A debug variable that allows to print more informations to the console.
+    :type more_info: bool.
+    :returns: bool::
+        - **True** -- The sorting was successfull.
+        - **False** -- The sorting was unsuccessfull.
+    """
     for i, (price, food) in enumerate(zip(secs_prices, secs_foods)):
         if len(price) != len(food):
             if more_info:
@@ -276,12 +320,20 @@ def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
             return False
     return True
 
-def from_menu_lord(launch_or_dinner, secs_foods, secs_prices):
+def from_menu_lord(lunch_or_dinner, secs_foods, secs_prices):
     """
-    From menu get launch or dinner
+    Extract from the full menu the lunch or dinner menu
+
+    :param lunch_or_dinner: moment of the day of which we want the menu.
+    :type lunch_or_dinner: str.
+    :param secs_foods: The list containing only foods.
+    :type secs_foods: list.
+    :param secs_prices: The list containing only prices.
+    :type secs_prices: list.
+    :returns: list -- Returns two lists containing foods and prices of the moment of the day wanted.
     """
     moment_foods, moment_prices = [], []
-    if launch_or_dinner == "Pranzo":
+    if lunch_or_dinner == "Pranzo":
         if is_course(secs_foods[2]) == "Primi":
             moment_foods.extend(secs_foods[0:2])
             moment_prices.extend(secs_prices[0:2])
@@ -313,6 +365,15 @@ def from_menu_lord(launch_or_dinner, secs_foods, secs_prices):
     return moment_foods[:], moment_prices[:]
 
 def append_courses(my_list, dictionary = courses_dictionaries):
+    """
+    Splits the full list containing prices and foods into the courses
+
+    :param my_list: The list that contain all the foods without sorting.
+    :type my_list: list.
+    :param dictionary: A dictionary which holds all the words for the sorting of the courses.
+    :type dictionary: dictionary.
+    :returns:  list -- Courses of the menu wanted.
+    """
     courses = [[],[],[],[],[],[]]
 
     for el in my_list:
@@ -331,8 +392,13 @@ def append_courses(my_list, dictionary = courses_dictionaries):
 
 def is_course(my_list, dictionary = courses_dictionaries):
     """
-    LISTA:  ["past", "zupp"]
-    OUT:    "Primi"
+    Checks which course the list belongs to
+
+    :param my_list: The list that contain all the foods without sorting.
+    :type my_list: list.
+    :param dictionary: A dictionary which holds all the words for the sorting of the courses.
+    :type dictionary: dictionary.
+    :returns:  str -- The keyword of the dish.
     """
     for el in my_list:
         for ci, course_dictionary in enumerate(dictionary):
@@ -355,7 +421,10 @@ def is_course(my_list, dictionary = courses_dictionaries):
 
 def delete_files_infolder(folder_dir):
     """
-    Function for deletion of files in a folder
+    Simply deletes all the file inside a folder.
+
+    :param folder_dir: The path of the folder.
+    :type folder_dir: str.
     """
     for the_file in os.listdir(folder_dir):
         the_file_path = os.path.join(folder_dir, the_file)
@@ -367,17 +436,36 @@ def delete_files_infolder(folder_dir):
 
 def get_bool():
     """
-    Get Boolean values stored in boolFile (see settings.py)
+    Get Boolean values stored in boolFile (see settings_dist.py).
+
+    :returns: str -- The content of the boolFile.
     """
     with open(boolFile, 'r') as f:
         return str(f.readline())
 
 def write_bool(bool_value):
+    """
+    Writes the value specified into the boolFile.
+
+    :param bool_value: A string containing the value to be written in the file
+    :type bool_value: str.
+    """
     with open(boolFile, 'w') as f:
         f.writelines(bool_value)
 
 ################################################################################
-def get_menu_updated(canteen, day, launch_or_dinner):
+def get_menu_updated(canteen, day, lunch_or_dinner):
+    """
+    Prepare the updated menu for the notification to the user
+
+    :param canteen: Name of the canteen.
+    :type canteen: str.
+    :param day: Day of the week.
+    :type day: str.
+    :param lunch_or_dinner: Moment of the day of which we want the menu.
+    :type lunch_or_dinner: str.
+    :returns:  str -- The menu requested given in a string.
+    """
     while(1):
         if dl_updated_pdf(canteen, day) == False:
             continue
@@ -388,7 +476,7 @@ def get_menu_updated(canteen, day, launch_or_dinner):
 
         if check_updated_txt(pdfFileName) == True:
             # Send the message that contain the meaning of the life
-            msg_menu = advanced_read_txt(canteen, day, launch_or_dinner)
+            msg_menu = advanced_read_txt(canteen, day, lunch_or_dinner)
 
             # Try to see if there is a possible error
             if "Errore!" in msg_menu:
@@ -402,8 +490,14 @@ def get_menu_updated(canteen, day, launch_or_dinner):
 
 def report_error(textFile, query_id, from_id):
     """
-    Create error file based on this type of syntax: - log_CP_lunedi_19_febbraio_2018.txt
-                                                    - log_DA_mercoledi_14_febbraio_2018.txt
+    Create error file based on this type of syntax (log_CP_lunedi_19_febbraio_2018.txt)
+
+    :param textFile: Name of the file.
+    :type textFile: str.
+    :param query_id: ID of the query.
+    :type query_id: str.
+    :param from_id: The chat_id of the hat_id of the person that sent the error.
+    :type from_id: str.
     """
     # Getting ready to work
     my_file = open(textFile, "r")
@@ -432,11 +526,17 @@ def report_error(textFile, query_id, from_id):
     f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
     f.close()
 
-
-# chat_id, "da", "cp"
 def user_in_users_notifications(chat_id, canteen):
     """
-    Return the value of the boolean for the presence of the user in the text file
+    Checks if the chat_id given is inside the user_notification file
+
+    :param chat_id: The chat_id of the user.
+    :type chat_id: str.
+    :param canteen: Name of the canteen.
+    :type canteen: str.
+    :returns: bool::
+        - **True** -- The user is in the list.
+        - **False** -- The user is not in the list.
     """
     found = False
 
@@ -449,7 +549,9 @@ def user_in_users_notifications(chat_id, canteen):
 
 def get_users_notifications(path):
     """
-    Retrun the user that are inside the file for the notification
+    Reads the txt file of users_notification
+
+    :returns: list -- Content of the user_notification file
     """
     f = open(path, "r")
     out = f.readlines()
@@ -459,7 +561,14 @@ def get_users_notifications(path):
 
 def set_users_notifications(chat_id, canteen, value):
     """
-    Add or remove the chat_id of theuser from the file of the notification
+    Add or remove the chat_id of the user from the file of the notification.
+
+    :param chat_id: The chat_id of the user.
+    :type chat_id: str.
+    :param canteen: Name of the canteen.
+    :type canteen: str.
+    :param value: State of the user.
+    :type value: bool.
     """
     if value:
         f = open(usNoDir + "user_notification_" + canteen + ".txt", "a")
@@ -479,29 +588,32 @@ def set_users_notifications(chat_id, canteen, value):
 
 def today_weekend():
     """
-    Return the number of the week
+    Returns today weekday in the form of a number.
+
+    :returns: int -- The current day in an integer format.
     """
     return datetime.datetime.today().weekday()
 
 def get_url(canteen, day):
     """
-    Return the URL of the PDF
+    Returns the URL of the pdf file.
+
+    :param canteen: Name of the canteen.
+    :type canteen: str.
+    :param day: Day of the week.
+    :type day: str.
+    :returns: str -- The URL of the pdf file.
     """
     URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu"
     return (URL + "/" + canteen + "/" + day + ".pdf")
 
 def get_day(day):
     """
-    Return the current day
+    Convert the day from an integer type to a string type.
 
-    Notes:
-    0 - MONDAY
-    1 - TUESDAY
-    2 - WEDNESDAY
-    3 - THURSDAY
-    4 - FRIDAY
-    5 - SATURDAY
-    6 - SUNDAY
+    :param day: Day of the week in an integer format.
+    :type day: int.
+    :returns: str -- The day of the week converted.
     """
     # Days of the week but in numeric format
     days_week_int = {
@@ -521,6 +633,14 @@ def get_day(day):
         return days_week_int[today_weekend()]
 
 def clean_canteen(canteen):
+    """
+    Convert the name of the canteen from a horrible style to the right one.
+
+    :param canteen: The name of the canteen in a horrible style.
+    :type canteen: string.
+    :returns: str -- The day of the week converted.
+    """
+
     # Available canteen in Camerino
     canteen_unicam = {
         "Avack" : "D'Avack",
@@ -530,6 +650,13 @@ def clean_canteen(canteen):
     return (canteen_unicam[canteen])
 
 def clean_day(day):
+    """
+    Convert the name of the day from a horrible style to the right one.
+
+    :param day: Day of the week in an string format.
+    :type day: str.
+    :returns: str -- The day of the week converted.
+    """
     # Days of the week (call me genius :3)
     days_week = {
         "lunedi" : "Lunedì",
@@ -545,7 +672,11 @@ def clean_day(day):
 
 def set_markup_keyboard_colleparadiso(admin_role):
     """
-    Return the custom markup for the keyboard, based on the day of the week
+    Return the custom markup for the keyboard, based on the day of the week.
+
+    :param admin_role: The role of the current user.
+    :type admin_role: bool.
+    :returns: list -- An array containing the tags to be used for the keyboard of Colle Paradiso.
     """
     # Get the day
     days_week_normal = get_day(today_weekend())
@@ -585,7 +716,11 @@ def set_markup_keyboard_colleparadiso(admin_role):
 
 def set_markup_keyboard_davak(admin_role):
     """
-    Return the custom markup for the keyboard, based on the day of the week
+    Return the custom markup for the keyboard, based on the day of the week.
+
+    :param admin_role: The role of the current user.
+    :type admin_role: bool.
+    :returns: list -- An array containing the tags to be used for the keyboard of D'Avack.
     """
     # Get the day
     days_week_normal = get_day(today_weekend())
@@ -610,11 +745,19 @@ def set_markup_keyboard_davak(admin_role):
 
     return markup_array
 
-def set_markup_keyboard_launch_dinnner(admin_role, canteen, day):
+def set_markup_keyboard_lunch_dinnner(admin_role, canteen, day):
     """
-    Return the custom markup for the launch and the dinner
+    Return the custom markup for the keyboard, based on the lunch or dinner.
+
+    :param admin_role: The role of the current user.
+    :type admin_role: bool.
+    :param canteen: Name of the canteen.
+    :type canteen: str.
+    :param day: Day of the week.
+    :type day: str.
+    :returns: list -- An array containing the tags to be used for the keyboard.
     """
-    # Launch or supper based on the choose of the user
+    # Lunch or supper based on the choose of the user
     if canteen == "ColleParadiso":
         if (day != "sabato" and day != "domenica") or admin_role:
             markup_array = [["Pranzo"],
@@ -624,6 +767,6 @@ def set_markup_keyboard_launch_dinnner(admin_role, canteen, day):
     elif canteen == "Avack":
         markup_array = [["Pranzo"]]
     else:
-        print(color.RED + "[SET KEYBOARD LAUNCH/DINNER] Nice shit bro :)" + color.END)
+        print(color.RED + "[SET KEYBOARD LUNCH/DINNER] Nice shit bro :)" + color.END)
 
     return markup_array
