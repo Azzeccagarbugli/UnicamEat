@@ -1,7 +1,7 @@
 """
-Unicam Eat! - Telegram Bot
-Author: Azzeccagarbugli (f.coppola1998@gmail.com)
-        Porchetta       (clarantonio98@gmail.com)
+Unicam Eat! - Telegram Bot (Main file)
+Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
+         Porchetta       (clarantonio98@gmail.com)
 """
 #!/usr/bin/python3.6
 
@@ -41,7 +41,7 @@ user_state = {}
 # User server state
 user_server_day = {}
 user_server_canteen = {}
-user_server_launch_dinner = {}
+user_server_lunch_dinner = {}
 
 # Admin role
 admin_role = {}
@@ -152,7 +152,7 @@ def handle(msg):
             user_chat_id = line.replace("\n", "")
             bot.sendMessage(user_chat_id, command_input)
 
-        bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo"_, parse_mode = "Markdown")
+        bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo_", parse_mode = "Markdown")
 
     # Send opening time
     elif command_input == "/orari" or command_input == "/orari" + bot_name:
@@ -280,7 +280,7 @@ def handle(msg):
         else:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
 
-    # Get launch or dinner
+    # Get lunch or dinner
     elif user_state[chat_id] == 3:
         try:
             # Setting day
@@ -307,7 +307,7 @@ def handle(msg):
 
             if user_state[chat_id] != 0:
                 # Choose the right time for eat
-                markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_launch_dinnner(admin_role[chat_id], user_server_canteen[chat_id], user_server_day[chat_id]))
+                markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_lunch_dinnner(admin_role[chat_id], user_server_canteen[chat_id], user_server_day[chat_id]))
 
                 if (user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "ColleParadiso":
                     msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
@@ -387,7 +387,7 @@ def handle(msg):
 
 def on_callback_query(msg):
     """
-    Return the price of a complete launch/dinner
+    Return the price of a complete lunch/dinner
     """
     query_id, from_id, data = telepot.glance(msg, flavor = 'callback_query')
 
@@ -415,13 +415,13 @@ def update():
     elif get_bool() != "True":
         write_bool("False")
 
-    # Supper or launch
+    # Supper or lunch
     have_to_send = ""
 
     # Error message
     err_msg = "Si è verificato un errore all'interno di UnicamEatBot, il menù non è stato convertito correttamente"
 
-    if curr_time == notification_launch:
+    if curr_time == notification_lunch:
         have_to_send = "Pranzo"
     elif curr_time == notification_dinner:
         have_to_send = "Cena"
@@ -511,6 +511,10 @@ if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
 
 if not os.path.isfile(usNoDir + "user_notification_da.txt"):
     f = open(usNoDir + "user_notification_da.txt", "w")
+    f.close()
+
+if not os.path.isfile(boolFile):
+    f = open(boolFile, "w")
     f.close()
 
 if not os.path.isfile(usersFile):
