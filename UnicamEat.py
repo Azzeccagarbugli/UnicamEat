@@ -361,6 +361,8 @@ def handle(msg):
 
                 # Try to see if there is a possible error
                 if "Errore!" in msg_menu:
+                    fail_conversion_msg = "Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. \n\n_Segnala gentilmente l'errore agli sviluppatori "\
+                                          "che provederrano a risolvere quest'ultimo_"
                     msg_menu = msg_menu.replace("Errore!", fail_conversion_msg)
                     callback_name = 'notification_developer ' + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
                     keyboard  = InlineKeyboardMarkup(inline_keyboard=[
