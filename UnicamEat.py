@@ -445,7 +445,7 @@ def update():
         # Get the day
         day = days_week[get_day(today_weekend())]
 
-        if day != "venerdi" and day != "sabato" and day != "domenica":
+        if (day == "lunedi" or day == "martedi" or day == "mercoledi" or day == "giovedi") and have_to_send == "Pranzo":
             canteen = "Avack"
             msg_menu = get_menu_updated(canteen, day, have_to_send)
 
@@ -461,7 +461,9 @@ def update():
 
                     # Prints the menu in a kawaii way
                     bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
-
+        else:
+            pass
+            
         if (day == "sabato" or day == "domenica") and have_to_send == "Cena":
             pass
         else:
