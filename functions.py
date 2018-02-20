@@ -521,7 +521,7 @@ def report_error(textFile, query_id, from_id):
                 logname += "_" + line
                 break
 
-    file_name_error = "log_" + str(logname.replace(" ", "_"))
+    file_name_error = ("log_" + str(logname.replace(" ", "_"))).rstrip()
 
     f = open(logDir + file_name_error + ".txt", "w")
     f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
