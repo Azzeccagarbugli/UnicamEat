@@ -80,7 +80,7 @@ courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Pani
 
 # Dictionaries
 courses_dictionaries = [
-    ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim"],
+    ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim", "raviol"],
     ["panin", "pizz", "crostin", "piadin", "focacci"],
     ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
     ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],
