@@ -425,7 +425,7 @@ def update():
     """
     curr_time = {datetime.datetime.now().time().hour, datetime.datetime.now().time().minute}
 
-    if today_weekend() != 0 and today_weekend() != 1:
+    if today_weekend() != 0:
         write_bool("#22")
     elif get_bool() != "True":
         write_bool("False")
@@ -445,6 +445,7 @@ def update():
         # Get the day
         day = days_week[get_day(today_weekend())]
 
+        # Sending to Avack users
         if (day == "lunedi" or day == "martedi" or day == "mercoledi" or day == "giovedi") and have_to_send == "Pranzo":
             canteen = "Avack"
             msg_menu = get_menu_updated(canteen, day, have_to_send)
@@ -461,9 +462,8 @@ def update():
 
                     # Prints the menu in a kawaii way
                     bot.sendMessage(chat_id, msg_menu, parse_mode = "Markdown", reply_markup = keyboard)
-        else:
-            pass
-            
+
+        # Sending to ColleParadiso users
         if (day == "sabato" or day == "domenica") and have_to_send == "Cena":
             pass
         else:

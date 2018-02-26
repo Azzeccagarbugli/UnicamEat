@@ -1,6 +1,7 @@
+import os
+
 # Your token Bot, you can get it on Telegram Bot Father
 TOKEN = 'YOUR_TOKEN'
-
 bot_name  = "@UnicamEatBot"
 
 # Start message
@@ -19,9 +20,6 @@ help_msg = "Il servizio offerto da *Unicam Eat!* permette di accedere a diversi 
            "*/avvertenze*: inoltra all'utente delle avvertenze predisposte dalla mensa operante\n\n"\
            "*/allergeni*: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
            "*/impostazioni*: comando che permette di modificare alcuni settaggi del bot secondo le proprie necessità"\
-
-# Directory
-directory_fcopp = 'YOUR_PATH'
 
 # Closed canteen
 closed_msg = "La mensa del D'Avack nei giorni <b>Venerdì</b>, <b>Sabato</b> e <b>Domenica</b> rimane chiusa sia "\
@@ -87,6 +85,8 @@ courses_dictionaries = [
     ["lattin", "brick", "acqua"]
 ]
 
+directory_fcopp = os.path.dirname(os.path.abspath(__file__))
+
 # Directory PDF and directory .txt
 pdfDir   = directory_fcopp + "/PDF/"
 txtDir   = directory_fcopp + "/Text/"
@@ -106,7 +106,7 @@ notification_lunch = {12, 30}
 notification_dinner = {18, 30}
 
 # Admin allowed
-admins_array = {22, 222}
+admins_array = {22}
 
 class color:
     PURPLE    = '\033[95m'

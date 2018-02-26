@@ -26,10 +26,10 @@ def server_status():
 
     :returns: bool -- **True Success**, **False Error**.
     """
-     # Try to ping the server
-    response = os.system("ping -c 1 www.ersucam.it > /dev/null")
+    # Try to ping the server
+    SITE_URL = "http://www.ersucam.it/"
 
-    if response == 0:
+    if requests.head(SITE_URL).status_code == 200:
         return True
     else:
         return False
@@ -240,8 +240,11 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
 
                     c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
                 else:
-                    c_secs_prices[3:6], c_secs_prices[6:8] = c_secs_prices[6:9], c_secs_prices[3:5]
+                    c_secs_prices[3:6], c_secs_prices[6:9] = c_secs_prices[6:9], c_secs_prices[3:6]
                     c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10], secs_foods[11]
+
+                    if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
+                        c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[8], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[9], secs_foods[10], secs_foods[11]
 
             # Checks if we don't have pizza/panini at dinner
             elif '1,00€' in c_secs_prices[9] or '0,80€' in c_secs_prices[9]:
@@ -442,7 +445,7 @@ def get_bool():
     :returns: str -- The content of the boolFile.
     """
     with open(boolFile, 'r') as f:
-        return str(f.readline())
+        return str(f.readline().strip())
 
 def write_bool(bool_value):
     """
@@ -469,6 +472,7 @@ def get_menu_updated(canteen, day, lunch_or_dinner):
     """
     while(1):
         if dl_updated_pdf(canteen, day) == False:
+            time.sleep(30)
             continue
 
         pdfFileName = canteen + '_' + day + ".pdf"
@@ -484,10 +488,8 @@ def get_menu_updated(canteen, day, lunch_or_dinner):
                 return "Errore"
             else:
                 return msg_menu
-
-            break
-
-        time.sleep(30)
+        else:
+            return "Errore"
 
 def report_error(textFile, query_id, from_id):
     """
