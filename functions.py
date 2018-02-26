@@ -18,6 +18,12 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 
+import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from settings import *
 
 def server_status():
@@ -393,7 +399,6 @@ def append_courses(my_list, dictionary = courses_dictionaries):
 
     return courses
 
-
 def is_course(my_list, dictionary = courses_dictionaries):
     """
     Checks which course the list belongs to
@@ -421,43 +426,6 @@ def is_course(my_list, dictionary = courses_dictionaries):
                     else:
                         return "Secondi"
 
-################################################################################
-
-def delete_files_infolder(folder_dir):
-    """
-    Simply deletes all the file inside a folder.
-
-    :param folder_dir: The path of the folder.
-    :type folder_dir: str.
-    """
-    for the_file in os.listdir(folder_dir):
-        the_file_path = os.path.join(folder_dir, the_file)
-        try:
-            if os.path.isfile(the_file_path):
-                os.unlink(the_file_path)
-        except Exception as e:
-            print(color.RED + "[ERROR] Errore nella funzione delete_files_infolder: " + e + color.END)
-
-def get_bool():
-    """
-    Get Boolean values stored in boolFile (see settings_dist.py).
-
-    :returns: str -- The content of the boolFile.
-    """
-    with open(boolFile, 'r') as f:
-        return str(f.readline().strip())
-
-def write_bool(bool_value):
-    """
-    Writes the value specified into the boolFile.
-
-    :param bool_value: A string containing the value to be written in the file
-    :type bool_value: str.
-    """
-    with open(boolFile, 'w') as f:
-        f.writelines(bool_value)
-
-################################################################################
 def get_menu_updated(canteen, day, lunch_or_dinner):
     """
     Prepare the updated menu for the notification to the user
@@ -543,18 +511,18 @@ def user_in_users_notifications(chat_id, canteen):
     """
     found = False
 
-    for user in get_users_notifications(usNoDir + "user_notification_" + canteen + ".txt"):
+    for user in readlines_fromfile(usNoDir + "user_notification_" + canteen + ".txt"):
         if str(chat_id) == user.replace("\n", ""):
             found = True
             break
 
     return found
 
-def get_users_notifications(path):
+def readlines_fromfile(path):
     """
-    Reads the txt file of users_notification
+    Reads the lines of a file
 
-    :returns: list -- Content of the user_notification file
+    :returns: list -- Content of the file it self
     """
     f = open(path, "r")
     out = f.readlines()
@@ -587,7 +555,42 @@ def set_users_notifications(chat_id, canteen, value):
                 f.write(line)
     f.close()
 
-################################################################################
+def get_graph(days):
+    """
+    Creates a graph that shows the usage of the bot during the past 30 days
+
+    :param days: The number of the days that the graph should show.
+    :type days: int.
+    :returns: str -- name of the output image of the graph
+    """
+    file_name = "temp_graph.png"
+
+    dailyUsers_count = []
+
+    for dailyFile in os.listdir(dailyusersDir):
+        count = 0
+        with open(dailyusersDir + dailyFile, "r") as f:
+            out = f.readlines();
+            for line in out:
+                if line.strip():
+                    count += 1
+
+        dailyUsers_count.append(count)
+        if count == days:
+            break
+
+    days = np.arange(0, days, 1)
+
+    plt.plot(days, dailyUsers_count)
+
+    plt.xlabel("Giorni del mese")
+    plt.ylabel("Utilizzo di Unicam Eat")
+    plt.title("Statistiche di utilizzo")
+    plt.grid(True)
+
+    plt.savefig(dailyusersDir + file_name)
+
+    return file_name
 
 def today_weekend():
     """
@@ -773,3 +776,129 @@ def set_markup_keyboard_lunch_dinnner(admin_role, canteen, day):
         print(color.RED + "[SET KEYBOARD LUNCH/DINNER] Nice shit bro :)" + color.END)
 
     return markup_array
+
+def delete_files_infolder(folder_dir):
+    """
+    Simply deletes all the file inside a folder.
+
+    :param folder_dir: The path of the folder.
+    :type folder_dir: str.
+    """
+    for the_file in os.listdir(folder_dir):
+        the_file_path = os.path.join(folder_dir, the_file)
+        try:
+            if os.path.isfile(the_file_path):
+                os.unlink(the_file_path)
+        except Exception as e:
+            print(color.RED + "[ERROR] Errore nella funzione delete_files_infolder: " + e + color.END)
+
+def get_bool():
+    """
+    Get Boolean values stored in boolFile (see settings_dist.py).
+
+    :returns: str -- The content of the boolFile.
+    """
+    with open(boolFile, 'r') as f:
+        return str(f.readline().strip())
+
+def write_bool(bool_value):
+    """
+    Writes the value specified into the boolFile.
+
+    :param bool_value: A string containing the value to be written in the file
+    :type bool_value: str.
+    """
+    with open(boolFile, 'w') as f:
+        f.writelines(bool_value)
+
+def check_dir_files():
+    """
+    Checks the existance of all the directories and files
+    """
+    if not os.path.exists(pdfDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the PDF for you. Stupid human." + color.END)
+        os.makedirs(pdfDir)
+    if not os.path.exists(txtDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Text Output for you. Stupid human." + color.END)
+        os.makedirs(txtDir)
+    if not os.path.exists(boolDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Boolean Value for you. Stupid human." + color.END)
+        os.makedirs(boolDir)
+    if not os.path.exists(logDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Log Info for you. Stupid human." + color.END)
+        os.makedirs(logDir)
+    if not os.path.exists(usNoDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the User Notification for you. Stupid human." + color.END)
+        os.makedirs(usNoDir)
+    if not os.path.exists(usersDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the DB of the Users for you. Stupid human." + color.END)
+        os.makedirs(usersDir)
+    if not os.path.exists(dailyusersDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the Daily utilization for you. Stupid human." + color.END)
+        os.makedirs(dailyusersDir)
+
+    # Create the file for the notification
+    if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
+        f = open(usNoDir + "user_notification_cp.txt", "w")
+        f.close()
+
+    if not os.path.isfile(usNoDir + "user_notification_da.txt"):
+        f = open(usNoDir + "user_notification_da.txt", "w")
+        f.close()
+
+    if not os.path.isfile(boolFile):
+        f = open(boolFile, "w")
+        f.close()
+
+    if not os.path.isfile(usersFile):
+        f = open(usersFile, "w")
+        f.close()
+
+def create_daily_file():
+    """
+    Creates the file for the day
+
+    num_giorno-mese-anno.txt
+    """
+    # Get the last filename
+    num = 0
+
+    for dailyFile in os.listdir(dailyusersDir):
+        temp_num = dailyFile.split("_")[0]
+        if int(temp_num) > int(num):
+            num = temp_num
+
+    datestring = datetime.datetime.now().strftime('%d-%m-%Y')
+
+    # Create the filename based on the current day
+    file_name = str(num) + "_" + datestring + ".txt"
+
+    if not os.path.isfile(file_name):
+        f = open(dailyusersDir + file_name, "w")
+        f.close()
+
+def add_to_daily_file(chat_id):
+    """
+    Add the chat_id to the file of the daily utilization
+    """
+    num = 0
+
+    filename = ""
+
+    for dailyFile in os.listdir(dailyusersDir):
+        temp_num = dailyFile.split("_")[0]
+        if int(temp_num) > int(num):
+            num = temp_num
+            filename = dailyFile
+
+    chat_id_found = False
+
+    if filename != "":
+        for user in readlines_fromfile(dailyusersDir + filename):
+            if str(chat_id) == user.replace("\n", ""):
+                chat_id_found = True
+                break
+
+        if not chat_id_found:
+            with open(dailyusersDir + filename, 'a') as f:
+                f.write(chat_id)

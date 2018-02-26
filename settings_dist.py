@@ -85,6 +85,7 @@ courses_dictionaries = [
     ["lattin", "brick", "acqua"]
 ]
 
+# General directory
 directory_fcopp = os.path.dirname(os.path.abspath(__file__))
 
 # Directory PDF and directory .txt
@@ -94,12 +95,15 @@ boolDir  = directory_fcopp + "/Boolean/"
 logDir   = directory_fcopp + "/Log/"
 usNoDir  = directory_fcopp + "/UserNotification/"
 usersDir = directory_fcopp + "/Users/"
+dailyusersDir = usersDir + "DailyUsers/"
 
 # Bool file
 boolFile = boolDir + "update_menu.txt"
 
 # Users Database
 usersFile = usersDir + "users_db.txt"
+
+# Daily users
 
 # Times for the notification
 notification_lunch = {12, 30}
