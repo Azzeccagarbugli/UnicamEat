@@ -327,7 +327,7 @@ def handle(msg):
                           "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
                           "di prendere anche la cena!"
                 elif user_server_canteen[chat_id] == "Avack":
-                    msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _escluisivamente_ per il turno del pranzo.\n"\
+                    msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _esclusivamente_ per il turno del pranzo.\n"\
                           "Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari"
                 else:
                     msg = "Seleziona dalla lista il menù desiderato"
