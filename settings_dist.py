@@ -1,7 +1,7 @@
 import os
 
 # Your token Bot, you can get it on Telegram Bot Father
-TOKEN = 'YOUR_TOKEN'
+TOKEN = ''
 bot_name  = "@UnicamEatBot"
 
 # Start message
@@ -78,13 +78,14 @@ courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Pani
 
 # Dictionaries
 courses_dictionaries = [
-    ["past", "zupp", "passat", "tagliatell", "ris", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim", "raviol"],
+    ["past", "zupp", "passat", "tagliatell", "riso", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim", "raviol"],
     ["panin", "pizz", "crostin", "piadin", "focacci"],
     ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
     ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],
     ["lattin", "brick", "acqua"]
 ]
 
+# General directory
 directory_fcopp = os.path.dirname(os.path.abspath(__file__))
 
 # Directory PDF and directory .txt
@@ -94,6 +95,7 @@ boolDir  = directory_fcopp + "/Boolean/"
 logDir   = directory_fcopp + "/Log/"
 usNoDir  = directory_fcopp + "/UserNotification/"
 usersDir = directory_fcopp + "/Users/"
+dailyusersDir = usersDir + "DailyUsers/"
 
 # Bool file
 boolFile = boolDir + "update_menu.txt"

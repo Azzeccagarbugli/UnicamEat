@@ -15,7 +15,7 @@ import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup
 
 from functions import *
-from settings  import *
+from settings import *
 
 # Days of the week
 days_week = {
@@ -53,6 +53,9 @@ def handle(msg):
     """
     content_type, chat_type, chat_id = telepot.glance(msg)
 
+    # User daily utilization
+    add_to_daily_file(chat_id)
+
     # Admin role setting
     try:    admin_role[chat_id]
     except: admin_role[chat_id] = False
@@ -70,17 +73,15 @@ def handle(msg):
     except UnboundLocalError:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido")
 
-    # Try to save username and name
-    try:
-        try:
-            username = msg['chat']['username']
-        except:
-            username = ""
+    # Attempting to save username and full name
+    try:    username  = msg['from']['username']
+    except: username  = "Not defined"
 
-        full_name = msg['chat']['first_name']
-        full_name += ' ' + msg['chat']['last_name']
-    except KeyError:
-        pass
+    try:    full_name = msg['from']['first_name'] + ' ' + msg['from']['last_name']
+    except: full_name = "Not defined"
+
+    if username == "Not defined":
+        username = full_name
 
     # Take instant of the message
     now = datetime.datetime.now()
@@ -140,6 +141,16 @@ def handle(msg):
         if chat_id in admins_array and admin_role[chat_id]:
             bot.sendMessage(chat_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
             user_state[chat_id] = 22
+        else:
+            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
+
+    elif command_input == "/graph" or command_input == "/graph" + bot_name:
+        if chat_id in admins_array and admin_role[chat_id]:
+            bot.sendChatAction(chat_id, "upload_photo")
+            create_graph(30)
+            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'))
+            os.remove(dailyusersDir + "temp_graph.png")
+            user_state[chat_id] = 0
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
@@ -423,6 +434,8 @@ def update():
     """
     Send the notification to the users
     """
+    create_daily_file()
+
     curr_time = {datetime.datetime.now().time().hour, datetime.datetime.now().time().minute}
 
     if today_weekend() != 0:
@@ -501,42 +514,8 @@ if os.path.isfile(pidfile):
 f = open(pidfile, 'w')
 f.write(pid)
 
-# Create the directory if it dosen't exist
-if not os.path.exists(pdfDir):
-    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the PDF for you. Stupid human." + color.END)
-    os.makedirs(pdfDir)
-if not os.path.exists(txtDir):
-    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Text Output for you. Stupid human." + color.END)
-    os.makedirs(txtDir)
-if not os.path.exists(boolDir):
-    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Boolean Value for you. Stupid human." + color.END)
-    os.makedirs(boolDir)
-if not os.path.exists(logDir):
-    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Log Info for you. Stupid human." + color.END)
-    os.makedirs(logDir)
-if not os.path.exists(usNoDir):
-    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the User Notification for you. Stupid human." + color.END)
-    os.makedirs(usNoDir)
-if not os.path.exists(usersDir):
-    print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the DB of the Users for you. Stupid human." + color.END)
-    os.makedirs(usersDir)
-
-# Create the file for the notification
-if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
-    f = open(usNoDir + "user_notification_cp.txt", "w")
-    f.close()
-
-if not os.path.isfile(usNoDir + "user_notification_da.txt"):
-    f = open(usNoDir + "user_notification_da.txt", "w")
-    f.close()
-
-if not os.path.isfile(boolFile):
-    f = open(boolFile, "w")
-    f.close()
-
-if not os.path.isfile(usersFile):
-    f = open(usersFile, "w")
-    f.close()
+# Checks if all the files and folders exist
+check_dir_files()
 
 # Start working
 try:

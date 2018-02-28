@@ -1,2 +1,4 @@
 telepot
 pdfminer.six
+numpy
+matplotlib
