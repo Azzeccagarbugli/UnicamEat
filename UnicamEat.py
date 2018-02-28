@@ -15,7 +15,7 @@ import telepot
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup
 
 from functions import *
-from settings  import *
+from settings import *
 
 # Days of the week
 days_week = {
@@ -146,7 +146,10 @@ def handle(msg):
 
     elif command_input == "/graph" or command_input == "/graph" + bot_name:
         if chat_id in admins_array and admin_role[chat_id]:
-            bot.sendPhoto(chat_id, photo = dailyusersDir + get_graph(30))
+            bot.sendChatAction(chat_id, "upload_photo")
+            create_graph(30)
+            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'))
+            os.remove(dailyusersDir + "temp_graph.png")
             user_state[chat_id] = 0
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
@@ -335,7 +338,7 @@ def handle(msg):
                           "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
                           "di prendere anche la cena!"
                 elif user_server_canteen[chat_id] == "Avack":
-                    msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _escluisivamente_ per il turno del pranzo.\n"\
+                    msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _esclusivamente_ per il turno del pranzo.\n"\
                           "Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari"
                 else:
                     msg = "Seleziona dalla lista il menù desiderato"
