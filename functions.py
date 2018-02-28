@@ -23,6 +23,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 from settings import *
 
@@ -555,7 +556,7 @@ def set_users_notifications(chat_id, canteen, value):
                 f.write(line)
     f.close()
 
-def get_graph(days):
+def create_graph(days):
     """
     Creates a graph that shows the usage of the bot during the past 30 days
 
@@ -567,7 +568,7 @@ def get_graph(days):
 
     dailyUsers_count = []
 
-    for dailyFile in os.listdir(dailyusersDir):
+    for dailyFile in os.listdir(dailyusersDir)[::-1]:
         count = 0
         with open(dailyusersDir + dailyFile, "r") as f:
             out = f.readlines();
@@ -576,12 +577,20 @@ def get_graph(days):
                     count += 1
 
         dailyUsers_count.append(count)
-        if count == days:
-            break
 
-    days = np.arange(0, days, 1)
+    fig, ax = plt.subplots()
 
-    plt.plot(days, dailyUsers_count)
+    # Fill with 0s
+    for index in range(0, (days+1 - len(os.listdir(dailyusersDir)))):
+        dailyUsers_count.append(0)
+
+    for axis in [ax.xaxis, ax.yaxis]:
+        axis.set_major_locator(ticker.MaxNLocator(integer = True))
+
+    days = np.arange(0, -days - 1, -1)
+
+    plt.plot(days, dailyUsers_count, marker = 'o', color = 'b')
+    plt.fill_between(days, dailyUsers_count, 0, color = '0.822')
 
     plt.xlabel("Giorni del mese")
     plt.ylabel("Utilizzo di Unicam Eat")
@@ -589,6 +598,7 @@ def get_graph(days):
     plt.grid(True)
 
     plt.savefig(dailyusersDir + file_name)
+    plt.clf()
 
     return file_name
 
@@ -860,18 +870,20 @@ def create_daily_file():
 
     num_giorno-mese-anno.txt
     """
+    datestring = datetime.datetime.now().strftime('%d-%m-%Y')
+
     # Get the last filename
     num = 0
 
     for dailyFile in os.listdir(dailyusersDir):
+        if datestring in dailyFile:
+            return
         temp_num = dailyFile.split("_")[0]
         if int(temp_num) > int(num):
-            num = temp_num
-
-    datestring = datetime.datetime.now().strftime('%d-%m-%Y')
+            num = int(temp_num)
 
     # Create the filename based on the current day
-    file_name = str(num) + "_" + datestring + ".txt"
+    file_name = str(num + 1) + "_" + datestring + ".txt"
 
     if not os.path.isfile(file_name):
         f = open(dailyusersDir + file_name, "w")
@@ -887,7 +899,8 @@ def add_to_daily_file(chat_id):
 
     for dailyFile in os.listdir(dailyusersDir):
         temp_num = dailyFile.split("_")[0]
-        if int(temp_num) > int(num):
+
+        if int(temp_num) >= int(num):
             num = temp_num
             filename = dailyFile
 
@@ -895,10 +908,10 @@ def add_to_daily_file(chat_id):
 
     if filename != "":
         for user in readlines_fromfile(dailyusersDir + filename):
-            if str(chat_id) == user.replace("\n", ""):
+            if str(chat_id) + "\n" == user:
                 chat_id_found = True
                 break
 
         if not chat_id_found:
             with open(dailyusersDir + filename, 'a') as f:
-                f.write(chat_id)
+                f.write(str(chat_id) + "\n")
