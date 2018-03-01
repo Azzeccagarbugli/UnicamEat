@@ -148,7 +148,15 @@ def handle(msg):
         if chat_id in admins_array and admin_role[chat_id]:
             bot.sendChatAction(chat_id, "upload_photo")
             create_graph(30)
-            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'))
+            
+            number_total_user = 0
+            my_file = open(usersFile, "r")
+            out = my_file.readlines()
+            my_file.close()
+            for line in out:
+                number_total_user += 1
+
+            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti all'interno del DB è: " + str(number_total_user))
             os.remove(dailyusersDir + "temp_graph.png")
             user_state[chat_id] = 0
         else:
@@ -195,7 +203,7 @@ def handle(msg):
         bot.sendPhoto(chat_id, photo = "https://i.imgur.com/6d6Sdtx.png")
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                      [dict(text = 'GitHub', url = 'https://github.com/Azzeccagarbugli/UnicamEat'), dict(text = 'Developer', url = 'https://t.me/azzeccagarbugli')],
-                     [dict(text = 'Dona una birra!', url = 'https://www.paypal.me/azzeccagarbugli')]])
+                     [dict(text = 'Offrici una birra!', url = 'https://www.paypal.me/azzeccagarbugli')]])
         bot.sendMessage(chat_id, info_msg, parse_mode = "Markdown", reply_markup = keyboard)
 
     # Send the list of allergens
