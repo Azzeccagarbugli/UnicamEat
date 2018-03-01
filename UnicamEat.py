@@ -467,7 +467,7 @@ def update():
                 for chat_id in admins_array:
                     bot.sendMessage(chat_id, err_msg, parse_mode = "Markdown")
             else:
-                for chat_id in get_users_notifications(usNoDir + "user_notification_da.txt"):
+                for chat_id in readlines_fromfile(usNoDir + "user_notification_da.txt"):
                     print(color.YELLOW + "[SENDING AVACK] Sto inviando un messaggio a: " + chat_id + color.END)
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                 [dict(text = 'PDF del menù del giorno', url = get_url(canteen, day))],
@@ -487,7 +487,7 @@ def update():
                 for chat_id in admins_array:
                     bot.sendMessage(chat_id, err_msg, parse_mode = "Markdown")
             else:
-                for chat_id in get_users_notifications(usNoDir + "user_notification_cp.txt"):
+                for chat_id in readlines_fromfile(usNoDir + "user_notification_cp.txt"):
                     print(color.YELLOW + "[SENDING COLLEPARADISO] Sto inviando un messaggio a: " + chat_id + color.END)
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                 [dict(text = 'PDF del menù del giorno', url = get_url(canteen, day))],
