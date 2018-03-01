@@ -581,7 +581,7 @@ def create_graph(days):
     fig, ax = plt.subplots()
 
     # Fill with 0s
-    for index in range(0, (days+1 - len(os.listdir(dailyusersDir)))):
+    for index in range(0, (days + 1 - len(os.listdir(dailyusersDir)))):
         dailyUsers_count.append(0)
 
     for axis in [ax.xaxis, ax.yaxis]:
@@ -591,6 +591,9 @@ def create_graph(days):
 
     plt.plot(days, dailyUsers_count, marker = 'o', color = 'b')
     plt.fill_between(days, dailyUsers_count, 0, color = '0.822')
+
+    loc = ticker.MultipleLocator(base = 3.0)
+    ax.xaxis.set_major_locator(loc)
 
     plt.xlabel("Giorni del mese")
     plt.ylabel("Utilizzo di Unicam Eat")
