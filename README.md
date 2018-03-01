@@ -145,7 +145,7 @@ Il bot viene rilasciato con licenza MIT, ciò significa che chiunque voglia modi
 
 Per compilare il codice sulla propria macchina basterà installare le dipendenze del software attraverso questo comando:
 ```bash
-$ sudo pip install -r requirements.txt
+$ sudo pip3 install -r requirements.txt
 ```
 Dopodichè sarà necessario andare a importare nel file ``UnicamEat.py`` il file ``settings_dist.py`` invece che il file ``settings.py``, andando a modificare secondo le prorpie scelte i parametri all'interno del file stesso.
 
