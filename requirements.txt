@@ -2,3 +2,4 @@ telepot
 pdfminer.six
 numpy
 matplotlib
+requests
