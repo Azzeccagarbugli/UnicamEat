@@ -33,7 +33,7 @@ Di seguito le principali caratteristiche di **Unicam Eat!**:
 
 Unicam Eat! come già affermato in precedenza è un bot Telegram. Questa piattaforma di messaggistica, infatti, mette a disposizione delle API che gli sviluppatori possono usufruire per andare a interfacciarsi con Telegram stesso. 
 
-Il framework adoperato in questo caso è stato **Telepot**.
+Il framework adoperato in questo caso è stato [**Telepot**](http://telepot.readthedocs.io/en/latest/).
 
 ---
 ### Gli elementi cardini del progetto
