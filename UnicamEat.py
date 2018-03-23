@@ -394,8 +394,14 @@ def handle(msg):
                     # Take random number for the donation
                     random_donation = random.randint(0, 5)
 
-                    if random_donation:
+                    qrcode_filename = generate_qr_code(chat_id, msg_menu, qrCodeDir, str(now.strftime("%d/%m %H:%M")), str(user_server_canteen[chat_id]), command_input)
+
+                    if random_donation and admin_role[chat_id] == True:
                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                    [dict(text = 'Prenota con il QR Code!', callback_data = 'qrcode')],
+                                    [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
+                    elif random_donation:
+                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                     [dict(text = 'PDF del menù del giorno', url = get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
                     else:
                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -415,7 +421,9 @@ def handle(msg):
     elif command_input.lower() == "questa mensa fa schifo" or command_input.lower() == "che schifo" or command_input.lower() == "siete inutili":
         bot.sendSticker(chat_id, "CAADBAADdwADzISpCY36P9nASV4cAg")
         bot.sendMessage(chat_id, "_Cikò non è d'accordo con te ma ti vuole bene lo stesso, perchè lui vuole bene a tutti_", parse_mode = "Markdown")
-
+    elif command_input.lower() == "cotoletta plz" or command_input.lower() == "i want cotoletta" or command_input.lower() == "give me my cotoletta":
+        bot.sendSticker(chat_id, "CAADBAADegADzISpCVjpXErTcu75Ag")
+        bot.sendMessage(chat_id, "_You will have your cotoletta maybe the next time, don't be offended_", parse_mode = "Markdown")
     else:
         bot.sendMessage(chat_id, "Il messaggio che hai inviato non è valido, prova inserendo un comando disponibile nella lista")
 
@@ -429,7 +437,7 @@ def on_callback_query(msg):
     print(color.PURPLE + '[CALLBACK QUERY] Callback query:', query_id, from_id, data, color.END)
 
     msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
-    msg_text_warn = "Una segnalazione è stata inviata ai developer, grazie mille"
+    msg_text_warn = "La segnalazione è stata inviata ai developer"
 
     if data == 'notification_prices':
         bot.answerCallbackQuery(query_id, text = msg_text_prices)
@@ -437,6 +445,8 @@ def on_callback_query(msg):
         txtname = data.replace("notification_developer ", "")
         report_error(txtDir + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
+    elif data == 'qrcode':
+        bot.sendPhoto(from_id, photo = open(qrCodeDir + str(from_id) + "_" + "QRCode.png", 'rb'), caption = "In allegato il tuo QR Code contenente i pasti da te selezionati")
 
 def update():
     """
