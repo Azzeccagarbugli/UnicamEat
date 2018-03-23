@@ -20,6 +20,8 @@ from pdfminer.pdfpage import PDFPage
 
 import numpy as np
 
+import qrcode
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -818,7 +820,7 @@ def write_bool(bool_value):
     """
     Writes the value specified into the boolFile.
 
-    :param bool_value: A string containing the value to be written in the file
+    :param bool_value: A string containing the value to be written in the file.
     :type bool_value: str.
     """
     with open(boolFile, 'w') as f:
@@ -849,6 +851,9 @@ def check_dir_files():
     if not os.path.exists(dailyusersDir):
         print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the Daily utilization for you. Stupid human." + color.END)
         os.makedirs(dailyusersDir)
+    if not os.path.exists(qrCodeDir):
+        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the QR Code for you. Stupid human." + color.END)
+        os.makedirs(qrCodeDir)
 
     # Create the file for the notification
     if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
@@ -895,6 +900,9 @@ def create_daily_file():
 def add_to_daily_file(chat_id):
     """
     Add the chat_id to the file of the daily utilization
+
+    :param chat_id: A string containing the value of the chat_id.
+    :type chat_id: str.
     """
     num = 0
 
@@ -918,3 +926,33 @@ def add_to_daily_file(chat_id):
         if not chat_id_found:
             with open(dailyusersDir + filename, 'a') as f:
                 f.write(str(chat_id) + "\n")
+
+def generate_qr_code(chat_id, msg, folder_dir, date, canteen, meal):
+    """
+    Generate the QR Code for the selected menu
+
+    :param chat_id: A string containing the value of the chat_id.
+    :type chat_id: str.
+    :param msg: A string containing the menu of the day.
+    :type msg: str.
+    :param folder_dir: A string containing the path of the folder.
+    :type folder_dir: str.
+    :param date: The current date.
+    :type date: str.
+    :returns: str -- The path of the QR Code.
+    """
+    qr = qrcode.QRCode(
+        version = 1,
+        error_correction = qrcode.constants.ERROR_CORRECT_L,
+        box_size = 7,
+        border = 4,
+    )
+    qr.add_data(str(chat_id) + " - " + date + " - " + canteen + " - " + meal + "\n\n" + msg)
+    qr.make(fit = True)
+
+    filename = folder_dir + str(chat_id) + "_" + "QRCode.png"
+
+    img = qr.make_image(fill_color = "black", back_color = "white")
+    img.save(filename)
+
+    return filename

@@ -3,3 +3,4 @@ pdfminer.six
 numpy
 matplotlib
 requests
+qrcode[pil]
