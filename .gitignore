@@ -4,5 +4,6 @@ Text/
 Log/
 UserNotification/
 Users/
+QRCode/
 __pycache__
 settings.py
