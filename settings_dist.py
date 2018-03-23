@@ -96,6 +96,7 @@ logDir   = directory_fcopp + "/Log/"
 usNoDir  = directory_fcopp + "/UserNotification/"
 usersDir = directory_fcopp + "/Users/"
 dailyusersDir = usersDir + "DailyUsers/"
+qrCodeDir = directory_fcopp + "/QRCode/"
 
 # Bool file
 boolFile = boolDir + "update_menu.txt"
