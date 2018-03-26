@@ -156,7 +156,7 @@ def handle(msg):
             for line in out:
                 number_total_user += 1
 
-            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti è: " + str(number_total_user))
+            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode = "Markdown")
             os.remove(dailyusersDir + "temp_graph.png")
             user_state[chat_id] = 0
         else:
