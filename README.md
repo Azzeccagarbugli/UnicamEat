@@ -43,7 +43,7 @@ Per accedere a questa feature basterà digitare il comando ``/menu`` e a questo 
 
 Durante l'intera procedura di selezione l'utente verrà aiutato nella scelta dei parametri disponibili grazie a delle tastiera dinamiche che andranno a migliorare la **User Experience** per rendere l'utilizzo di **Unicam Eat!** decisamente _user friendly_.
 
-</br></br></br>
+</br></br>
 
 ## Struttura di Unicam Eat!
 
