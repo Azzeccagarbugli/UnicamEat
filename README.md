@@ -31,7 +31,7 @@ Di seguito le principali caratteristiche di **Unicam Eat!**:
 
 ## Utilizzo del Bot
 
-<img align="left" width="202" src="https://i.imgur.com/qDUExac.jpg"> 
+<img align="left" width="300" src="https://i.imgur.com/qDUExac.jpg"> 
 
 Come primo step è fondamentale andare ad aggiungere il **bot** nella prorpia lista dei contatti all'interno di Telegram, è possibile infatti raggiungere **Unicam Eat!** mediante il seguente [**link**](https://t.me/UnicamEatBot/).
 
@@ -42,7 +42,7 @@ Sicuramente la feature più interessante offerta da **Unicam Eat!** è quella di
 Per accedere a questa feature basterà digitare il comando ``/menu`` e a questo punto il bot guiderà l'utente verso la selezione innanzitutto della mensa in cui si desidera mangiare, e in seguito chiederà all'utente di quale giorno necessita il menù.
 
 Durante l'intera procedura di selezione l'utente verrà aiutato nella scelta dei parametri disponibili grazie a delle tastiera dinamiche che andranno a migliorare la **User Experience** per rendere l'utilizzo di **Unicam Eat!** decisamente _user friendly_.
-</br>
+<br><br><br>
 
 ## Struttura di Unicam Eat!
 
