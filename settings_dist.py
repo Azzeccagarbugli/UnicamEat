@@ -88,7 +88,7 @@ courses_dictionaries = [
 # General directory
 directory_fcopp = os.path.dirname(os.path.abspath(__file__))
 
-# Directory PDF and directory .txt
+# Directory PDF, directory .txt and general directories
 pdfDir   = directory_fcopp + "/PDF/"
 txtDir   = directory_fcopp + "/Text/"
 boolDir  = directory_fcopp + "/Boolean/"
