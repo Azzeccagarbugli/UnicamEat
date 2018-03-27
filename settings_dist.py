@@ -33,7 +33,7 @@ opening_msg = "<b>• D'Avack</b>\n"\
             ""\
             "\n<b>• Colle Paradiso</b>\n"\
             "Aperta tutti i giorni della settimana dalle ore <b>12:30</b> alle ore <b>14:15</b> e dalle ore <b>19:30</b> alle ore <b>21:15</b>."\
-            "\nDurante il week-end la mensa, invece, rimarrà aperta <b>esclusivamente</b> per pranzo dalle ore <b>12:30</b> alle ore <b>13:15</b>."\
+            "\nDurante il week-end la mensa, invece, rimarrà aperta <b>esclusivamente</b> per pranzo dalle ore <b>12:30</b> alle ore <b>13:30</b>."\
             "\n<i>Posizione:</i> /posizione_colleparadiso"
 
 # Info message
