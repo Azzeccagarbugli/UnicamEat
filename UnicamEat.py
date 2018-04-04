@@ -148,7 +148,7 @@ def handle(msg):
         if chat_id in admins_array and admin_role[chat_id]:
             bot.sendChatAction(chat_id, "upload_photo")
             create_graph(30)
-            
+
             number_total_user = 0
             my_file = open(usersFile, "r")
             out = my_file.readlines()
@@ -156,7 +156,9 @@ def handle(msg):
             for line in out:
                 number_total_user += 1
 
-            bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode = "Markdown")
+            try:    bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode = "Markdown")
+            except: bot.sendMessage(chat_id, "Per inviare correttamente l'immagine è necessario aggiornare Telepot ad una versione maggiore della 12.6")
+
             os.remove(dailyusersDir + "temp_graph.png")
             user_state[chat_id] = 0
         else:
@@ -167,21 +169,20 @@ def handle(msg):
         out = my_file.readlines()
         my_file.close()
 
-        # Flag
         success = False
 
-        for line in out:
-            user_chat_id = line.replace("\n", "")
-            # Tries to send the message
-            try:
-                bot.sendMessage(user_chat_id, command_input, parse_mode = "Markdown")
-            except telepot.exception.TelegramError:
-                bot.sendMessage(chat_id, "Il testo che hai inviato non è formattato bene, riprova")
-                break
-
+        try:
+            bot.sendMessage(chat_id, "Il testo che mi hai inviato è:\n\n" + command_input + "\n\nsta per essere inviato...", parse_mode = "Markdown")
             success = True
+        except telepot.exception.TelegramError:
+            bot.sendMessage(chat_id, "Il testo che hai inviato non è formattato bene, riprova")
 
         if success:
+            for line in out:
+                # Tries to send the message
+                user_chat_id = line.replace("\n", "")
+                bot.sendMessage(user_chat_id, command_input, parse_mode = "Markdown")
+
             bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo_", parse_mode = "Markdown")
             # Set user state
             user_state[chat_id] = 0
@@ -227,10 +228,15 @@ def handle(msg):
         language_bot = "English"
 
         not_txt_cp, not_txt_da = "", ""
-        if user_in_users_notifications(chat_id, "cp"):
-            not_txt_cp = "Disabilita"
+        if user_in_users_notifications(chat_id, "cp", "_l"):
+            not_txt_cp_l = "Disabilita"
         else:
-            not_txt_cp = "Abilita"
+            not_txt_cp_l = "Abilita"
+
+        if user_in_users_notifications(chat_id, "cp", "_d"):
+            not_txt_cp_d = "Disabilita"
+        else:
+            not_txt_cp_d = "Abilita"
 
         if user_in_users_notifications(chat_id, "da"):
             not_txt_da = "Disabilita"
@@ -239,8 +245,9 @@ def handle(msg):
 
         markup = ReplyKeyboardMarkup(keyboard=[
                         ["Lingua: " + language_bot],
-                        ["Notifiche Colle Paradiso: " + not_txt_cp],
-                        ["Notifiche D'Avack: "        + not_txt_da]])
+                        ["Notifiche Colle Paradiso - Pranzo: " + not_txt_cp_l],
+                        ["Notifiche Colle Paradiso - Cena: "   + not_txt_cp_d],
+                        ["Notifiche D'Avack: "                 + not_txt_da]])
         bot.sendMessage(chat_id, settings_msg, parse_mode = "Markdown", reply_markup = markup)
 
         # Set user state
@@ -253,19 +260,27 @@ def handle(msg):
         elif "Notifiche" in command_input:
             wanted_notification = command_input.replace("Notifiche ", "")
             if "Colle Paradiso" in wanted_notification:
-                if "Abilita" in wanted_notification:
-                    bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* sono state *abilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-                    set_users_notifications(chat_id, "cp", True)
+                if "Pranzo" in wanted_notification:
+                    if "Abilita" in wanted_notification:
+                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno del pranzo sono state *abilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                        set_users_notifications(chat_id, "cp", "_l", True)
+                    else:
+                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno del pranzo sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                        set_users_notifications(chat_id, "cp", "_l", False)
                 else:
-                    bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-                    set_users_notifications(chat_id, "cp", False)
+                    if "Abilita" in wanted_notification:
+                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno della cena sono state *abilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                        set_users_notifications(chat_id, "cp", "_d", True)
+                    else:
+                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno della cena sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                        set_users_notifications(chat_id, "cp", "_d", False)
             elif "D'Avack" in wanted_notification:
                 if "Abilita" in wanted_notification:
                     bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *abilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-                    set_users_notifications(chat_id, "da", True)
+                    set_users_notifications(chat_id, "da", "", True)
                 else:
                     bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *disabilitate*", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
-                    set_users_notifications(chat_id, "da", False)
+                    set_users_notifications(chat_id, "da", "", False)
         else:
             bot.sendMessage(chat_id, "Sei uno stupido bamboccio, " + username, reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
 
@@ -505,7 +520,12 @@ def update():
                 for chat_id in admins_array:
                     bot.sendMessage(chat_id, err_msg, parse_mode = "Markdown")
             else:
-                for chat_id in readlines_fromfile(usNoDir + "user_notification_cp.txt"):
+                l_or_d = ""
+                if have_to_send == "Pranzo":
+                    l_or_d = "l"
+                elif have_to_send == "Cena":
+                    l_or_d = "d"
+                for chat_id in readlines_fromfile(usNoDir + "user_notification_cp_" + l_or_d + ".txt"):
                     print(color.YELLOW + "[SENDING COLLEPARADISO] Sto inviando un messaggio a: " + chat_id + color.END)
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                 [dict(text = 'PDF del menù del giorno', url = get_url(canteen, day))],
