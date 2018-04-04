@@ -500,7 +500,7 @@ def report_error(textFile, query_id, from_id):
     f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
     f.close()
 
-def user_in_users_notifications(chat_id, canteen):
+def user_in_users_notifications(chat_id, canteen, launch_or_dinner = ""):
     """
     Checks if the chat_id given is inside the user_notification file
 
@@ -511,10 +511,12 @@ def user_in_users_notifications(chat_id, canteen):
     :returns: bool::
         - **True** -- The user is in the list.
         - **False** -- The user is not in the list.
+    :param launch_or_dinner: Select the launch or dinner for the notification.
+    :type launch_or_dinner: str.
     """
     found = False
 
-    for user in readlines_fromfile(usNoDir + "user_notification_" + canteen + ".txt"):
+    for user in readlines_fromfile(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt"):
         if str(chat_id) == user.replace("\n", ""):
             found = True
             break
@@ -533,7 +535,7 @@ def readlines_fromfile(path):
 
     return out
 
-def set_users_notifications(chat_id, canteen, value):
+def set_users_notifications(chat_id, canteen, launch_or_dinner, value):
     """
     Add or remove the chat_id of the user from the file of the notification.
 
@@ -543,16 +545,18 @@ def set_users_notifications(chat_id, canteen, value):
     :type canteen: str.
     :param value: State of the user.
     :type value: bool.
+    :param launch_or_dinner: Select the launch or dinner for the notification.
+    :type launch_or_dinner: str.
     """
     if value:
-        f = open(usNoDir + "user_notification_" + canteen + ".txt", "a")
+        f = open(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt", "a")
         f.write(str(chat_id) + "\n")
     else:
         # Remove the chat_id from the file
-        f = open(usNoDir + "user_notification_" + canteen + ".txt", "r")
+        f = open(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt", "r")
         out = f.readlines()
         f.close()
-        f = open(usNoDir + "user_notification_" + canteen + ".txt", "w")
+        f = open(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt", "w")
         for line in out:
             if str(chat_id) + "\n" != line:
                 f.write(line)
@@ -856,8 +860,12 @@ def check_dir_files():
         os.makedirs(qrCodeDir)
 
     # Create the file for the notification
-    if not os.path.isfile(usNoDir + "user_notification_cp.txt"):
-        f = open(usNoDir + "user_notification_cp.txt", "w")
+    if not os.path.isfile(usNoDir + "user_notification_cp_d.txt"):
+        f = open(usNoDir + "user_notification_cp_d.txt", "w")
+        f.close()
+
+    if not os.path.isfile(usNoDir + "user_notification_cp_l.txt"):
+        f = open(usNoDir + "user_notification_cp_l.txt", "w")
         f.close()
 
     if not os.path.isfile(usNoDir + "user_notification_da.txt"):
@@ -875,8 +883,6 @@ def check_dir_files():
 def create_daily_file():
     """
     Creates the file for the day
-
-    num_giorno-mese-anno.txt
     """
     datestring = datetime.datetime.now().strftime('%d-%m-%Y')
 
