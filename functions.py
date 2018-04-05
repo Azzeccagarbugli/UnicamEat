@@ -694,7 +694,7 @@ def clean_day(day):
     }
 
     return days_week[day]
-
+    
 def set_markup_keyboard_colleparadiso(admin_role):
     """
     Return the custom markup for the keyboard, based on the day of the week.
@@ -945,6 +945,10 @@ def generate_qr_code(chat_id, msg, folder_dir, date, canteen, meal):
     :type folder_dir: str.
     :param date: The current date.
     :type date: str.
+    :param canteen: The selected canteen.
+    :type canteen: str.
+    :param meal: The selected meal.
+    :type meal: str.
     :returns: str -- The path of the QR Code.
     """
     qr = qrcode.QRCode(
