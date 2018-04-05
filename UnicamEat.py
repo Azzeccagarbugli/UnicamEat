@@ -109,6 +109,17 @@ def handle(msg):
     elif command_input == "/help" or command_input == "/help" + bot_name:
         bot.sendMessage(chat_id, help_msg, parse_mode = "Markdown")
 
+    """
+    Todo:
+    
+    Struttura pannello Admin:
+    - /closecanteen
+    - /delete_files_infolder
+    - /bool
+    - /sendmessage
+    - /graph
+    - /QR_Code
+    """
     # Toggle/Untoggle admin role
     elif command_input == "/admin" or command_input == "/admin" + bot_name:
         if chat_id in admins_array:
@@ -461,7 +472,8 @@ def on_callback_query(msg):
         report_error(txtDir + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
     elif data == 'qrcode':
-        bot.sendPhoto(from_id, photo = open(qrCodeDir + str(from_id) + "_" + "QRCode.png", 'rb'), caption = "In allegato il tuo QR Code contenente i pasti da te selezionati")
+        bot.sendPhoto(from_id, photo = open(qrCodeDir + str(from_id) + "_" + "QRCode.png", 'rb'), caption = "In allegato il tuo *QR Code* contenente i pasti da te selezionati", parse_mode = "Markdown")
+        bot.answerCallbackQuery(query_id)
 
 def update():
     """
