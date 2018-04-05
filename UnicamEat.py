@@ -89,6 +89,18 @@ def handle(msg):
     # Debug
     print("[UNICAM EAT BOT][{}] - Msg from {}@{}{}[{}]: \"{}{}{}\"".format(now.strftime("%d/%m %H:%M"), color.BOLD, username.ljust(20), color.END, str(chat_id), color.ITALIC, command_input, color.END))
 
+    '''
+    Todo:
+    
+    Struttura pannello Admin:
+    - /closecanteen
+    - /delete_files_infolder
+    - /bool
+    - /sendmessage
+    - /graph
+    - /QR_Code
+    '''
+
     # Send start message
     if command_input == "/start" or command_input == "/start" + bot_name:
         bot.sendMessage(chat_id, start_msg, parse_mode = "Markdown")
@@ -108,18 +120,7 @@ def handle(msg):
     # Send help message
     elif command_input == "/help" or command_input == "/help" + bot_name:
         bot.sendMessage(chat_id, help_msg, parse_mode = "Markdown")
-
-    """
-    Todo:
     
-    Struttura pannello Admin:
-    - /closecanteen
-    - /delete_files_infolder
-    - /bool
-    - /sendmessage
-    - /graph
-    - /QR_Code
-    """
     # Toggle/Untoggle admin role
     elif command_input == "/admin" or command_input == "/admin" + bot_name:
         if chat_id in admins_array:
