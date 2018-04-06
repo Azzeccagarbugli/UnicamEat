@@ -31,7 +31,7 @@ Di seguito le principali caratteristiche di **Unicam Eat!**:
 
 ## Utilizzo del Bot
 
-<img align="left" width="300" src="https://i.imgur.com/qDUExac.jpg"> 
+<img align="left" width="300" src="https://i.imgur.com/qDUExac.jpg">
 
 Come primo step è fondamentale andare ad aggiungere il **bot** nella prorpia lista dei contatti all'interno di Telegram, è possibile infatti raggiungere **Unicam Eat!** mediante il seguente [**link**](https://t.me/UnicamEatBot/).
 
@@ -46,7 +46,7 @@ Durante l'intera procedura di selezione l'utente verrà aiutato nella scelta dei
 
 ## Struttura di Unicam Eat!
 
-Unicam Eat! come già affermato in precedenza è un bot Telegram. Questa piattaforma di messaggistica, infatti, mette a disposizione delle API che gli sviluppatori possono usufruire per andare a interfacciarsi con Telegram stesso. 
+**Unicam Eat!** come già affermato in precedenza è un bot Telegram. Questa piattaforma di messaggistica, infatti, mette a disposizione delle API che gli sviluppatori possono usufruire per andare a interfacciarsi con Telegram stesso.
 
 Il framework adoperato in questo caso è stato [**Telepot**](http://telepot.readthedocs.io/en/latest/).
 
@@ -94,7 +94,7 @@ def convert_in_txt(fname, pages = None):
 
 Una volta effettuata la conversione, e quindi ottenuto il file di testo desiderato, si passa alla fase più delicata dell'intero processo, ovvero, andare a riordinare in maniera più affidabile possibile il menù del giorno seguendo le linee guida del PDF originale.
 
-Questa parte del software viene gestita in maniera davvero dettagliata e meticolosa per evitare eventuali problemi di qualsiasi genere. 
+Questa parte del software viene gestita in maniera davvero dettagliata e meticolosa per evitare eventuali problemi di qualsiasi genere.
 
 
 È possibile accedere a questa parte del codice consultando la funzione *advanced_read_txt()* all'interno del file [functions.py](https://github.com/Azzeccagarbugli/UnicamEat/blob/master/functions.py).
@@ -123,7 +123,7 @@ def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
 
 #### Invio del menù attraverso Telegram
 
-Una volta completate le prime due fasi si può passare alla fase finale cioè, sostanzialmente, l'invio del messaggio contenente il menù mediante Telegram. 
+Una volta completate le prime due fasi si può passare alla fase finale cioè, sostanzialmente, l'invio del messaggio contenente il menù mediante Telegram.
 
 Come già affermato in precedenza, grazie all'uso di **Telepot**, possiamo utilizzare le API messe a disposizione da Telegram e quindi andare ad usufruire una serie davvero molto ampia di *features* che vanno a costituire la struttura stessa del bot.
 
@@ -154,7 +154,7 @@ finally:
 
 ## Installazione
 
-Il bot viene rilasciato con licenza MIT, ciò significa che chiunque voglia modificare o proporre suggerimenti per implementare nuove funzionalità o per risolvere eventuali problemi, può farlo liberamente utilizzando GitHub.
+Il bot viene rilasciato con licenza **MIT**, ciò significa che chiunque voglia modificare o proporre suggerimenti per implementare nuove funzionalità o per risolvere eventuali problemi, può farlo liberamente utilizzando GitHub.
 
 ---
 

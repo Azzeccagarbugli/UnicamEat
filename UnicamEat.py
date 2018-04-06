@@ -2,6 +2,10 @@
 Unicam Eat! - Telegram Bot (Main file)
 Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
          Porchetta       (clarantonio98@gmail.com)
+
+TO DO:
+user_state da modificare
+admin_role da levare
 """
 #!/usr/bin/python3.6
 
@@ -46,6 +50,10 @@ user_server_lunch_dinner = {}
 # Admin role
 admin_role = {}
 
+# Bool to check if we want to close canteens or not
+canteen_closed_da = False
+canteen_closed_cp = False
+
 # Message handle funtion
 def handle(msg):
     """
@@ -89,18 +97,6 @@ def handle(msg):
     # Debug
     print("[UNICAM EAT BOT][{}] - Msg from {}@{}{}[{}]: \"{}{}{}\"".format(now.strftime("%d/%m %H:%M"), color.BOLD, username.ljust(20), color.END, str(chat_id), color.ITALIC, command_input, color.END))
 
-    '''
-    Todo:
-    
-    Struttura pannello Admin:
-    - /closecanteen
-    - /delete_files_infolder
-    - /bool
-    - /sendmessage
-    - /graph
-    - /QR_Code
-    '''
-
     # Send start message
     if command_input == "/start" or command_input == "/start" + bot_name:
         bot.sendMessage(chat_id, start_msg, parse_mode = "Markdown")
@@ -120,59 +116,16 @@ def handle(msg):
     # Send help message
     elif command_input == "/help" or command_input == "/help" + bot_name:
         bot.sendMessage(chat_id, help_msg, parse_mode = "Markdown")
-    
+
     # Toggle/Untoggle admin role
     elif command_input == "/admin" or command_input == "/admin" + bot_name:
         if chat_id in admins_array:
-            if admin_role[chat_id]:
-                admin_role[chat_id] = False
-                bot.sendMessage(chat_id, "Ruolo da admin disattivato")
-            else:
-                admin_role[chat_id] = True
-                bot.sendMessage(chat_id, "Ruolo da admin attivato")
-        else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
-
-    elif command_input == "/delfiles" or command_input == "/delfiles" + bot_name:
-        if chat_id in admins_array and admin_role[chat_id]:
-            delete_files_infolder(pdfDir)
-            delete_files_infolder(txtDir)
-            delete_files_infolder(logDir)
-            bot.sendMessage(chat_id, "Ho ripulito le folders *pdfDir*, *txtDir* e *logDir*.", parse_mode = "Markdown")
-        else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
-
-    elif command_input == "/bool" or command_input == "/bool" + bot_name:
-        if chat_id in admins_array and admin_role[chat_id]:
-            msg = "Il valore attuale della booleana è: *{}*".format(str(get_bool()))
-            bot.sendMessage(chat_id, msg, parse_mode = "Markdown")
-        else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
-
-    elif command_input == "/sendmessage" or command_input == "/sendmessage" + bot_name:
-        if chat_id in admins_array and admin_role[chat_id]:
-            bot.sendMessage(chat_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
-            user_state[chat_id] = 22
-        else:
-            bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
-
-    elif command_input == "/graph" or command_input == "/graph" + bot_name:
-        if chat_id in admins_array and admin_role[chat_id]:
-            bot.sendChatAction(chat_id, "upload_photo")
-            create_graph(30)
-
-            number_total_user = 0
-            my_file = open(usersFile, "r")
-            out = my_file.readlines()
-            my_file.close()
-            for line in out:
-                number_total_user += 1
-
-            try:    bot.sendPhoto(chat_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode = "Markdown")
-            except: bot.sendMessage(chat_id, "Per inviare correttamente l'immagine è necessario aggiornare Telepot ad una versione maggiore della 12.6")
-
-            os.remove(dailyusersDir + "temp_graph.png")
-            user_state[chat_id] = 0
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                         [dict(text = "Invia messaggio", callback_data = "cmd_send_msg"), dict(text = "Chiudi mensa", callback_data = "cmd_close_canteen")],
+                         [dict(text = "Boolean", callback_data = "cmd_bool"), dict(text = "Pulisci cartelle", callback_data = "cmd_clean_folders")],
+                         [dict(text = "Attiva la vecchia modalità Admin", callback_data = "cmd_admin")],
+                         [dict(text = "Grafico", callback_data = "cmd_graph")]])
+            bot.sendMessage(chat_id, "Seleziona un comando", parse_mode = "Markdown", reply_markup = keyboard)
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
@@ -319,23 +272,42 @@ def handle(msg):
         msg = "Inserisci la data"
 
         if command_input == "D'Avack":
-            # Get the date
-            day_int = today_weekend()
-            # Is Canteen closed?
-            if (day_int == 4 or day_int == 5 or day_int == 6) and not admin_role[chat_id]:
-                bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+            if canteen_closed_da:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                             [dict(text = "Controlla eventuali aggiornamenti", url = 'http://www.ersucam.it/')]])
+                bot.sendMessage(chat_id, "_Stiamo controllando lo stato della mensa_", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                bot.sendMessage(chat_id, canteen_closed_holiday_msg, parse_mode = "Markdown", reply_markup = keyboard)
 
+                # Set user state
                 user_state[chat_id] = 0
             else:
-                markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_davak(admin_role[chat_id]))
-                bot.sendMessage(chat_id, msg, parse_mode = "Markdown", reply_markup = markup)
+                # Get the date
+                day_int = today_weekend()
+                # Is Canteen closed?
+                if (day_int == 4 or day_int == 5 or day_int == 6) and not admin_role[chat_id]:
+                    bot.sendMessage(chat_id, closed_msg, parse_mode = "HTML", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+
+                    user_state[chat_id] = 0
+                else:
+                    markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_davak(admin_role[chat_id]))
+                    bot.sendMessage(chat_id, msg, parse_mode = "Markdown", reply_markup = markup)
+
+                    user_state[chat_id] = 3
+
+        elif command_input == "Colle Paradiso":
+            if canteen_closed_cp:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                             [dict(text = "Controlla eventuali aggiornamenti", url = 'http://www.ersucam.it/')]])
+                bot.sendMessage(chat_id, "_Stiamo controllando lo stato della mensa_", parse_mode = "Markdown", reply_markup = ReplyKeyboardRemove(remove_keyboard = True))
+                bot.sendMessage(chat_id, canteen_closed_holiday_msg, parse_mode = "Markdown", reply_markup = keyboard)
+
+                # Set user state
+                user_state[chat_id] = 0
+            else:
+                markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_colleparadiso(admin_role[chat_id]))
+                bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
 
                 user_state[chat_id] = 3
-        elif command_input == "Colle Paradiso":
-            markup = ReplyKeyboardMarkup(keyboard = set_markup_keyboard_colleparadiso(admin_role[chat_id]))
-            bot.sendMessage(chat_id, msg, parse_mode = "HTML", reply_markup = markup)
-
-            user_state[chat_id] = 3
         else:
             bot.sendMessage(chat_id, "Inserisci una mensa valida")
 
@@ -468,13 +440,91 @@ def on_callback_query(msg):
 
     if data == 'notification_prices':
         bot.answerCallbackQuery(query_id, text = msg_text_prices)
+
     elif 'notification_developer' in data:
         txtname = data.replace("notification_developer ", "")
         report_error(txtDir + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text = msg_text_warn)
+
     elif data == 'qrcode':
         bot.sendPhoto(from_id, photo = open(qrCodeDir + str(from_id) + "_" + "QRCode.png", 'rb'), caption = "In allegato il tuo *QR Code* contenente i pasti da te selezionati", parse_mode = "Markdown")
         bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_send_msg':
+        bot.sendMessage(from_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
+
+        bot.answerCallbackQuery(query_id)
+        user_state[from_id] = 22
+
+    elif data == 'cmd_close_canteen':
+        global canteen_closed_da, canteen_closed_cp
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [dict(text = "D'Avack", callback_data = "cmd_close_canteen_da")],
+                    [dict(text = "Colle Paradiso", callback_data = "cmd_close_canteen_cp")]])
+
+        bot.editMessageText(msg_identifier = (from_id, msg['message']['message_id']), text = "Seleziona la mensa", reply_markup = keyboard)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == "cmd_close_canteen_da":
+        global canteen_closed_da
+
+        if canteen_closed_da:
+            msg_to_admin = "Ho aperto la mensa D'Avack"
+            canteen_closed_da = False
+        else:
+            msg_to_admin = "Ho chiuso la mensa D'Avack"
+            canteen_closed_da = True
+
+        bot.answerCallbackQuery(query_id, text = msg_to_admin)
+
+    elif data == "cmd_close_canteen_cp":
+        global canteen_closed_cp
+
+        if canteen_closed_cp:
+            msg_to_admin = "Ho aperto la mensa Colle Paradiso"
+            canteen_closed_cp = False
+        else:
+            msg_to_admin = "Ho chiuso la mensa Colle Paradiso"
+            canteen_closed_cp = True
+
+        bot.answerCallbackQuery(query_id, text = msg_to_admin)
+
+    elif data == 'cmd_bool':
+        bot.answerCallbackQuery(query_id, text = "Il valore attuale della booleana è: {}".format(str(get_bool())))
+
+    elif data == 'cmd_clean_folders':
+        delete_files_infolder(pdfDir)
+        delete_files_infolder(txtDir)
+        delete_files_infolder(logDir)
+        bot.answerCallbackQuery(query_id, text = "Ho ripulito le folders \"pdfDir\", \"txtDir\" e \"logDir\".")
+
+    elif data == 'cmd_graph':
+        bot.sendChatAction(from_id, "upload_photo")
+
+        # Creation of the png photo to send
+        create_graph(30)
+
+        number_total_user = 0
+        my_file = open(usersFile, "r")
+        out = my_file.readlines()
+        my_file.close()
+        for line in out:
+            number_total_user += 1
+
+        try:    bot.sendPhoto(from_id, photo = open(dailyusersDir + "temp_graph.png", 'rb'), caption = "Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode = "Markdown")
+        except: bot.sendMessage(from_id, "Per inviare correttamente l'immagine è necessario aggiornare Telepot ad una versione maggiore della 12.6")
+
+        os.remove(dailyusersDir + "temp_graph.png")
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_admin':
+        if admin_role[from_id]:
+            admin_role[from_id] = False
+            bot.answerCallbackQuery(query_id, text = "Ho disattivato la vecchia modalità Admin")
+        else:
+            admin_role[from_id] = True
+            bot.answerCallbackQuery(query_id, text = "Ho attivato la vecchia modalità Admin")
 
 def update():
     """

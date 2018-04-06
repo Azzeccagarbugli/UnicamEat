@@ -73,6 +73,9 @@ prices_msg = "In allegato la lista dei prezzi con annessa tabella di corrisponde
 fail_conversion_msg = "_Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. Segnala gentilmente l'errore agli sviluppatori "\
                       "che provederrano a risolvere quest'ultimo_"
 
+# Canteen closed for holiday or other stuff
+canteen_closed_holiday_msg = "Attualmente la mensa che hai selezionato è *chiusa*, la preghiamo di attendere fino ad eventuali aggiornamenti"
+
 # Courses names
 courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
 
