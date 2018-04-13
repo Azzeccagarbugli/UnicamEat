@@ -176,19 +176,27 @@ def handle(msg):
 
     # Send message function
     elif user_state[chat_id] == 11:
+        text_approved = True
         try:
             bot.sendMessage(chat_id, "Il testo che mi hai inviato è:\n\n" + command_input + "\n\nsta per essere inviato...", parse_mode="Markdown")
+        except telepot.exception.TelegramError:
+            bot.sendMessage(chat_id, "Il testo che hai inviato non è formattato correttamente, riprova")
+            text_approved = False
 
+        if text_approved:
             # Tries to send the message
             for user_chat_id in db.get_all_users_id():
-                bot.sendMessage(user_chat_id, command_input, parse_mode="Markdown")
+                if str(user_chat_id) != str(chat_id):
+                    try:
+                        bot.sendMessage(user_chat_id, command_input, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + user_chat_id)
 
             bot.sendMessage(chat_id, "_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo_", parse_mode="Markdown")
 
             # Set user state
             user_state[chat_id] = 0
-        except telepot.exception.TelegramError:
-            bot.sendMessage(chat_id, "Il testo che hai inviato non è formattato bene, riprova")
 
     # Get canteen
     elif command_input == "/menu" or command_input == "/menu" + BOT_NAME:
@@ -406,7 +414,7 @@ def on_callback_query(msg):
         bot.sendMessage(from_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
 
         bot.answerCallbackQuery(query_id)
-        user_state[from_id] = 22
+        user_state[from_id] = 11
 
     elif data == 'cmd_close_canteen':
         global canteen_closed_da, canteen_closed_cp
@@ -653,7 +661,7 @@ else:
 
 if os.path.isfile(pidfile):
     print(Fore.RED + "[PID PROCESS] {} already exists, exiting!".format(pidfile))
-    sys.exit()
+    quit()
 
 with open(pidfile, 'w') as f:
     f.write(str(os.getpid()))
@@ -665,7 +673,6 @@ try:
 
     # Initializing the DB
     db = Firebase("credentials_db.json")
-    db.initialize_sdk()
 
     bot = telepot.Bot(TOKEN)
 

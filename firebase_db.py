@@ -14,13 +14,10 @@ from calendar import monthrange
 
 class Firebase:
     def __init__(self, cert):
-        self.cert = cert
-
-    def initialize_sdk(self):
         """
-        Initialize the Firebase Admin SDK
+        What a beautiful world
         """
-        cred = credentials.Certificate(self.cert)
+        cred = credentials.Certificate(cert)
 
         try:
             firebase_admin.initialize_app(cred, {
