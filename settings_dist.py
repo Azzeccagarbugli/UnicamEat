@@ -13,7 +13,6 @@ courses_dictionaries = [
     ["lattin", "brick", "acqua"]
 ]
 
-
 class Dirs:
     CURRENT = os.path.dirname(os.path.abspath(__file__))
     PDF = CURRENT + "/PDF/"
@@ -21,7 +20,6 @@ class Dirs:
     BOOL = CURRENT + "/Boolean/"
     LOG = CURRENT + "/Log/"
     QRCODE = CURRENT + "/QRCode/"
-
 
 # Bool file
 boolFile = Dirs.bool + "update_menu.txt"

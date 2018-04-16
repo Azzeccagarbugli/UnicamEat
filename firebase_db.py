@@ -11,7 +11,6 @@ from colorama import Fore
 import datetime
 from calendar import monthrange
 
-
 class Firebase:
     def __init__(self, cert):
         """
