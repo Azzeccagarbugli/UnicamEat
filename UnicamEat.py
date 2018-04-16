@@ -99,70 +99,17 @@ def handle(msg):
 
     # Settings status
     elif command_input == "/impostazioni" or command_input == "/impostazioni" + BOT_NAME:
-        language_bot = "English"
-        user_info = db.get_user(chat_id)
-
-        not_txt_cp_l = "Abilita"
-        if user_info["preferences"]["notif_cp_l"]:
-            not_txt_cp_l = "Disabilita"
-
-        not_txt_cp_d = "Abilita"
-        if user_info["preferences"]["notif_cp_d"]:
-            not_txt_cp_d = "Disabilita"
-
-        not_txt_da = "Abilita"
-        if user_info["preferences"]["notif_da"]:
-            not_txt_da = "Disabilita"
-
-        markup = ReplyKeyboardMarkup(keyboard=[
-                        ["Lingua: " + language_bot],
-                        ["Notifiche Colle Paradiso - Pranzo: " + not_txt_cp_l],
-                        ["Notifiche Colle Paradiso - Cena: " + not_txt_cp_d],
-                        ["Notifiche D'Avack: " + not_txt_da]])
-
-        settings_msg = "Attraverso le impostazioni potrai cambiare diversi parametri all'interno del bot: "\
-                       "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o viceversa"\
+        settings_msg = "Attraverso le impostazioni potrai cambiare diversi parametri all'interno del *Bot*: "\
+                       "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o in generale a un altra lingua"\
                        "\n• *Notifiche*: abilita le notifiche per il menù del giorno"
+
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                     [dict(text="Lingua", callback_data="cmd_change_lng")],
+                     [dict(text="Notifiche D'Avack", callback_data="cmd_notif_da")],
+                     [dict(text="Notifiche Colle Paradiso", callback_data="cmd_notif_cp")]])
 
         bot.sendMessage(chat_id, settings_msg, parse_mode="Markdown", reply_markup=markup)
 
-        # Set user state
-        user_state[chat_id] = 1
-
-    elif user_state[chat_id] == 1:
-        if "Lingua" in command_input:
-            # Work in Progress
-            # wanted_language = command_input.replace("Lingua: ", "")
-            bot.sendMessage(chat_id, "Funzione ancora non implementata", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-        elif "Notifiche" in command_input:
-            wanted_notification = command_input.replace("Notifiche ", "")
-            if "Colle Paradiso" in wanted_notification:
-                if "Pranzo" in wanted_notification:
-                    if "Abilita" in wanted_notification:
-                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno del pranzo sono state *abilitate*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                        db.edit_user(chat_id, "preferences/notif_cp_l", True)
-                    else:
-                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno del pranzo sono state *disabilitate*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                        db.edit_user(chat_id, "preferences/notif_cp_l", False)
-                else:
-                    if "Abilita" in wanted_notification:
-                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno della cena sono state *abilitate*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                        db.edit_user(chat_id, "preferences/notif_cp_d", True)
-                    else:
-                        bot.sendMessage(chat_id, "Le notifiche per *Colle Paradiso* per il turno della cena sono state *disabilitate*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                        db.edit_user(chat_id, "preferences/notif_cp_d", False)
-            elif "D'Avack" in wanted_notification:
-                if "Abilita" in wanted_notification:
-                    bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *abilitate*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                    db.edit_user(chat_id, "preferences/notif_da", True)
-                else:
-                    bot.sendMessage(chat_id, "Le notifiche per *D'Avack* sono state *disabilitate*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                    db.edit_user(chat_id, "preferences/notif_da", False)
-        else:
-            bot.sendMessage(chat_id, "Sei uno stupido bamboccio " + username + "!", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-
-        # Set user state
-        user_state[chat_id] = 0
     # Toggle/Untoggle admin role
     elif command_input == "/admin" or command_input == "/admin" + BOT_NAME:
         if db.get_user(chat_id)['role'] == 1:
@@ -392,16 +339,18 @@ def on_callback_query(msg):
     """
     query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
 
+    # User on Firebase
+    user_info = db.get_user(from_id)
+
     # Debug
     print(Fore.GREEN + '[CALLBACK QUERY] Callback query: ' + Fore.RESET + Style.BRIGHT + query_id, from_id, data)
 
-    msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
-    msg_text_warn = "La segnalazione è stata inviata ai developer"
-
     if data == 'notification_prices':
+        msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
         bot.answerCallbackQuery(query_id, text=msg_text_prices)
 
     elif 'notification_developer' in data:
+        msg_text_warn = "La segnalazione è stata inviata ai developer"
         txtname = data.replace("notification_developer ", "")
         report_error(Dirs.TXT + txtname, query_id, from_id)
         bot.answerCallbackQuery(query_id, text=msg_text_warn)
@@ -421,9 +370,19 @@ def on_callback_query(msg):
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     [dict(text="D'Avack", callback_data="cmd_close_canteen_da")],
-                    [dict(text="Colle Paradiso", callback_data="cmd_close_canteen_cp")]])
+                    [dict(text="Colle Paradiso", callback_data="cmd_close_canteen_cp")],
+                    [dict(text="<<  Indietro", callback_data="cmd_back_admin")]])
 
         bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text="Seleziona la mensa", reply_markup=keyboard)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == "cmd_back_admin":
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                     [dict(text="Invia messaggio", callback_data="cmd_send_msg"), dict(text="Chiudi mensa", callback_data="cmd_close_canteen")],
+                     [dict(text="Boolean", callback_data="cmd_bool"), dict(text="Pulisci cartelle", callback_data="cmd_clean_folders")],
+                     [dict(text="Grafico", callback_data="cmd_graph")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text="Seleziona un comando", reply_markup=keyboard)
         bot.answerCallbackQuery(query_id)
 
     elif data == "cmd_close_canteen_da":
@@ -476,6 +435,99 @@ def on_callback_query(msg):
         os.remove(graph_name)
         bot.answerCallbackQuery(query_id)
 
+    elif data == 'cmd_back_settings':
+        settings_msg = "Attraverso le impostazioni potrai cambiare diversi parametri all'interno del *Bot*: "\
+                       "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o in generale a un altra lingua"\
+                       "\n• *Notifiche*: abilita le notifiche per il menù del giorno"
+
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                     [dict(text="Lingua", callback_data="cmd_change_lng")],
+                     [dict(text="Notifiche D'Avack", callback_data="cmd_notif_da")],
+                     [dict(text="Notifiche Colle Paradiso", callback_data="cmd_notif_cp")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=settings_msg, parse_mode="Markdown", reply_markup=markup)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_change_lng':
+        # Work in Progress
+        # wanted_language = command_input.replace("Lingua: ", "")
+        not_lng_msg_status = "Scegliere la lingua con il quale si desidera utilizzare il Bot"
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                  [dict(text="Italiano", callback_data="cmd_lng_it")],
+                  [dict(text="Inglese", callback_data="cmd_lng_ing")],
+                  [dict(text="Cinese", callback_data="cmd_lng_cinese")],
+                  [dict(text="<<  Indietro", callback_data="cmd_back_settings")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_lng_msg_status, parse_mode="Markdown", reply_markup=markup)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_lng_it' or data == 'cmd_lng_ing' or data == 'cmd_lng_cinese':
+        bot.answerCallbackQuery(query_id, text="Funzione ancora non implementata")
+
+    elif data == 'cmd_notif_da':
+        not_da_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche"
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                  [dict(text="Abilita", callback_data="cmd_notif_da_on")],
+                  [dict(text="Disabilita", callback_data="cmd_notif_da_off")],
+                  [dict(text="<<  Indietro", callback_data="cmd_back_settings")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_da_msg_status, parse_mode="Markdown", reply_markup=markup)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_notif_da_on':
+        db.edit_user(from_id, "preferences/notif_da", True)
+        bot.answerCallbackQuery(query_id, text="Le notifiche per il D'Avack sono state abilitate")
+
+    elif data == 'cmd_notif_da_off':
+        db.edit_user(from_id, "preferences/notif_da", False)
+        bot.answerCallbackQuery(query_id, text="Le notifiche per il D'Avack sono state disabilitate")
+
+    elif data == 'cmd_notif_cp':
+        not_cp_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche per il pranzo e per la cena, o per entrambe"
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                  [dict(text="Pranzo", callback_data="cmd_notif_cp_lunch")],
+                  [dict(text="Cena", callback_data="cmd_notif_cp_dinner")],
+                  [dict(text="<<  Indietro", callback_data="cmd_back_settings")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_cp_msg_status, parse_mode="Markdown", reply_markup=markup)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_notif_cp_lunch':
+        not_cp_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche per il pranzo"
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                  [dict(text="Abilita", callback_data="cmd_notif_cp_lunch_on")],
+                  [dict(text="Disabilita", callback_data="cmd_notif_cp_lunch_off")],
+                  [dict(text="<<  Indietro", callback_data="cmd_notif_cp")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_cp_msg_status, parse_mode="Markdown", reply_markup=markup)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_notif_cp_dinner':
+        not_cp_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche per la cena"
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+                  [dict(text="Abilita", callback_data="cmd_notif_cp_dinner_on")],
+                  [dict(text="Disabilita", callback_data="cmd_notif_cp_dinner_off")],
+                  [dict(text="<<  Indietro", callback_data="cmd_notif_cp")]])
+
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_cp_msg_status, parse_mode="Markdown", reply_markup=markup)
+        bot.answerCallbackQuery(query_id)
+
+    elif data == 'cmd_notif_cp_lunch_on':
+        db.edit_user(from_id, "preferences/notif_cp_l", True)
+        bot.answerCallbackQuery(query_id, text="Le notifiche per Colle Paradiso nel turno del pranzo sono state abilitate")
+
+    elif data == 'cmd_notif_cp_lunch_off':
+        db.edit_user(from_id, "preferences/notif_cp_l", False)
+        bot.answerCallbackQuery(query_id, text="Le notifiche per Colle Paradiso nel turno del pranzo sono state disabilitate")
+
+    elif data == 'cmd_notif_cp_dinner_on':
+        db.edit_user(from_id, "preferences/notif_cp_d", True)
+        bot.answerCallbackQuery(query_id, text="Le notifiche per Colle Paradiso nel turno della cena sono state abilitate")
+
+    elif data == 'cmd_notif_cp_dinner_off':
+        db.edit_user(from_id, "preferences/notif_cp_d", False)
+        bot.answerCallbackQuery(query_id, text="Le notifiche per Colle Paradiso nel turno della cena sono state disabilitate")
+
 
 def update():
     """
@@ -504,7 +556,7 @@ def update():
         day = days_week[get_day(today_weekend())]
 
         # Sending to Avack users
-        if (day == "lunedi" or day == "martedi" or day == "mercoledi" or day == "giovedi") and have_to_send == "Pranzo":
+        if (day == "lunedi" or day == "martedi" or day == "mercoledi" or day == "giovedi") and have_to_send == "Pranzo" and canteen_closed_da == False:
             canteen = "Avack"
             msg_menu = get_menu_updated(canteen, day, have_to_send)
 
@@ -522,7 +574,7 @@ def update():
                     bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
 
         # Sending to ColleParadiso users
-        if (day == "sabato" or day == "domenica") and have_to_send == "Cena":
+        if (day == "sabato" or day == "domenica") and have_to_send == "Cena" and canteen_closed_cp == True:
             pass
         else:
             canteen = "ColleParadiso"
@@ -554,7 +606,7 @@ def basic_cmds(chat_id, command_input):
         start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
                     "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al bot. "\
                     "Se hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
-                    "\n\n_Il bot e' stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo._"
+                    "\n\n_Il Bot e' stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo._"
 
         bot.sendMessage(chat_id, start_msg, parse_mode="Markdown")
         db.add_user(chat_id, bot.getChat(chat_id))
@@ -562,14 +614,14 @@ def basic_cmds(chat_id, command_input):
 
     elif command_input == "/help" or command_input == "/help" + BOT_NAME:
         help_msg = "Il servizio offerto da *Unicam Eat!* permette di accedere a diversi contenuti, raggiungibili attraverso determinati comandi tra cui:\n\n"\
-                   "*/info*: fornisce ulteriori informazioni sul bot e sui suoi creatori\n\n"\
+                   "*/info*: fornisce ulteriori informazioni sul Bot e sui suoi creatori\n\n"\
                    "*/menu*: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
                    "succesivamente il *giorno* e infine il parametro *pranzo* o *cena* in base alle proprie esigenze\n\n"\
-                   "*/orari*: visualizza gli orari delle mense disponibili nel bot\n\n"\
+                   "*/orari*: visualizza gli orari delle mense disponibili nel Bot\n\n"\
                    "*/prezzi*: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
                    "*/avvertenze*: inoltra all'utente delle avvertenze predisposte dalla mensa operante\n\n"\
                    "*/allergeni*: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
-                   "*/impostazioni*: comando che permette di modificare alcuni settaggi del bot secondo le proprie necessità"
+                   "*/impostazioni*: comando che permette di modificare alcuni settaggi del Bot secondo le proprie necessità"
 
         bot.sendMessage(chat_id, help_msg, parse_mode="Markdown")
         return True
