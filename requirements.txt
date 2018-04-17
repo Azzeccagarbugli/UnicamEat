@@ -4,3 +4,5 @@ numpy
 matplotlib
 requests
 qrcode[pil]
+colorama
+firebase_admin

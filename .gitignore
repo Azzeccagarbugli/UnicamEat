@@ -7,3 +7,4 @@ Users/
 QRCode/
 __pycache__
 settings.py
+credentials_db.json

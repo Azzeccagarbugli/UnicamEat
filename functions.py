@@ -2,7 +2,13 @@
 Unicam Eat! - Telegram Bot (Core functions file)
 Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
          Porchetta       (clarantonio98@gmail.com)
+
+Da rivedere:
+- report_error
+- boolean file
 """
+
+from settings import Dirs, courses_dictionaries, boolFile
 
 import os
 import requests
@@ -10,6 +16,8 @@ import filecmp
 
 import time
 import datetime
+
+from colorama import Fore
 
 from io import StringIO
 
@@ -27,7 +35,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-from settings import *
 
 def server_status():
     """
@@ -43,6 +50,7 @@ def server_status():
     else:
         return False
 
+
 def dl_updated_pdf(canteen, day):
     """
     Tries to download the updated pdf from Ersu's website
@@ -54,7 +62,7 @@ def dl_updated_pdf(canteen, day):
     :returns: bool -- **True Success**, **False Error**.
     """
     # Directory where put the file, and name of the file itself
-    filename = pdfDir + canteen + '_' + day + '.pdf'
+    filename = Dirs.PDF + canteen + '_' + day + '.pdf'
 
     if server_status():
         # Check the existence of the files
@@ -68,9 +76,10 @@ def dl_updated_pdf(canteen, day):
     else:
         return False
 
+
 def check_updated_txt(pdfFileName):
     """
-    Checks the txtDir updating if necessary the txt file containing the menu of the day
+    Checks the Dirs.TXT updating if necessary the txt file containing the menu of the day
 
     :param pdfFileName: Name of the pdf to check.
     :type pdfFileName: str.
@@ -78,50 +87,50 @@ def check_updated_txt(pdfFileName):
         - **True** -- The update was successfull.
         - **False** -- There was an error and we don't have the most updated PDF available.
     """
-    if not os.path.isfile(txtDir + pdfFileName + ".txt"):
-        print(color.CYAN + "[FILE] Ho aggiunto un nuovo file convertito in .txt" + color.END)
+    if not os.path.isfile(Dirs.TXT + pdfFileName + ".txt"):
+        print(Fore.CYAN + "[FILE] Ho aggiunto un nuovo file convertito in .txt")
 
-        os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+        os.rename(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt")
     elif today_weekend() != 0:
-        if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-            print(color.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt" + color.END)
+        if filecmp.cmp(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt"):
+            print(Fore.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt")
 
-            os.remove(txtDir + "converted.txt")
+            os.remove(Dirs.TXT + "converted.txt")
         else:
-            print(color.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
+            print(Fore.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato")
 
-            os.remove(txtDir + pdfFileName + ".txt")
-            os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+            os.remove(Dirs.TXT + pdfFileName + ".txt")
+            os.rename(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt")
     else:
-        print(color.CYAN + "[FILE] Controllo se ho i file aggiornati o meno..." + color.END)
+        print(Fore.CYAN + "[FILE] Controllo se ho i file aggiornati o meno...")
 
         if get_bool() == "False":
-            if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                print(color.CYAN + "[FILE] I due file sono ancora uguali, inviato un msg di errore." + color.END)
+            if filecmp.cmp(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt"):
+                print(Fore.CYAN + "[FILE] I due file sono ancora uguali, inviato un msg di errore.")
 
                 return False
             else:
-                print(color.CYAN + "[FILE] Ho trovato un aggiornamento ed ho sostituito il file con quello più recente" + color.END)
+                print(Fore.CYAN + "[FILE] Ho trovato un aggiornamento ed ho sostituito il file con quello più recente")
 
-                os.remove(txtDir + pdfFileName + ".txt")
-                os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+                os.remove(Dirs.TXT + pdfFileName + ".txt")
+                os.rename(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt")
 
                 write_bool("True")
         else:
-            print(color.CYAN + "[FILE] Dovrei avere i file aggiornati online, la booleana era True." + color.END)
+            print(Fore.CYAN + "[FILE] Dovrei avere i file aggiornati online, la booleana era True.")
 
-            if filecmp.cmp(txtDir + "converted.txt", txtDir + pdfFileName + ".txt"):
-                print(color.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt" + color.END)
+            if filecmp.cmp(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt"):
+                print(Fore.CYAN + "[FILE] I due file erano identici, ho cestinato converted.txt")
 
-                os.remove(txtDir + "converted.txt")
+                os.remove(Dirs.TXT + "converted.txt")
             else:
-                print(color.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato" + color.END)
+                print(Fore.CYAN + "[FILE] I due file erano diversi ed ho voluto aggiornare con l'ultimo scaricato")
 
-                os.remove(txtDir + pdfFileName + ".txt")
-                os.rename(txtDir + "converted.txt", txtDir + pdfFileName + ".txt")
+                os.remove(Dirs.TXT + pdfFileName + ".txt")
+                os.rename(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt")
     return True
 
-def convert_in_txt(fname, pages = None):
+def convert_in_txt(fname, pages=None):
     """
     Converts a .pdf file to a .txt file, using pdfminer.six lib
 
@@ -137,10 +146,10 @@ def convert_in_txt(fname, pages = None):
 
     output = StringIO()
     manager = PDFResourceManager()
-    converter = TextConverter(manager, output, laparams = LAParams())
+    converter = TextConverter(manager, output, laparams=LAParams())
     interpreter = PDFPageInterpreter(manager, converter)
 
-    infile = open(pdfDir + fname, 'rb')
+    infile = open(Dirs.PDF + fname, 'rb')
     for page in PDFPage.get_pages(infile, pagenums):
         interpreter.process_page(page)
     infile.close()
@@ -148,12 +157,13 @@ def convert_in_txt(fname, pages = None):
     text = output.getvalue()
     output.close()
 
-    textFilename = txtDir + "converted.txt"
+    textFilename = Dirs.TXT + "converted.txt"
     textFile = open(textFilename, "w")
     textFile.write(text)
     textFile.close()
 
-def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
+
+def advanced_read_txt(canteen, day, lunch_or_dinner="Pranzo"):
     """
     Reads the txt of the menu requested, formatting and ordering prices and foods
 
@@ -165,7 +175,7 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
     :type lunch_or_dinner: str.
     :returns:  str -- The menu requested given in a string.
     """
-    txtName = txtDir + str(canteen) + "_" +  str(day) + ".pdf.txt"
+    txtName = Dirs.TXT + str(canteen) + "_" + str(day) + ".pdf.txt"
 
     # Convert in the right day and the right canteen, just for good appaerence
     msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(clean_canteen(canteen), clean_day(day), lunch_or_dinner)
@@ -201,8 +211,8 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
                     break
 
     # Searches for foods and prices
-    secs_foods     = []
-    secs_prices    = []
+    secs_foods = []
+    secs_prices = []
 
     for sec in secs:
         if sec[0][0].isdigit() and sec[0] != "1 Formaggino":
@@ -214,7 +224,7 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
 
     # IMPORTANT: This will try to understand the structure of the sections produced before
     if not foods_prices_are_ordered(secs_prices, secs_foods):
-        c_secs_foods  = secs_foods[:]
+        c_secs_foods = secs_foods[:]
         c_secs_prices = secs_prices[:]
 
         i1, i2 = 0, 0
@@ -224,17 +234,17 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
                 break
 
         for i, (prices, foods) in enumerate(zip(c_secs_prices, c_secs_foods)):
-            if len(prices) != len(foods) and i != i1 and i != i1+1 and i!= i1+2:
+            if len(prices) != len(foods) and i != i1 and i != i1+1 and i != i1+2:
                 i2 = i
                 break
 
         if i1 != 0 and i2 != 0:
             c_secs_prices[i1:i1+3], c_secs_prices[i2:i2+3] = c_secs_prices[i2:i2+3], c_secs_prices[i1:i1+3]
         else:
-            print(color.RED + "[ERROR] Nice Shit Bro x1000000" + color.END)
+            print(Fore.RED + "[ERROR] Nice Shit Bro x1000000")
 
         if not foods_prices_are_ordered(c_secs_prices, c_secs_foods):
-            print(color.CYAN + "[CONVERSION] ESITO 1: False" + color.END)
+            print(Fore.CYAN + "[CONVERSION] ESITO 1: False")
 
             c_secs_foods  = secs_foods[:]
             c_secs_prices = secs_prices[:]
@@ -244,8 +254,8 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
                 # Checks if we don't have pizza/panini at dinner
                 if '1,00€' in c_secs_prices[10] or '0,80€' in c_secs_prices[10]:
                     c_secs_prices[3:5], c_secs_prices[6:8] = c_secs_prices[6:8], c_secs_prices[3:5]
-                    c_secs_prices[5],   c_secs_prices[6]   = c_secs_prices[6],   c_secs_prices[5]
-                    c_secs_prices[6],   c_secs_prices[7]   = c_secs_prices[7],   c_secs_prices[6]
+                    c_secs_prices[5],   c_secs_prices[6] = c_secs_prices[6],   c_secs_prices[5]
+                    c_secs_prices[6],   c_secs_prices[7] = c_secs_prices[7],   c_secs_prices[6]
 
                     c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[4], secs_foods[1], secs_foods[3], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
                 else:
@@ -257,10 +267,10 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
 
             # Checks if we don't have pizza/panini at dinner
             elif '1,00€' in c_secs_prices[9] or '0,80€' in c_secs_prices[9]:
-                print(color.YELLOW + "[PIZZA STYLE] No pizza no party" + color.END)
+                print(Fore.YELLOW + "[PIZZA STYLE] No pizza no party")
                 c_secs_prices[2:4], c_secs_prices[5:7] = c_secs_prices[5:7], c_secs_prices[2:4]
-                c_secs_prices[4],   c_secs_prices[5]   = c_secs_prices[5],   c_secs_prices[4]
-                c_secs_prices[5],   c_secs_prices[6]   = c_secs_prices[6],   c_secs_prices[5]
+                c_secs_prices[4],   c_secs_prices[5] = c_secs_prices[5],   c_secs_prices[4]
+                c_secs_prices[5],   c_secs_prices[6] = c_secs_prices[6],   c_secs_prices[5]
 
                 c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[1], secs_foods[3], secs_foods[4], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9]
             else:
@@ -268,21 +278,21 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
                 c_secs_foods = secs_foods[0], secs_foods[2], secs_foods[1], secs_foods[3], secs_foods[4], secs_foods[5], secs_foods[6], secs_foods[7], secs_foods[8], secs_foods[9], secs_foods[10]
 
             if not foods_prices_are_ordered(c_secs_prices, c_secs_foods, more_info = True):
-                print(color.CYAN + "[CONVERSION] ESITO 2: False" + color.END)
-                print(color.RED + "[CONVERSION] Non è stato possibile riordinare correttamente la lista" + color.END)
+                print(Fore.CYAN + "[CONVERSION] ESITO 2: False")
+                print(Fore.RED + "[CONVERSION] Non è stato possibile riordinare correttamente la lista")
 
                 return msg_menu + "Errore!"
             else:
-                print(color.CYAN + "[CONVERSION] ESITO 2: True" + color.END)
+                print(Fore.CYAN + "[CONVERSION] ESITO 2: True")
 
                 secs_foods, secs_prices = from_menu_lord(lunch_or_dinner, c_secs_foods, c_secs_prices)
         else:
-            print(color.CYAN + "[CONVERSION] ESITO 1: True" + color.END)
+            print(Fore.CYAN + "[CONVERSION] ESITO 1: True")
 
             secs_foods, secs_prices = from_menu_lord(lunch_or_dinner, c_secs_foods, c_secs_prices)
 
     else:
-        print(color.GREEN + "[SUCCESS CONVERSION] La lista è ordinata, strano..." + color.END)
+        print(Fore.GREEN + "[SUCCESS CONVERSION] La lista è ordinata, strano...")
 
     # Creates a sorted menu without repetitions with prices and foods together
     # Tries to create a menu for lunch and another for dinner
@@ -302,6 +312,9 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
     # Splits the menu into the current courses
     courses = append_courses(myList)
 
+    # Courses names
+    courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
+
     for course_text, course in zip(courses_texts, courses):
         msg_menu += course_text
         for el in course:
@@ -310,6 +323,7 @@ def advanced_read_txt(canteen, day, lunch_or_dinner = "Pranzo"):
     msg_menu += "_Il menù potrebbe subire variazioni_"
 
     return msg_menu
+
 
 def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
     """
@@ -328,10 +342,11 @@ def foods_prices_are_ordered(secs_prices, secs_foods, more_info = False):
     for i, (price, food) in enumerate(zip(secs_prices, secs_foods)):
         if len(price) != len(food):
             if more_info:
-                print(color.CYAN + "[CONVERSION BUG] C'è ancora un errore. A: " + str(i) + color.END)
-                print(color.CYAN + "[CONVERSION BUG] Dettagli:\n" + str(price) + " - " + str(food) + color.END)
+                print(Fore.CYAN + "[CONVERSION BUG] C'è ancora un errore. A: " + str(i))
+                print(Fore.CYAN + "[CONVERSION BUG] Dettagli:\n" + str(price) + " - " + str(food))
             return False
     return True
+
 
 def from_menu_lord(lunch_or_dinner, secs_foods, secs_prices):
     """
@@ -377,7 +392,8 @@ def from_menu_lord(lunch_or_dinner, secs_foods, secs_prices):
 
     return moment_foods[:], moment_prices[:]
 
-def append_courses(my_list, dictionary = courses_dictionaries):
+
+def append_courses(my_list, dictionary=courses_dictionaries):
     """
     Splits the full list containing prices and foods into the courses
 
@@ -387,14 +403,16 @@ def append_courses(my_list, dictionary = courses_dictionaries):
     :type dictionary: dictionary.
     :returns:  list -- Courses of the menu wanted.
     """
-    courses = [[],[],[],[],[],[]]
+    courses = [[], [], [], [], [], []]
 
     for el in my_list:
         for ci, course_dictionary in enumerate(dictionary):
             for word in course_dictionary:
                 if word.lower() in el.lower() and "pizzaiola" not in el.lower() and el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
-                    if ci >= 1: courses[ci+1].append(el)
-                    else:       courses[ci].append(el)
+                    if ci >= 1:
+                        courses[ci+1].append(el)
+                    else:
+                        courses[ci].append(el)
 
     for el in my_list:
         if el not in courses[0] and el not in courses[1] and el not in courses[2] and el not in courses[3] and el not in courses[4] and el not in courses[5]:
@@ -402,7 +420,8 @@ def append_courses(my_list, dictionary = courses_dictionaries):
 
     return courses
 
-def is_course(my_list, dictionary = courses_dictionaries):
+
+def is_course(my_list, dictionary=courses_dictionaries):
     """
     Checks which course the list belongs to
 
@@ -429,6 +448,7 @@ def is_course(my_list, dictionary = courses_dictionaries):
                     else:
                         return "Secondi"
 
+
 def get_menu_updated(canteen, day, lunch_or_dinner):
     """
     Prepare the updated menu for the notification to the user
@@ -442,15 +462,15 @@ def get_menu_updated(canteen, day, lunch_or_dinner):
     :returns:  str -- The menu requested given in a string.
     """
     while(1):
-        if dl_updated_pdf(canteen, day) == False:
+        if dl_updated_pdf(canteen, day) is False:
             time.sleep(30)
             continue
 
         pdfFileName = canteen + '_' + day + ".pdf"
-        print(color.YELLOW + "[SENDING FILE] Sto provando a inviare il PDF - " + pdfFileName + color.END)
+        print(Fore.YELLOW + "[SENDING FILE] Sto provando a inviare il PDF - " + pdfFileName)
         convert_in_txt(pdfFileName)
 
-        if check_updated_txt(pdfFileName) == True:
+        if check_updated_txt(pdfFileName) is True:
             # Send the message that contain the meaning of the life
             msg_menu = advanced_read_txt(canteen, day, lunch_or_dinner)
 
@@ -461,6 +481,7 @@ def get_menu_updated(canteen, day, lunch_or_dinner):
                 return msg_menu
         else:
             return "Errore"
+
 
 def report_error(textFile, query_id, from_id):
     """
@@ -482,46 +503,24 @@ def report_error(textFile, query_id, from_id):
     days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
 
     # String for the canteen and date of the error
-    logname = ""
+    log_name = ""
     if "Avack" in textFile:
-        logname = "DA"
+        log_name = "DA"
     else:
-        logname = "CP"
+        log_name = "CP"
 
     for line in out:
         for day in days:
             if day in line.lower():
-                logname += "_" + line
+                log_name += "_" + line
                 break
 
-    file_name_error = ("log_" + str(logname.replace(" ", "_"))).rstrip()
+    file_name_error = ("log_" + str(log_name.replace(" ", "_"))).rstrip()
 
-    f = open(logDir + file_name_error + ".txt", "w")
+    f = open(Dirs.LOG + file_name_error + ".txt", "w")
     f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
     f.close()
 
-def user_in_users_notifications(chat_id, canteen, launch_or_dinner = ""):
-    """
-    Checks if the chat_id given is inside the user_notification file
-
-    :param chat_id: The chat_id of the user.
-    :type chat_id: str.
-    :param canteen: Name of the canteen.
-    :type canteen: str.
-    :returns: bool::
-        - **True** -- The user is in the list.
-        - **False** -- The user is not in the list.
-    :param launch_or_dinner: Select the launch or dinner for the notification.
-    :type launch_or_dinner: str.
-    """
-    found = False
-
-    for user in readlines_fromfile(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt"):
-        if str(chat_id) == user.replace("\n", ""):
-            found = True
-            break
-
-    return found
 
 def readlines_fromfile(path):
     """
@@ -535,34 +534,8 @@ def readlines_fromfile(path):
 
     return out
 
-def set_users_notifications(chat_id, canteen, launch_or_dinner, value):
-    """
-    Add or remove the chat_id of the user from the file of the notification.
 
-    :param chat_id: The chat_id of the user.
-    :type chat_id: str.
-    :param canteen: Name of the canteen.
-    :type canteen: str.
-    :param value: State of the user.
-    :type value: bool.
-    :param launch_or_dinner: Select the launch or dinner for the notification.
-    :type launch_or_dinner: str.
-    """
-    if value:
-        f = open(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt", "a")
-        f.write(str(chat_id) + "\n")
-    else:
-        # Remove the chat_id from the file
-        f = open(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt", "r")
-        out = f.readlines()
-        f.close()
-        f = open(usNoDir + "user_notification_" + canteen + launch_or_dinner + ".txt", "w")
-        for line in out:
-            if str(chat_id) + "\n" != line:
-                f.write(line)
-    f.close()
-
-def create_graph(days):
+def create_graph(db, days, graph_name):
     """
     Creates a graph that shows the usage of the bot during the past 30 days
 
@@ -570,35 +543,18 @@ def create_graph(days):
     :type days: int.
     :returns: str -- name of the output image of the graph
     """
-    file_name = "temp_graph.png"
-
-    dailyUsers_count = []
-
-    for dailyFile in os.listdir(dailyusersDir)[::-1]:
-        count = 0
-        with open(dailyusersDir + dailyFile, "r") as f:
-            out = f.readlines();
-            for line in out:
-                if line.strip():
-                    count += 1
-
-        dailyUsers_count.append(count)
-
     fig, ax = plt.subplots()
 
-    # Fill with 0s
-    for index in range(0, (days + 1 - len(os.listdir(dailyusersDir)))):
-        dailyUsers_count.append(0)
-
     for axis in [ax.xaxis, ax.yaxis]:
-        axis.set_major_locator(ticker.MaxNLocator(integer = True))
+        axis.set_major_locator(ticker.MaxNLocator(integer=True))
 
-    days = np.arange(0, -days - 1, -1)
+    daily_users_data = db.get_daily_users(days)
+    days = np.arange(0, -days, -1)
 
-    plt.plot(days, dailyUsers_count, marker = 'o', color = 'b')
-    plt.fill_between(days, dailyUsers_count, 0, color = '0.822')
+    plt.plot(days, daily_users_data, marker='o', color='b')
+    plt.fill_between(days, daily_users_data, 0, color='0.822')
 
-    loc = ticker.MultipleLocator(base = 3.0)
+    loc = ticker.MultipleLocator(base=3.0)
     ax.xaxis.set_major_locator(loc)
 
     plt.xlabel("Giorni del mese")
@@ -606,10 +562,8 @@ def create_graph(days):
     plt.title("Statistiche di utilizzo")
     plt.grid(True)
 
-    plt.savefig(dailyusersDir + file_name)
+    plt.savefig(graph_name)
     plt.clf()
-
-    return file_name
 
 def today_weekend():
     """
@@ -618,6 +572,7 @@ def today_weekend():
     :returns: int -- The current day in an integer format.
     """
     return datetime.datetime.today().weekday()
+
 
 def get_url(canteen, day):
     """
@@ -632,6 +587,7 @@ def get_url(canteen, day):
     URL = "http://www.ersucam.it/wp-content/uploads/mensa/menu"
     return (URL + "/" + canteen + "/" + day + ".pdf")
 
+
 def get_day(day):
     """
     Convert the day from an integer type to a string type.
@@ -642,13 +598,13 @@ def get_day(day):
     """
     # Days of the week but in numeric format
     days_week_int = {
-        0 : "Lunedì",
-        1 : "Martedì",
-        2 : "Mercoledì",
-        3 : "Giovedì",
-        4 : "Venerdì",
-        5 : "Sabato",
-        6 : "Domenica"
+        0: "Lunedì",
+        1: "Martedì",
+        2: "Mercoledì",
+        3: "Giovedì",
+        4: "Venerdì",
+        5: "Sabato",
+        6: "Domenica"
     }
 
     # Check today
@@ -656,6 +612,7 @@ def get_day(day):
         return days_week_int[day]
     else:
         return days_week_int[today_weekend()]
+
 
 def clean_canteen(canteen):
     """
@@ -668,11 +625,12 @@ def clean_canteen(canteen):
 
     # Available canteen in Camerino
     canteen_unicam = {
-        "Avack" : "D'Avack",
-        "ColleParadiso" : "Colle Paradiso"
+        "Avack": "D'Avack",
+        "ColleParadiso": "Colle Paradiso"
     }
 
     return (canteen_unicam[canteen])
+
 
 def clean_day(day):
     """
@@ -684,30 +642,31 @@ def clean_day(day):
     """
     # Days of the week (call me genius :3)
     days_week = {
-        "lunedi" : "Lunedì",
-        "martedi" : "Martedì",
-        "mercoledi" : "Mercoledì",
-        "giovedi" : "Giovedì",
-        "venerdi" : "Venerdì",
-        "sabato" : "Sabato",
-        "domenica" : "Domenica"
+        "lunedi": "Lunedì",
+        "martedi": "Martedì",
+        "mercoledi": "Mercoledì",
+        "giovedi": "Giovedì",
+        "venerdi": "Venerdì",
+        "sabato": "Sabato",
+        "domenica": "Domenica"
     }
 
     return days_week[day]
-    
-def set_markup_keyboard_colleparadiso(admin_role):
+
+
+def get_cp_keyboard(user_role=0):
     """
     Return the custom markup for the keyboard, based on the day of the week.
 
-    :param admin_role: The role of the current user.
-    :type admin_role: bool.
+    :param user_role: The role of the current user.
+    :type user_role: integer.
     :returns: list -- An array containing the tags to be used for the keyboard of Colle Paradiso.
     """
     # Get the day
     days_week_normal = get_day(today_weekend())
 
     # Check which day is today and so set the right keyboard
-    if admin_role:
+    if user_role > 0:
         markup_array = [["Lunedì"],
                         ["Martedì", "Mercoledì", "Giovedì"],
                         ["Venerdì", "Sabato", "Domenica"]]
@@ -735,23 +694,24 @@ def set_markup_keyboard_colleparadiso(admin_role):
     elif days_week_normal == "Domenica":
         markup_array = [["Oggi"]]
     else:
-        print(color.RED + "[COLLEPARADISO KEYBOARD] Nice shit bro :)" + color.END)
+        print(Fore.RED + "[COLLEPARADISO KEYBOARD] Nice shit bro :)")
 
     return markup_array
 
-def set_markup_keyboard_davak(admin_role):
+
+def get_da_keyboard(user_role=0):
     """
     Return the custom markup for the keyboard, based on the day of the week.
 
-    :param admin_role: The role of the current user.
-    :type admin_role: bool.
+    :param user_role: The role of the current user.
+    :type user_role: integer.
     :returns: list -- An array containing the tags to be used for the keyboard of D'Avack.
     """
     # Get the day
     days_week_normal = get_day(today_weekend())
 
     # Check which day is today and so set the right keyboard
-    if admin_role:
+    if user_role > 0:
         markup_array = [["Lunedì"],
                         ["Martedì", "Mercoledì", "Giovedì"]]
     elif days_week_normal == "Lunedì":
@@ -766,16 +726,17 @@ def set_markup_keyboard_davak(admin_role):
     elif days_week_normal == "Giovedì":
         markup_array = [["Oggi"]]
     else:
-        print(color.RED + "[AVACK KEYBOARD] Nice shit bro :)" + color.END)
+        print(Fore.RED + "[AVACK KEYBOARD] Nice shit bro :)")
 
     return markup_array
 
-def set_markup_keyboard_lunch_dinnner(admin_role, canteen, day):
+
+def get_launch_dinner_keyboard(canteen, day, user_role=0):
     """
     Return the custom markup for the keyboard, based on the lunch or dinner.
 
-    :param admin_role: The role of the current user.
-    :type admin_role: bool.
+    :param user_role: The role of the current user.
+    :type user_role: integer.
     :param canteen: Name of the canteen.
     :type canteen: str.
     :param day: Day of the week.
@@ -784,7 +745,7 @@ def set_markup_keyboard_lunch_dinnner(admin_role, canteen, day):
     """
     # Lunch or supper based on the choose of the user
     if canteen == "ColleParadiso":
-        if (day != "sabato" and day != "domenica") or admin_role:
+        if (day != "sabato" and day != "domenica") or user_role > 0:
             markup_array = [["Pranzo"],
                             ["Cena"]]
         else:
@@ -792,9 +753,10 @@ def set_markup_keyboard_lunch_dinnner(admin_role, canteen, day):
     elif canteen == "Avack":
         markup_array = [["Pranzo"]]
     else:
-        print(color.RED + "[SET KEYBOARD LUNCH/DINNER] Nice shit bro :)" + color.END)
+        print(Fore.RED + "[SET KEYBOARD LUNCH/DINNER] Nice shit bro :)")
 
     return markup_array
+
 
 def delete_files_infolder(folder_dir):
     """
@@ -809,7 +771,8 @@ def delete_files_infolder(folder_dir):
             if os.path.isfile(the_file_path):
                 os.unlink(the_file_path)
         except Exception as e:
-            print(color.RED + "[ERROR] Errore nella funzione delete_files_infolder: " + e + color.END)
+            print(Fore.RED + "[ERROR] Errore nella funzione delete_files_infolder: " + e)
+
 
 def get_bool():
     """
@@ -819,6 +782,7 @@ def get_bool():
     """
     with open(boolFile, 'r') as f:
         return str(f.readline().strip())
+
 
 def write_bool(bool_value):
     """
@@ -830,108 +794,31 @@ def write_bool(bool_value):
     with open(boolFile, 'w') as f:
         f.writelines(bool_value)
 
+
 def check_dir_files():
     """
     Checks the existance of all the directories and files
     """
-    if not os.path.exists(pdfDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the PDF for you. Stupid human." + color.END)
-        os.makedirs(pdfDir)
-    if not os.path.exists(txtDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Text Output for you. Stupid human." + color.END)
-        os.makedirs(txtDir)
-    if not os.path.exists(boolDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Boolean Value for you. Stupid human." + color.END)
-        os.makedirs(boolDir)
-    if not os.path.exists(logDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the Log Info for you. Stupid human." + color.END)
-        os.makedirs(logDir)
-    if not os.path.exists(usNoDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder of the User Notification for you. Stupid human." + color.END)
-        os.makedirs(usNoDir)
-    if not os.path.exists(usersDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the DB of the Users for you. Stupid human." + color.END)
-        os.makedirs(usersDir)
-    if not os.path.exists(dailyusersDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the Daily utilization for you. Stupid human." + color.END)
-        os.makedirs(dailyusersDir)
-    if not os.path.exists(qrCodeDir):
-        print(color.DARKCYAN + "[DIRECTORY] I'm creating this folder for the QR Code for you. Stupid human." + color.END)
-        os.makedirs(qrCodeDir)
-
-    # Create the file for the notification
-    if not os.path.isfile(usNoDir + "user_notification_cp_d.txt"):
-        f = open(usNoDir + "user_notification_cp_d.txt", "w")
-        f.close()
-
-    if not os.path.isfile(usNoDir + "user_notification_cp_l.txt"):
-        f = open(usNoDir + "user_notification_cp_l.txt", "w")
-        f.close()
-
-    if not os.path.isfile(usNoDir + "user_notification_da.txt"):
-        f = open(usNoDir + "user_notification_da.txt", "w")
-        f.close()
+    if not os.path.exists(Dirs.PDF):
+        print(Fore.CYAN + "[DIRECTORY] I'm creating this folder of the PDF for you. Stupid human.")
+        os.makedirs(Dirs.PDF)
+    if not os.path.exists(Dirs.TXT):
+        print(Fore.CYAN + "[DIRECTORY] I'm creating this folder of the Text Output for you. Stupid human.")
+        os.makedirs(Dirs.TXT)
+    if not os.path.exists(Dirs.BOOL):
+        print(Fore.CYAN + "[DIRECTORY] I'm creating this folder of the Boolean Value for you. Stupid human.")
+        os.makedirs(Dirs.BOOL)
+    if not os.path.exists(Dirs.LOG):
+        print(Fore.CYAN + "[DIRECTORY] I'm creating this folder of the Log Info for you. Stupid human.")
+        os.makedirs(Dirs.LOG)
+    if not os.path.exists(Dirs.QRCODE):
+        print(Fore.CYAN + "[DIRECTORY] I'm creating this folder for the QR Code for you. Stupid human.")
+        os.makedirs(Dirs.QRCODE)
 
     if not os.path.isfile(boolFile):
         f = open(boolFile, "w")
         f.close()
 
-    if not os.path.isfile(usersFile):
-        f = open(usersFile, "w")
-        f.close()
-
-def create_daily_file():
-    """
-    Creates the file for the day
-    """
-    datestring = datetime.datetime.now().strftime('%d-%m-%Y')
-
-    # Get the last filename
-    num = 0
-
-    for dailyFile in os.listdir(dailyusersDir):
-        if datestring in dailyFile:
-            return
-        temp_num = dailyFile.split("_")[0]
-        if int(temp_num) > int(num):
-            num = int(temp_num)
-
-    # Create the filename based on the current day
-    file_name = str(num + 1) + "_" + datestring + ".txt"
-
-    if not os.path.isfile(file_name):
-        f = open(dailyusersDir + file_name, "w")
-        f.close()
-
-def add_to_daily_file(chat_id):
-    """
-    Add the chat_id to the file of the daily utilization
-
-    :param chat_id: A string containing the value of the chat_id.
-    :type chat_id: str.
-    """
-    num = 0
-
-    filename = ""
-
-    for dailyFile in os.listdir(dailyusersDir):
-        temp_num = dailyFile.split("_")[0]
-
-        if int(temp_num) >= int(num):
-            num = temp_num
-            filename = dailyFile
-
-    chat_id_found = False
-
-    if filename != "":
-        for user in readlines_fromfile(dailyusersDir + filename):
-            if str(chat_id) + "\n" == user:
-                chat_id_found = True
-                break
-
-        if not chat_id_found:
-            with open(dailyusersDir + filename, 'a') as f:
-                f.write(str(chat_id) + "\n")
 
 def generate_qr_code(chat_id, msg, folder_dir, date, canteen, meal):
     """
@@ -952,17 +839,17 @@ def generate_qr_code(chat_id, msg, folder_dir, date, canteen, meal):
     :returns: str -- The path of the QR Code.
     """
     qr = qrcode.QRCode(
-        version = 1,
-        error_correction = qrcode.constants.ERROR_CORRECT_L,
-        box_size = 7,
-        border = 4,
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=7,
+        border=4,
     )
     qr.add_data(str(chat_id) + " - " + date + " - " + canteen + " - " + meal + "\n\n" + msg)
-    qr.make(fit = True)
+    qr.make(fit=True)
 
     filename = folder_dir + str(chat_id) + "_" + "QRCode.png"
 
-    img = qr.make_image(fill_color = "black", back_color = "white")
+    img = qr.make_image(fill_color="black", back_color="white")
     img.save(filename)
 
     return filename
