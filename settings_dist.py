@@ -13,6 +13,7 @@ courses_dictionaries = [
     ["lattin", "brick", "acqua"]
 ]
 
+
 class Dirs:
     CURRENT = os.path.dirname(os.path.abspath(__file__))
     PDF = CURRENT + "/PDF/"
@@ -21,8 +22,9 @@ class Dirs:
     LOG = CURRENT + "/Log/"
     QRCODE = CURRENT + "/QRCode/"
 
+
 # Bool file
-boolFile = Dirs.bool + "update_menu.txt"
+boolFile = Dirs.BOOL + "update_menu.txt"
 
 # Times for the notification
 notification_lunch = {12, 30}

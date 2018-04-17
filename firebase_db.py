@@ -11,6 +11,7 @@ from colorama import Fore
 import datetime
 from calendar import monthrange
 
+
 class Firebase:
     def __init__(self, cert):
         """
@@ -62,7 +63,7 @@ class Firebase:
                     "notif_cp_l": True,
                     "notif_da": True
                 },
-                "role": 0 # Default user
+                "role": 0  # Default user
             })
             return True
         return False

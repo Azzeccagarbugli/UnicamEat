@@ -19,7 +19,6 @@ TO DO:
 """
 
 import os
-import sys
 import random
 import time
 import datetime
@@ -181,7 +180,7 @@ def handle(msg):
 
     # Toggle/Untoggle admin role
     elif command_input == "/admin" or command_input == "/admin" + BOT_NAME:
-        if db.get_user(chat_id)['role'] == 1:
+        if db.get_user(chat_id)['role'] == 5:
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
                          [dict(text="Invia messaggio", callback_data="cmd_send_msg"), dict(text="Chiudi mensa", callback_data="cmd_close_canteen")],
                          [dict(text="Boolean", callback_data="cmd_bool"), dict(text="Pulisci cartelle", callback_data="cmd_clean_folders")],
@@ -366,7 +365,7 @@ def handle(msg):
                     # qrcode_filename never used, do we need it?
                     qrcode_filename = generate_qr_code(chat_id, msg_menu, Dirs.QRCODE, str(now.strftime("%d/%m %H:%M")), str(user_server_canteen[chat_id]), command_input)
 
-                    if random_donation and db.get_user(chat_id)['role'] == 1:
+                    if random_donation and db.get_user(chat_id)['role'] == 5:
                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                     [dict(text='Prenota con il QR Code!', callback_data='qrcode')],
                                     [dict(text='PDF del menù del giorno', url=get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
@@ -407,9 +406,6 @@ def on_callback_query(msg):
     Return the price of a complete lunch/dinner
     """
     query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
-
-    # User on Firebase
-    user_info = db.get_user(from_id)
 
     # Debug
     print(Fore.GREEN + '[CALLBACK QUERY] Callback query: ' + Fore.RESET + Style.BRIGHT + query_id, from_id, data)
@@ -643,7 +639,7 @@ def update():
                     bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
 
         # Sending to ColleParadiso users
-        if (day == "sabato" or day == "domenica") and have_to_send == "Cena" and canteen_closed_cp == True:
+        if (day == "sabato" or day == "domenica") and have_to_send == "Cena" and canteen_closed_cp is True:
             pass
         else:
             canteen = "ColleParadiso"
