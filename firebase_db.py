@@ -27,20 +27,22 @@ class Firebase:
                   "oppure un parametro non è stato passato correttamente. Si prega di chiuderla e riprovare.")
             quit()
 
-    def add_user(self, chat_id, user_info):
+    def add_user(self, user_info):
         """
         Adds a new user under /users
         """
-        if not self.exists_user(chat_id):
-            # Trying to get full name
-            if 'first_name' in user_info and 'last_name' in user_info:
-                name = user_info['first_name'] + " " + user_info['last_name']
-            elif 'first_name' in user_info:
-                name = user_info['first_name']
-            elif 'last_name' in user_info:
-                name = user_info['last_name']
+        if not self.exists_user(user_info['id']):
+            # Trying to get first name
+            if 'first_name' in user_info:
+                first_name = user_info['first_name']
             else:
-                name = "Not Defined"
+                first_name = "Not Defined"
+
+            # Trying to get last name
+            if 'last_name' in user_info:
+                last_name = user_info['last_name']
+            else:
+                last_name = "Not Defined"
 
             # Trying to get username
             if 'username' in user_info:
@@ -48,9 +50,10 @@ class Firebase:
             else:
                 username = "Not Defined"
 
-            db.reference('users/' + str(chat_id)).set({
+            db.reference('users/' + str(user_info['id'])).set({
                 "info": {
-                    "name": name,
+                    "first_name": first_name,
+                    "last_name": last_name,
                     "username": username
                 },
                 "preferences": {
@@ -59,7 +62,7 @@ class Firebase:
                     "notif_cp_l": True,
                     "notif_da": True
                 },
-                "role": 0
+                "role": 0 # Default user
             })
             return True
         return False
@@ -95,7 +98,7 @@ class Firebase:
         Retrieves all the ids of the users in the db
         """
         # NOTE that we don't really need to convert to list, but it is very userful for debug purpose
-        # since like this we can sort it and have an output as we really have in the firebase console
+        # since like this we can sort it and have an output as we really have in the Firebase console
         users_list = list(db.reference('users/').get(shallow=True))
         users_list.sort(key=int)
         return users_list
@@ -104,7 +107,7 @@ class Firebase:
         """
         Retrieves all the admin's chat_ids
         """
-        return list(db.reference('users/').order_by_child('role').equal_to(1).get())
+        return list(db.reference('users/').order_by_child('role').equal_to(5).get())
 
     def get_users_with_pref(self, pref, val):
         """
@@ -118,17 +121,20 @@ class Firebase:
         """
         return self.get_user(chat_id) is not None
 
-    def update_daily_users(self, chat_id):
+    def update_daily_users(self, user_info):
         """
         Updates the 22 to make sure that we always have the 22 in our hearts
         """
+        if not self.exists_user(user_info['id']):
+            self.add_user(user_info)
+
         now = datetime.datetime.now()
         try:
-            db.reference('daily_users/' + now.strftime("%Y/%m/%d")).get()[chat_id]
+            db.reference('daily_users/' + now.strftime("%Y/%m/%d")).get()[user_info['id']]
             return False
         except (KeyError, TypeError) as e:
             db.reference('daily_users/' + now.strftime("%Y/%m/%d")).update({
-                str(chat_id): True
+                str(user_info['id']): True
             })
             return True
 
@@ -198,4 +204,4 @@ class Firebase:
             out = f.readlines()
 
         for chat_id in out:
-            self.add_user(chat_id.rstrip(), bot.getChat(chat_id))
+            self.add_user(bot.getChat(chat_id))
