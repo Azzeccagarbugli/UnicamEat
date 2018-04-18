@@ -6,16 +6,22 @@ Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
          Porchetta       (clarantonio98@gmail.com)
 
 TO DO:
-- Implementazione di FireBase                                                                    [V]
-    - Modificare funzione Update()
-- Modificare il codice affinché non utilizzi più la variabile admin_role                         [V]
-- Migliorare gestione colori                                                                     [V]
-- Rendere più sensati gli user_state                                                             [V]
 - Espandere l'utilizzo del comando /admin per il db in Firebase                                  []
 - Richiesta tramite query dei vari files .xml per la lettura dei menù                            []
 - Creare ramo nel db per la chiusura della mensa, e in generale dello stato di cose belline      []
 - Se possibile migliorare la gestione della funzione /registrati                                 []
+- Modificare funzione invia messaggio, vorrei che:
+    - permetta di scegliere un'ora di pubblicazione
+    - permetta di scegliere se inviare con notifica all'utente o no
+    - controllo errore più figo (basandosi sull'offset)
+- Spostare parametri di servizio (chiusura mense, booleana) all'interno di una nuova sezione
 - Implementazione della gestione generica di una mensa, for the future                           []
+    Cosa deve avere una mensa?
+    - Posizione
+    - Informazioni
+    - Orari/Giorni di apertura
+    - Chiusura forzata
+    - Indirizzo da dove reperire i menù (privato)
 """
 
 import os
@@ -53,6 +59,9 @@ canteen_unicam = {
 # State for user
 user_state = {}
 
+# Report stuff
+report_texts = {}
+
 # User server state
 user_server_day = {}
 user_server_canteen = {}
@@ -68,7 +77,7 @@ def handle(msg):
     """
     content_type, chat_type, chat_id = telepot.glance(msg)
 
-    # User daily utilization
+    # Updating daily users for graph construction
     db.update_daily_users(bot.getChat(chat_id))
 
     try:  # Check what type of content was sent
@@ -84,6 +93,14 @@ def handle(msg):
     except KeyError:
         user_state[chat_id] = 0
 
+    try:
+        report_texts[chat_id]
+    except KeyError:
+        report_texts[chat_id] = {
+            'title': "",
+            'text': ""
+        }
+
     try:  # Attempting to save username and full name
         username = msg['from']['username']
     except KeyError:
@@ -98,77 +115,10 @@ def handle(msg):
     if basic_cmds(chat_id, command_input) is True:
         pass
 
-    # Register command
-    elif command_input == "/registrati" or command_input == "/registrati" + BOT_NAME:
-        role = db.get_user(chat_id)['role']
-        if role == 0:
-            # Inserimento Nome
-            msg = "Attraverso il seguente comando potrai confermare la tua identità in maniera *ufficiosa* con i tuoi dati personali. "\
-                  "\nMediante tale registrazione ti sarà possibile effettuare *prenotazioni del menù del giorno* quindi ti invitiamo, "\
-                  "onde evitare problematiche, all'inserimento di *dati veritieri*."\
-                  "\n\n_I tuoi personali innanzitutto sono al sicuro grazie alla crittografia offerta da Telegram e in secondo luogo, carissimo utente, "\
-                  "noi teniamo a te davvero molto e vogliamo garantirti la migliore esperienza d'uso possibile._"
-
-            bot.sendMessage(chat_id, msg, parse_mode="Markdown")
-            bot.sendMessage(chat_id, "Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
-
-            user_state[chat_id] = 31
-        elif role == 1:
-            msg_text = "La registrazione è già stata effettuata con successo ma non hai confermato di persona la tua identità presso la mensa."\
-                        "\n\n_Se pensi che ci sia stato un problema contatta il developer_"
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                         [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
-            bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
-        elif role == 2:
-            msg_text = "Ci risulta che tu abbia già confermato personalmente la tua identità presso la mensa, "\
-                       "per cui ti è già possibile ordinare i menù.\n\n_Se pensi che ci sia stato un problema contatta il developer_"
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                         [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
-            bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
-        else:
-            msg_text = "Il ruolo che ho trovato nel database *(" + str(role) + ")* non richiede che tu effettui una registrazione."\
-                       "\n\n_Se pensi che ci sia stato un problema contatta il developer_"
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                         [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
-            bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
-
-    elif user_state[chat_id] == 31:
-        # Inserimento Cognome
-        db.edit_user(chat_id, "info/first_name", command_input)
-
-        bot.sendMessage(chat_id, "Inserisci il tuo *cognome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
-        user_state[chat_id] = 32
-
-    elif user_state[chat_id] == 32:
-        # Checking pt.1
-        db.edit_user(chat_id, "info/last_name", command_input)
-
-        markup = ReplyKeyboardMarkup(keyboard=[
-                        ["Confermo"],
-                        ["Modifica i dati"]])
-        bot.sendMessage(chat_id, "Confermi che i dati corretti sono corretti? O vuoi modificare qualcosa?", parse_mode="Markdown", reply_markup=markup)
-        user_state[chat_id] = 33
-
-    elif user_state[chat_id] == 33:
-        # Checking pt.2
-        if command_input == "Confermo":
-            db.edit_user(chat_id, "role", 1)
-
-            user_info = db.get_user(chat_id)
-            msg_lol = "*" + user_info['info']['first_name'] + " " + user_info['info']['last_name'] + "* welcome in the family ❤️"
-
-            bot.sendPhoto(chat_id, "https://i.imgur.com/tFUZ984.jpg", caption=msg_lol, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-            user_state[chat_id] = 0
-        elif command_input == "Modifica dati":
-            bot.sendMessage(chat_id, "Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
-            user_state[chat_id] = 31
-        else:
-            bot.sendMessage(chat_id, "L'opzione specificata non è valida, scegline una corretta dalla tastiera", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
-
     # Settings status
-    elif command_input == "/impostazioni" or command_input == "/impostazioni" + BOT_NAME:
+    elif command_input == "/settings" or command_input == "/settings" + BOT_NAME:
         settings_msg = "Attraverso le impostazioni potrai cambiare diversi parametri all'interno del *Bot*: "\
-                       "\n• *Lingua*: passa dalla lingua italiana a quella inglese, o in generale a un altra lingua"\
+                       "\n• *Lingua*: passa dalla lingua attuale ad un'altra desiderata"\
                        "\n• *Notifiche*: abilita le notifiche per il menù del giorno"
 
         markup = InlineKeyboardMarkup(inline_keyboard=[
@@ -182,10 +132,11 @@ def handle(msg):
     elif command_input == "/admin" or command_input == "/admin" + BOT_NAME:
         if db.get_user(chat_id)['role'] == 5:
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                         [dict(text="Invia messaggio", callback_data="cmd_send_msg"), dict(text="Chiudi mensa", callback_data="cmd_close_canteen")],
-                         [dict(text="Boolean", callback_data="cmd_bool"), dict(text="Pulisci cartelle", callback_data="cmd_clean_folders")],
-                         [dict(text="Grafico", callback_data="cmd_graph")]])
-            bot.sendMessage(chat_id, "Seleziona un comando", parse_mode="Markdown", reply_markup=keyboard)
+                         [dict(text="⚠️ Segnalazioni", callback_data="cmd_reports")],
+                         [dict(text="✉️ Invia messaggio", callback_data="cmd_send_msg"), dict(text="🔒 Chiudi mensa", callback_data="cmd_close_canteen")],
+                         [dict(text="🔍 Boolean", callback_data="cmd_bool"), dict(text="🗑 Pulisci cartelle", callback_data="cmd_clean_folders")],
+                         [dict(text="📈 Grafico", callback_data="cmd_graph")]])
+            bot.sendMessage(chat_id, "*PANNELLO ADMIN*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
         else:
             bot.sendMessage(chat_id, "Non disponi dei permessi per usare questo comando")
 
@@ -309,11 +260,11 @@ def handle(msg):
 
                 if (user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "ColleParadiso":
                     msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
-                          "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari e non scordarti "\
+                          "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /hours e non scordarti "\
                           "di prendere anche la cena!"
                 elif user_server_canteen[chat_id] == "Avack":
                     msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _esclusivamente_ per il turno del pranzo.\n"\
-                          "Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /orari"
+                          "Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /hours"
                 else:
                     msg = "Seleziona dalla lista il menù desiderato"
 
@@ -387,6 +338,161 @@ def handle(msg):
         else:
             bot.sendMessage(chat_id, "Inserisci un parametro valido")
 
+    # Register command
+    elif command_input == "/register" or command_input == "/register" + BOT_NAME:
+        role = db.get_user(chat_id)['role']
+
+        if role == 0:
+            # Inserimento Nome
+            msg = "Attraverso il seguente comando potrai confermare la tua identità in maniera *ufficiosa* con i tuoi dati personali. "\
+                  "\nMediante tale registrazione ti sarà possibile effettuare *prenotazioni del menù del giorno* quindi ti invitiamo, "\
+                  "onde evitare problematiche, all'inserimento di *dati veritieri*."\
+                  "\n\n_I tuoi personali innanzitutto sono al sicuro grazie alla crittografia offerta da Telegram e in secondo luogo, carissimo utente, "\
+                  "noi teniamo a te davvero molto e vogliamo garantirti la migliore esperienza d'uso possibile._"
+
+            bot.sendMessage(chat_id, msg, parse_mode="Markdown")
+            bot.sendMessage(chat_id, "Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+
+            user_state[chat_id] = 31
+        elif role == 1:
+            msg_text = "La registrazione è già stata effettuata con successo ma non hai confermato di persona la tua identità presso la mensa."\
+                        "\n\n_Se pensi che ci sia stato un problema contatta il developer_"
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                         [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
+            bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
+
+        elif role == 2:
+            msg_text = "Ci risulta che tu abbia già confermato personalmente la tua identità presso la mensa, "\
+                       "per cui ti è già possibile ordinare i menù.\n\n_Se pensi che ci sia stato un problema contatta il developer_"
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                         [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
+            bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
+
+        else:
+            msg_text = "Il ruolo che ho trovato nel database *(" + str(role) + ")* non richiede che tu effettui una registrazione."\
+                       "\n\n_Se pensi che ci sia stato un problema contatta il developer_"
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                         [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
+            bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
+
+    elif user_state[chat_id] == 31:
+        # Inserimento Cognome
+        db.edit_user(chat_id, "info/first_name", command_input)
+
+        bot.sendMessage(chat_id, "Inserisci il tuo *cognome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+        user_state[chat_id] = 32
+
+    elif user_state[chat_id] == 32:
+        # Checking pt.1
+        db.edit_user(chat_id, "info/last_name", command_input)
+
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Confermo"],
+                        ["Modifica i dati"]])
+
+        user_info = db.get_user(chat_id)
+        msg = "Confermi che il seguente profilo corrisponde alla tua identità reale?"\
+              "\n\n*NOME:* {}\n*COGNOME:* {}"\
+              "\n\n*ATTENZIONE:* una volta confermati non potrai più modificarli.".format(user_info['info']['first_name'], user_info['info']['last_name'])
+        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=markup)
+        user_state[chat_id] = 33
+
+    elif user_state[chat_id] == 33:
+        # Checking pt.2
+        if command_input == "Confermo":
+            db.edit_user(chat_id, "role", 1)
+
+            user_info = db.get_user(chat_id)
+            msg_lol = "*" + user_info['info']['first_name'] + " " + user_info['info']['last_name'] + "* welcome in the family ❤️"
+
+            bot.sendPhoto(chat_id, "https://i.imgur.com/tFUZ984.jpg", caption=msg_lol, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+            user_state[chat_id] = 0
+
+        elif command_input == "Modifica dati":
+            bot.sendMessage(chat_id, "Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+            user_state[chat_id] = 31
+
+        else:
+            bot.sendMessage(chat_id, "L'opzione specificata non è valida, scegline una corretta dalla tastiera", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+
+    # Report a bug to the developers
+    elif command_input == "/report" or command_input == "/report" + BOT_NAME:
+        msg = "Tramite questo comando potrai inviare un *errore* che hai trovato agli sviluppatori,"\
+              "o semplicemente inviargli il tuo *parere* su questo bot."\
+              "\n\nTi basta scrivere qui sotto il testo che vuoi inviargli e la tua richiesta sarà immediatamente salvata nel server e rigirata agli sviluppatori."\
+              "\n\nPer cominciare digita il *titolo* del messaggio da inviare"
+        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+
+        user_state[chat_id] = 41
+
+    elif user_state[chat_id] == 41:
+        report_texts[chat_id]['title'] = command_input
+
+        msg = "Adesso scrivi il tuo *messaggio*"
+        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+
+        user_state[chat_id] = 42
+
+    elif user_state[chat_id] == 42:
+        report_texts[chat_id]['text'] = command_input
+
+        markup = ReplyKeyboardMarkup(keyboard=[
+                        ["Confermo"],
+                        ["Ricrea da capo"]])
+
+        user_info = db.get_user(chat_id)
+        msg = "Confermi di voler inviare il seguente messaggio?"\
+              "\n\n🏷 *TITOLO:* {}\n📝 *Messaggio*:\n_{}_"\
+              "\n\n*ATTENZIONE:* una volta confermato non potrai più modificarlo.".format(report_texts[chat_id]['title'], report_texts[chat_id]['text'])
+        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=markup)
+        user_state[chat_id] = 43
+
+    elif user_state[chat_id] == 43:
+        if command_input == "Confermo":
+            db.report_error(chat_id, report_texts[chat_id]['title'], report_texts[chat_id]['text'], high_priority=False)
+
+            msg = "Il tuo messaggio è stato inviato *con successo*, ti ringraziamo per la collaborazione."
+            bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+
+            user_state[chat_id] = 0
+
+        elif command_input == "Ricrea da capo":
+            msg = "La precedente segnalazione è stata *annullata*.\nScrivi il *titolo* del messaggio"
+            bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+
+            user_state[chat_id] = 41
+
+        else:
+            bot.sendMessage(chat_id, "L'opzione specificata non è valida, scegline una corretta dalla tastiera", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+
+    # Admin view reports
+    elif user_state[chat_id] == 51 or user_state[chat_id] == 52:
+        if user_state[chat_id] == 51:
+            reports = db.get_reports(new=True, old=False)
+        else:
+            reports = db.get_reports(new=False, old=True)
+
+        # Retrieving wanted msg
+        title = command_input.split(' [')[0]
+
+        msg_data = [
+            reports[title]['chat_id'],
+            "Alta" if reports[title]['high_priority'] else "Bassa",
+            reports[title]['date'],
+            title,
+            reports[title]['text']
+        ]
+
+        # Printing wanted msg
+        msg = "👤 *DA:* _{}_\n❗️ *PRIORITÀ:* {}\n"\
+              "📅 *DATA:* {}\n\n"\
+              "🏷 *TITOLO:* {}\n"\
+              "📝 *MESSAGGIO:*\n{}".format(msg_data[0], msg_data[1], msg_data[2], msg_data[3], msg_data[4])
+
+        if user_state[chat_id] == 51:
+            db.read_report(title)
+        bot.sendMessage(chat_id, msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+
     # Fun messages
     elif command_input.lower() == "questa mensa fa schifo" or command_input.lower() == "che schifo" or command_input.lower() == "siete inutili":
         bot.sendSticker(chat_id, "CAADBAADdwADzISpCY36P9nASV4cAg")
@@ -424,6 +530,43 @@ def on_callback_query(msg):
         bot.sendPhoto(from_id, photo=open(qrCodeDir + str(from_id) + "_" + "QRCode.png", 'rb'), caption="In allegato il tuo *QR Code* contenente i pasti da te selezionati", parse_mode="Markdown")
         bot.answerCallbackQuery(query_id)
 
+    elif data == 'cmd_reports':
+        """
+        TO DO:
+        - Calcolo messaggi totali, messaggi non letti
+        - Possibilità di scegliere per giorno
+        """
+        new_reports, old_reports = db.get_reports_number()
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [dict(text="📩 Visualizza nuovi", callback_data="cmd_view_reports_new")],
+                    [dict(text="🗂 Visualizza vecchi", callback_data="cmd_view_reports_old")],
+                    [dict(text="<<  Indietro", callback_data="cmd_back_admin")]])
+
+        answer_msg = "Hai *{} messaggi non letti*, _{} già letti_".format(new_reports, old_reports)
+        bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=answer_msg, parse_mode="Markdown", reply_markup=keyboard)
+        bot.answerCallbackQuery(query_id)
+
+    elif 'cmd_view_reports' in data:
+        if 'new' in data:
+            reports = db.get_reports(new=True, old=False)
+            user_state[from_id] = 51
+        elif 'old' in data:
+            reports = db.get_reports(new=False, old=True)
+            user_state[from_id] = 52
+
+        if reports is not None:
+            keyboard = []
+            for key, val in reports.items():
+                keyboard.append([key + " [{}]".format(val['date'])])
+
+            markup = ReplyKeyboardMarkup(keyboard=keyboard)
+            bot.sendMessage(from_id, "Seleziona un messaggio da vedere dalla lista sottostante", reply_markup=markup)
+
+            bot.answerCallbackQuery(query_id)
+        else:
+            bot.answerCallbackQuery(query_id, text="Non sono presenti messaggi")
+
     elif data == 'cmd_send_msg':
         bot.sendMessage(from_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
 
@@ -443,9 +586,10 @@ def on_callback_query(msg):
 
     elif data == "cmd_back_admin":
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                     [dict(text="Invia messaggio", callback_data="cmd_send_msg"), dict(text="Chiudi mensa", callback_data="cmd_close_canteen")],
-                     [dict(text="Boolean", callback_data="cmd_bool"), dict(text="Pulisci cartelle", callback_data="cmd_clean_folders")],
-                     [dict(text="Grafico", callback_data="cmd_graph")]])
+                     [dict(text="⚠️ Segnalazioni", callback_data="cmd_reports")],
+                     [dict(text="✉️ Invia messaggio", callback_data="cmd_send_msg"), dict(text="🔒 Chiudi mensa", callback_data="cmd_close_canteen")],
+                     [dict(text="🔍 Boolean", callback_data="cmd_bool"), dict(text="🗑 Pulisci cartelle", callback_data="cmd_clean_folders")],
+                     [dict(text="📈 Grafico", callback_data="cmd_graph")]])
 
         bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text="Seleziona un comando", reply_markup=keyboard)
         bot.answerCallbackQuery(query_id)
@@ -532,8 +676,8 @@ def on_callback_query(msg):
     elif data == 'cmd_notif_da':
         not_da_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche"
         markup = InlineKeyboardMarkup(inline_keyboard=[
-                  [dict(text="Abilita", callback_data="cmd_notif_da_on")],
-                  [dict(text="Disabilita", callback_data="cmd_notif_da_off")],
+                  [dict(text="🔔 Abilita", callback_data="cmd_notif_da_on")],
+                  [dict(text="🔕 Disabilita", callback_data="cmd_notif_da_off")],
                   [dict(text="<<  Indietro", callback_data="cmd_back_settings")]])
 
         bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_da_msg_status, parse_mode="Markdown", reply_markup=markup)
@@ -560,8 +704,8 @@ def on_callback_query(msg):
     elif data == 'cmd_notif_cp_lunch':
         not_cp_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche per il pranzo"
         markup = InlineKeyboardMarkup(inline_keyboard=[
-                  [dict(text="Abilita", callback_data="cmd_notif_cp_lunch_on")],
-                  [dict(text="Disabilita", callback_data="cmd_notif_cp_lunch_off")],
+                  [dict(text="🔔 Abilita", callback_data="cmd_notif_cp_lunch_on")],
+                  [dict(text="🔕 Disabilita", callback_data="cmd_notif_cp_lunch_off")],
                   [dict(text="<<  Indietro", callback_data="cmd_notif_cp")]])
 
         bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_cp_msg_status, parse_mode="Markdown", reply_markup=markup)
@@ -570,8 +714,8 @@ def on_callback_query(msg):
     elif data == 'cmd_notif_cp_dinner':
         not_cp_msg_status = "Scegliere se *abilitare* o *disabilitare* le notifiche per la cena"
         markup = InlineKeyboardMarkup(inline_keyboard=[
-                  [dict(text="Abilita", callback_data="cmd_notif_cp_dinner_on")],
-                  [dict(text="Disabilita", callback_data="cmd_notif_cp_dinner_off")],
+                  [dict(text="🔔 Abilita", callback_data="cmd_notif_cp_dinner_on")],
+                  [dict(text="🔕 Disabilita", callback_data="cmd_notif_cp_dinner_off")],
                   [dict(text="<<  Indietro", callback_data="cmd_notif_cp")]])
 
         bot.editMessageText(msg_identifier=(from_id, msg['message']['message_id']), text=not_cp_msg_status, parse_mode="Markdown", reply_markup=markup)
@@ -679,35 +823,38 @@ def basic_cmds(chat_id, command_input):
 
     elif command_input == "/help" or command_input == "/help" + BOT_NAME:
         help_msg = "Il servizio offerto da *Unicam Eat!* permette di accedere a diversi contenuti, raggiungibili attraverso determinati comandi tra cui:\n\n"\
-                   "*/info*: fornisce ulteriori informazioni sul Bot e sui suoi creatori\n\n"\
-                   "*/menu*: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
+                   "/info: fornisce ulteriori informazioni sul Bot e sui suoi creatori\n\n"\
+                   "/menu: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
                    "succesivamente il *giorno* e infine il parametro *pranzo* o *cena* in base alle proprie esigenze\n\n"\
-                   "*/orari*: visualizza gli orari delle mense disponibili nel Bot\n\n"\
-                   "*/prezzi*: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
-                   "*/avvertenze*: inoltra all'utente delle avvertenze predisposte dalla mensa operante\n\n"\
-                   "*/allergeni*: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
-                   "*/impostazioni*: comando che permette di modificare alcuni settaggi del Bot secondo le proprie necessità"
+                   "/hours: visualizza gli orari delle mense disponibili nel Bot\n\n"\
+                   "/position\_avack: restituisce la posizione della mensa D'Avack nella mappa\n\n"\
+                   "/position\_colleparadiso: restituisce la posizione della mensa Colle Paradiso nella mappa\n\n"\
+                   "/prices: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
+                   "/warnings: inoltra all'utente delle avvertenze predisposte dalla mensa operante\n\n"\
+                   "/allergens: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
+                   "/settings: comando che permette di modificare alcuni settaggi del Bot secondo le proprie necessità\n\n"\
+                   "/report: permette di inviare un messaggio agli sviluppatori, che sia di segnalazione o altro"
 
         bot.sendMessage(chat_id, help_msg, parse_mode="Markdown")
         return True
 
-    elif command_input == "/orari" or command_input == "/orari" + BOT_NAME:
+    elif command_input == "/hours" or command_input == "/hours" + BOT_NAME:
         opening_msg = "*• D'Avack*\n"\
                     "Aperta tutti i giorni della settimana durante il pranzo, esclusi *Venerdì*, *Sabato* e *Domenica*, dalle ore *12:30* alle ore *14:15*. "\
-                    "\n_Posizione:_ /posizione\_avak\n"\
+                    "\n_Posizione:_ /position\_avak\n"\
                     "\n*• Colle Paradiso*\n"\
                     "Aperta tutti i giorni della settimana dalle ore *12:30* alle ore *14:15* e dalle ore *19:30* alle ore *21:15*."\
                     "\nDurante il week-end la mensa, invece, rimarrà aperta *esclusivamente* per pranzo dalle ore *12:30* alle ore *13:30*."\
-                    "\n_Posizione:_ /posizione\_colleparadiso"
+                    "\n_Posizione:_ /position\_colleparadiso"
 
         bot.sendMessage(chat_id, opening_msg, parse_mode="Markdown")
         return True
 
-    elif command_input == "/posizione_colleparadiso" or command_input == "/posizione_colleparadiso" + BOT_NAME:
+    elif command_input == "/position_colleparadiso" or command_input == "/position_colleparadiso" + BOT_NAME:
         bot.sendLocation(chat_id, "4    3.1437097", "13.0822057")
         return True
 
-    elif command_input == "/posizione_avak" or command_input == "/posizione_avak" + BOT_NAME:
+    elif command_input == "/position_avak" or command_input == "/position_avak" + BOT_NAME:
         bot.sendLocation(chat_id, "43.137908", "13.0688287")
         return True
 
@@ -727,7 +874,7 @@ def basic_cmds(chat_id, command_input):
         bot.sendMessage(chat_id, info_msg, parse_mode="Markdown", reply_markup=keyboard)
         return True
 
-    elif command_input == "/allergeni" or command_input == "/allergeni" + BOT_NAME:
+    elif command_input == "/allergens" or command_input == "/allergens" + BOT_NAME:
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                      [dict(text='PDF del Regolamento Europeo', url='http://www.sviluppoeconomico.gov.it/images/stories/documenti/Reg%201169-2011-UE_Etichettatura.pdf')]])
 
@@ -735,7 +882,7 @@ def basic_cmds(chat_id, command_input):
         bot.sendPhoto(chat_id, photo="https://i.imgur.com/OfURcFz.png", caption=allergeni_msg, reply_markup=keyboard)
         return True
 
-    elif command_input == "/prezzi" or command_input == "/prezzi" + BOT_NAME:
+    elif command_input == "/prices" or command_input == "/prices" + BOT_NAME:
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     [dict(text='Costo di un pasto completo', callback_data='notification_prices')]])
 
@@ -743,7 +890,7 @@ def basic_cmds(chat_id, command_input):
         bot.sendPhoto(chat_id, photo="https://i.imgur.com/BlDDpAE.png", caption=prices_msg, reply_markup=keyboard)
         return True
 
-    elif command_input == "/avvertenze" or command_input == "/avvertenze" + BOT_NAME:
+    elif command_input == "/warnings" or command_input == "/warnings" + BOT_NAME:
         warning_msg = "Si avvisano gli utenti che, nel personalizzare il proprio pasto, è consentito ritirare *al massimo 2 porzioni di ciascuna pietanza o prodotto*, "\
                       "nel modo indicato: \n"\
                       "• *Max n. 2* - Primi piatti\n"\
