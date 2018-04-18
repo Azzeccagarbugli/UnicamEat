@@ -98,7 +98,7 @@ class Firebase:
         """
         Retrieves all the ids of the users in the db
         """
-        # NOTE that we don't really need to convert to list, but it is very userful for debug purpose
+        # NOTE that we don't really need to convert to list, but it is very usefull for debug purpose
         # since like this we can sort it and have an output as we really have in the Firebase console
         users_list = list(db.reference('users/').get(shallow=True))
         users_list.sort(key=int)
@@ -185,6 +185,63 @@ class Firebase:
                     for i in range(days, 0, -1):
                         daily_users.append(0)
                     return daily_users
+
+    def report_error(self, chat_id, title, text, high_priority=False):
+        """
+        Saves a report written by user to the db
+        """
+        # Current day
+        now = datetime.datetime.now()
+
+        db.reference('reports/to_read/' + title).set({
+            "chat_id": chat_id,
+            "date": now.strftime("%Y-%m-%d"),  # ISO 8601
+            "high_priority": high_priority,
+            "text": text
+        })
+
+    def get_reports(self, new=True, old=True):
+        """
+        Reads all the reports written by the users
+        """
+        if new and not old:
+            # new_reports = db.reference('reports/').order_by_child('read').equal_to(False).order_by_child('date').limit_to_first(20).get()
+            new_reports = db.reference('reports/to_read/').order_by_child('date').limit_to_first(20).get()
+            return new_reports
+
+        elif old and not new:
+            old_reports = db.reference('reports/already_read/').order_by_child('date').limit_to_first(20).get()
+            return old_reports
+
+        elif new and old:
+            new_reports = db.reference('reports/to_read/').order_by_child('date').limit_to_first(20).get()
+            old_reports = db.reference('reports/already_read/').order_by_child('date').limit_to_first(20).get()
+            return (new_reports, old_reports)
+
+        else:
+            return None
+
+    def read_report(self, title):
+        # Copying msg for archive purpose
+        report_to_copy = db.reference('reports/to_read/' + title).get()
+        db.reference('reports/to_read/' + title).delete()
+        db.reference('reports/already_read/' + title).set(report_to_copy)
+
+    def get_reports_number(self):
+        new_numb = db.reference('reports/to_read/').get()
+        old_numb = db.reference('reports/already_read/').get()
+
+        if new_numb is None:
+            new_numb = 0
+        else:
+            new_numb = len(new_numb)
+
+        if old_numb is None:
+            old_numb = 0
+        else:
+            old_numb = len(old_numb)
+
+        return (new_numb, old_numb)
 
     def rename_users_key(self, key_to_edit, new_key_val, start_val):
         """
