@@ -144,7 +144,7 @@ def handle(msg):
     elif user_state[chat_id] == 11:
         text_approved = True
         try:
-            bot.sendMessage(chat_id, "Il testo che mi hai inviato è:\n\n" + command_input + "\n\nsta per essere inviato...", parse_mode="Markdown")
+            bot.sendMessage(chat_id, "*ANTEPRIMA DEL TESTO:*\n----------\n" + command_input + "\n----------\n_Invio in corso, attendere..._", parse_mode="Markdown")
         except telepot.exception.TelegramError:
             bot.sendMessage(chat_id, "Il testo che hai inviato non è formattato correttamente, riprova")
             text_approved = False
@@ -527,7 +527,7 @@ def on_callback_query(msg):
         bot.answerCallbackQuery(query_id, text=msg_text_warn)
 
     elif data == 'qrcode':
-        bot.sendPhoto(from_id, photo=open(qrCodeDir + str(from_id) + "_" + "QRCode.png", 'rb'), caption="In allegato il tuo *QR Code* contenente i pasti da te selezionati", parse_mode="Markdown")
+        bot.sendPhoto(from_id, photo=open(Dirs.QRCODE + str(from_id) + "_" + "QRCode.png", 'rb'), caption="In allegato il tuo *QR Code* contenente i pasti da te selezionati", parse_mode="Markdown")
         bot.answerCallbackQuery(query_id)
 
     elif data == 'cmd_reports':
@@ -737,6 +737,13 @@ def on_callback_query(msg):
         db.edit_user(from_id, "preferences/notif_cp_d", False)
         bot.answerCallbackQuery(query_id, text="Le notifiche per Colle Paradiso nel turno della cena sono state disabilitate")
 
+    elif data == 'cmd_position_da':
+        bot.sendLocation(from_id, "43.137908", "13.0688287")
+        bot.answerCallbackQuery(query_id, text="La posizione del D'Avack è stata condivisa")
+
+    elif data == 'cmd_position_cp':
+        bot.sendLocation(from_id, "43.1437097", "13.0822057")
+        bot.answerCallbackQuery(query_id, text="La posizione ci Colle Paradiso è stata condivisa")
 
 def update():
     """
@@ -827,8 +834,7 @@ def basic_cmds(chat_id, command_input):
                    "/menu: mediante questo comando è possibile ottenere il menù del giorno, selezionando in primo luogo la *mensa* in cui si desidera mangiare, "\
                    "succesivamente il *giorno* e infine il parametro *pranzo* o *cena* in base alle proprie esigenze\n\n"\
                    "/hours: visualizza gli orari delle mense disponibili nel Bot\n\n"\
-                   "/position\_avack: restituisce la posizione della mensa D'Avack nella mappa\n\n"\
-                   "/position\_colleparadiso: restituisce la posizione della mensa Colle Paradiso nella mappa\n\n"\
+                   "/position: restituisce le posizioni delle mense di Camerino\n\n"\
                    "/prices: inoltra una foto contenente il listino dei prezzi e, in particolar modo, la tabella di conversione di quest'ultimi\n\n"\
                    "/warnings: inoltra all'utente delle avvertenze predisposte dalla mensa operante\n\n"\
                    "/allergens: vengono visualizzati gli alimenti _o i loro componenti_ che possono scatenare reazioni immuno-mediate\n\n"\
@@ -850,12 +856,13 @@ def basic_cmds(chat_id, command_input):
         bot.sendMessage(chat_id, opening_msg, parse_mode="Markdown")
         return True
 
-    elif command_input == "/position_colleparadiso" or command_input == "/position_colleparadiso" + BOT_NAME:
-        bot.sendLocation(chat_id, "4    3.1437097", "13.0822057")
-        return True
+    elif command_input == "/position" or command_input == "/position" + BOT_NAME:
+        msg_text = "Di seguito puoi accedere ai due comandi che ti restitueranno la posizione delle mense del *D'Avack* e di *Colle Paradiso*"
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                     [dict(text="D'Avack", callback_data="cmd_position_da")],
+                     [dict(text="Colle Paradiso", callback_data="cmd_position_cp")]])
 
-    elif command_input == "/position_avak" or command_input == "/position_avak" + BOT_NAME:
-        bot.sendLocation(chat_id, "43.137908", "13.0688287")
+        bot.sendMessage(chat_id, msg_text, parse_mode="Markdown", reply_markup=keyboard)
         return True
 
     elif command_input == "/info" or command_input == "/info" + BOT_NAME or command_input == BOT_NAME:
