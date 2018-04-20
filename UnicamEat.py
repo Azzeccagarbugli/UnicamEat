@@ -743,7 +743,7 @@ def on_callback_query(msg):
 
     elif data == 'cmd_position_cp':
         bot.sendLocation(from_id, "43.1437097", "13.0822057")
-        bot.answerCallbackQuery(query_id, text="La posizione ci Colle Paradiso è stata condivisa")
+        bot.answerCallbackQuery(query_id, text="La posizione di Colle Paradiso è stata condivisa")
 
 def update():
     """
@@ -846,12 +846,11 @@ def basic_cmds(chat_id, command_input):
 
     elif command_input == "/hours" or command_input == "/hours" + BOT_NAME:
         opening_msg = "*• D'Avack*\n"\
-                    "Aperta tutti i giorni della settimana durante il pranzo, esclusi *Venerdì*, *Sabato* e *Domenica*, dalle ore *12:30* alle ore *14:15*. "\
-                    "\n_Posizione:_ /position\_avak\n"\
+                    "Aperta tutti i giorni della settimana durante il pranzo, esclusi *Venerdì*, *Sabato* e *Domenica*, dalle ore *12:30* alle ore *14:15*. \n"\
                     "\n*• Colle Paradiso*\n"\
                     "Aperta tutti i giorni della settimana dalle ore *12:30* alle ore *14:15* e dalle ore *19:30* alle ore *21:15*."\
                     "\nDurante il week-end la mensa, invece, rimarrà aperta *esclusivamente* per pranzo dalle ore *12:30* alle ore *13:30*."\
-                    "\n_Posizione:_ /position\_colleparadiso"
+                    "_\n\nPer le posizioni delle mense di Camerino è possibile consultare il comando_ /position"
 
         bot.sendMessage(chat_id, opening_msg, parse_mode="Markdown")
         return True
