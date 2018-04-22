@@ -51,7 +51,7 @@ class Firebase:
             else:
                 username = "Not Defined"
 
-            db.reference('users/' + str(user_info['id'])).set({
+            db.reference('users/' + str(user_info['id'])).update({
                 "info": {
                     "first_name": first_name,
                     "last_name": last_name,
@@ -124,20 +124,16 @@ class Firebase:
 
     def update_daily_users(self, user_info):
         """
-        Updates the 22 to make sure that we always have the 22 in our hearts
+        Updates daily users list for graph information
         """
         if not self.exists_user(user_info['id']):
             self.add_user(user_info)
 
         now = datetime.datetime.now()
-        try:
-            db.reference('daily_users/' + now.strftime("%Y/%m/%d")).get()[user_info['id']]
-            return False
-        except (KeyError, TypeError) as e:
-            db.reference('daily_users/' + now.strftime("%Y/%m/%d")).update({
-                str(user_info['id']): True
-            })
-            return True
+
+        db.reference('daily_users/' + now.strftime("%Y/%m/%d")).update({
+            str(user_info['id']): True
+        })
 
     def get_daily_users(self, days=1):
         """
@@ -186,12 +182,30 @@ class Firebase:
                         daily_users.append(0)
                     return daily_users
 
+    def correct_title(self, title):
+        """
+        Checks if a given report is valid
+        In case it isn't valid, this function will fix it
+        """
+        illegal_chrs = ['.', '$', '[', ']', '#', '/']
+        markdown_chrs = ['_', '*']
+        for chr in illegal_chrs:
+            if chr in title:
+                title = title.replace(chr, " ")
+        for chr in markdown_chrs:
+            if chr in title:
+                title = title.replace(chr, "")
+        return title
+
     def report_error(self, chat_id, title, text, high_priority=False):
         """
         Saves a report written by user to the db
         """
         # Current day
         now = datetime.datetime.now()
+
+        # Fixing title to make Firebase happy
+        title = self.correct_title(title)
 
         db.reference('reports/to_read/' + title).set({
             "chat_id": chat_id,
