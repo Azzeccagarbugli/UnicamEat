@@ -19,7 +19,6 @@ class Dirs:
     PDF = CURRENT + "/PDF/"
     TXT = CURRENT + "/Text/"
     BOOL = CURRENT + "/Boolean/"
-    LOG = CURRENT + "/Log/"
     QRCODE = CURRENT + "/QRCode/"
 
 
