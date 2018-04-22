@@ -130,6 +130,7 @@ def check_updated_txt(pdfFileName):
                 os.rename(Dirs.TXT + "converted.txt", Dirs.TXT + pdfFileName + ".txt")
     return True
 
+
 def convert_in_txt(fname, pages=None):
     """
     Converts a .pdf file to a .txt file, using pdfminer.six lib
@@ -483,45 +484,6 @@ def get_menu_updated(canteen, day, lunch_or_dinner):
             return "Errore"
 
 
-def report_error(textFile, query_id, from_id):
-    """
-    Create error file based on this type of syntax (log_CP_lunedi_19_febbraio_2018.txt)
-
-    :param textFile: Name of the file.
-    :type textFile: str.
-    :param query_id: ID of the query.
-    :type query_id: str.
-    :param from_id: The chat_id of the hat_id of the person that sent the error.
-    :type from_id: str.
-    """
-    # Getting ready to work
-    my_file = open(textFile, "r")
-    out = my_file.readlines()
-    my_file.close()
-
-    # Take today date
-    days = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
-
-    # String for the canteen and date of the error
-    log_name = ""
-    if "Avack" in textFile:
-        log_name = "DA"
-    else:
-        log_name = "CP"
-
-    for line in out:
-        for day in days:
-            if day in line.lower():
-                log_name += "_" + line
-                break
-
-    file_name_error = ("log_" + str(log_name.replace(" ", "_"))).rstrip()
-
-    f = open(Dirs.LOG + file_name_error + ".txt", "w")
-    f.write("ID della query: " + str(query_id) + "\nCHAT_ID dell'utente: " + str(from_id))
-    f.close()
-
-
 def readlines_fromfile(path):
     """
     Reads the lines of a file
@@ -564,6 +526,7 @@ def create_graph(db, days, graph_name):
 
     plt.savefig(graph_name)
     plt.clf()
+
 
 def today_weekend():
     """
@@ -808,9 +771,6 @@ def check_dir_files():
     if not os.path.exists(Dirs.BOOL):
         print(Fore.CYAN + "[DIRECTORY] I'm creating this folder of the Boolean Value for you. Stupid human.")
         os.makedirs(Dirs.BOOL)
-    if not os.path.exists(Dirs.LOG):
-        print(Fore.CYAN + "[DIRECTORY] I'm creating this folder of the Log Info for you. Stupid human.")
-        os.makedirs(Dirs.LOG)
     if not os.path.exists(Dirs.QRCODE):
         print(Fore.CYAN + "[DIRECTORY] I'm creating this folder for the QR Code for you. Stupid human.")
         os.makedirs(Dirs.QRCODE)
