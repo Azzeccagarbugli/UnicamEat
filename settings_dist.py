@@ -11,6 +11,8 @@ class Dirs:
     QRCODE = CURRENT + "/QRCode/"
     TEMP = CURRENT + "/Temp/"
 
+# Updating time in secs
+updating_time = 60
 
 # Times for the notification
 notification_lunch = {12, 30}
