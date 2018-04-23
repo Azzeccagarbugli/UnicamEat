@@ -3,27 +3,16 @@ import os
 # Your token Bot, you can get it on Telegram Bot Father
 TOKEN = ''
 BOT_NAME = "@UnicamEatBot"
-
-# Dictionaries
-courses_dictionaries = [
-    ["past", "zupp", "passat", "tagliatell", "riso", "chicche", "minestron", "penn", "chitarr", "tortellin", "prim", "raviol", "maccheroncin"],
-    ["panin", "pizz", "crostin", "piadin", "focacci"],
-    ["frutt", "yogurt", "contorn", "dolc", "pan", "sals"],
-    ["porzionat", "formaggi", "olio", "confettur", "cioccolat", "asport"],
-    ["lattin", "brick", "acqua"]
-]
+MENU_URL = "URL of the menu in a .xml format"
 
 
 class Dirs:
     CURRENT = os.path.dirname(os.path.abspath(__file__))
-    PDF = CURRENT + "/PDF/"
-    TXT = CURRENT + "/Text/"
-    BOOL = CURRENT + "/Boolean/"
     QRCODE = CURRENT + "/QRCode/"
+    TEMP = CURRENT + "/Temp/"
 
-
-# Bool file
-boolFile = Dirs.BOOL + "update_menu.txt"
+# Updating time in secs
+updating_time = 60
 
 # Times for the notification
 notification_lunch = {12, 30}

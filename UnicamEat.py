@@ -29,41 +29,20 @@ import random
 import time
 import datetime
 from urllib3 import exceptions as urllib3_exceptions
+import xml.etree.ElementTree as ET
 
 import colorama
 from colorama import Fore, Style
 
+import logging
 import telepot
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, ForceReply
 from telepot.delegate import per_chat_id, include_callback_query_chat_id, create_open, pave_event_space
-import logging
 
 from firebase_db import Firebase
 from functions import *
-from settings import TOKEN, BOT_NAME, Dirs, notification_lunch, notification_dinner
-
-# Days of the week
-days_week = {
-    "Lunedì": "lunedi",
-    "Martedì": "martedi",
-    "Mercoledì": "mercoledi",
-    "Giovedì": "giovedi",
-    "Venerdì": "venerdi",
-    "Sabato": "sabato",
-    "Domenica": "domenica"
-}
-
-# Available canteen in Camerino
-canteen_unicam = {
-    "D'Avack": "Avack",
-    "Colle Paradiso": "ColleParadiso"
-}
-
-# User server state
-user_server_day = {}
-user_server_canteen = {}
-user_server_lunch_dinner = {}
+from settings import TOKEN, BOT_NAME, Dirs, updating_time, notification_lunch, notification_dinner
 
 # Bool to check if we want to close canteens or not
 canteen_closed_da = False
@@ -76,6 +55,7 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         self._user_state = 0
         self._report_texts = {'title': "", 'text': ""}
+        self._day_menu = {'canteen': "", 'day': "", 'meal': ""}
 
         # Updating daily users for graph construction
         db.update_daily_users(self.bot.getChat(args[0][-1]))
@@ -199,12 +179,13 @@ class UnicamEat(telepot.helper.ChatHandler):
         # Get date
         elif self._user_state == 21:
             # Canteen's stuff
-            user_server_canteen[chat_id] = canteen_unicam[command_input]
+            self._day_menu['canteen'] = command_input
 
             msg = "Inserisci la data"
             canteen_closed_holiday_msg = "Attualmente la mensa che hai selezionato è *chiusa*, ti preghiamo di attendere fino ad eventuali aggiornamenti"
 
             if command_input == "D'Avack":
+                self._day_menu['canteen'] = "D'Avack"
                 if canteen_closed_da:
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                  [dict(text="Controlla eventuali aggiornamenti", url='http://www.ersucam.it/')]])
@@ -215,7 +196,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                     self._user_state = 0
                 else:
                     # Get the date
-                    day_int = today_weekend()
+                    day_int = datetime.datetime.today().weekday()
                     # Is Canteen closed?
                     if day_int >= 4:
                         closed_msg = "La mensa del D'Avack nei giorni *Venerdì*, *Sabato* e *Domenica* rimane chiusa sia "\
@@ -232,6 +213,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                         self._user_state = 22
 
             elif command_input == "Colle Paradiso":
+                self._day_menu['canteen'] = "Colle Paradiso"
                 if canteen_closed_cp:
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                  [dict(text="Controlla eventuali aggiornamenti", url='http://www.ersucam.it/')]])
@@ -250,16 +232,24 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Get lunch or dinner
         elif self._user_state == 22:
-            try:
-                # Setting day
+            # Setting day
+            if command_input == "Oggi" or command_input == "Lunedì" or command_input == "Martedì" or command_input == "Mercoledì" or command_input == "Giovedì" or command_input == "Venerdì" or command_input == "Sabato" or command_input == "Domenica":
                 if command_input == "Oggi":
-                    current_day = get_day(command_input)
-                    user_server_day[chat_id] = days_week[current_day]
+                    per_benino = {
+                        0: "Lunedì",
+                        1: "Martedì",
+                        2: "Mercoledì",
+                        3: "Giovedì",
+                        4: "Venerdì",
+                        5: "Sabato",
+                        6: "Domenica"
+                    }
+                    self._day_menu['day'] = per_benino[datetime.datetime.today().weekday()]
                 else:
-                    user_server_day[chat_id] = days_week[command_input]
+                    self._day_menu['day'] = command_input
 
                 # Is D'Avack closed?
-                if (user_server_day[chat_id] == "venerdi" or user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica" or command_input == "domenica" or command_input == "sabato" or command_input == "venerdì") and user_server_canteen[chat_id] == "Avack":
+                if (self._day_menu['day'] == "Venerdì" or self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "D'Avack":
                     closed_msg = "La mensa del D'Avack nei giorni *Venerdì*, *Sabato* e *Domenica* rimane chiusa sia "\
                                  "per pranzo che per cena. Riprova a inserire il comando /menu e controlla la mensa "\
                                  "di *Colle Pardiso* per ottenere i menù da te desiderati"
@@ -270,19 +260,14 @@ class UnicamEat(telepot.helper.ChatHandler):
                     # Bot send activity for nice appearence
                     self.sender.sendChatAction("typing")
 
-                    if not dl_updated_pdf(str(user_server_canteen[chat_id]), str(user_server_day[chat_id])):
-                        self.sender.sendMessage("*Il server dell'ERSU attualmente è down*, la preghiamo di riprovare più tardi", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-                        self._user_state = 0
-
-                if self._user_state != 0:
                     # Choose the right time for eat
-                    markup = ReplyKeyboardMarkup(keyboard=get_launch_dinner_keyboard(user_server_canteen[chat_id], user_server_day[chat_id]))
+                    markup = ReplyKeyboardMarkup(keyboard=get_launch_dinner_keyboard(self._day_menu['canteen'], self._day_menu['day']))
 
-                    if (user_server_day[chat_id] == "sabato" or user_server_day[chat_id] == "domenica") and user_server_canteen[chat_id] == "ColleParadiso":
+                    if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "Colle Paradiso":
                         msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
                               "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /hours e non scordarti "\
                               "di prendere anche la cena!"
-                    elif user_server_canteen[chat_id] == "Avack":
+                    elif self._day_menu['canteen'] == "D'Avack":
                         msg = "Ti ricordiamo che la mensa del *D'Avack* è aperta _esclusivamente_ per il turno del pranzo.\n"\
                               "Per maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /hours"
                     else:
@@ -292,68 +277,54 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                     # Set user state
                     self._user_state = 23
-
-            except KeyError:
-                self.sender.sendMessage("Inserisci un giorno della settimana valido")
+            else:
+                self.sender.sendMessage("La data inserita non è valida, riprova inserendone una valida", parse_mode="Markdown", reply_markup=markup)
 
         # Print menu
         elif self._user_state == 23:
             # Check the existence of the life (see line 22)
             if command_input == "Pranzo" or command_input == "Cena":
+                self._day_menu['meal'] = command_input
+
                 # Bot send activity for nice appaerence
                 self.sender.sendChatAction("upload_document")
-
-                # Start the conversion
-                pdfFileName = str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf"
-
-                # Convert the PDF
-                convert_in_txt(pdfFileName)
-
                 self.sender.sendMessage("_Stiamo processando la tua richiesta..._", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
-                if check_updated_txt(pdfFileName) is True:
-                    # Send the message that contain the meaning of the life
-                    msg_menu = advanced_read_txt(str(user_server_canteen[chat_id]), str(user_server_day[chat_id]), command_input)
+                result_menu = get_updated_menu(self._day_menu['canteen'], self._day_menu['day'], self._day_menu['meal'])
 
-                    # Try to see if there is a possible error
-                    if "Errore!" in msg_menu:
-                        fail_conversion_msg = "Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. \n\n_Segnala gentilmente l'errore agli sviluppatori "\
-                                              "che provederrano a risolvere quest'ultimo_"
-                        msg_menu = msg_menu.replace("Errore!", fail_conversion_msg)
+                if result_menu != "Error":
+                    # Take random number for the donation
+                    random_donation = random.randint(0, 5)
 
-                        callback_name = 'notification_developer ' + str(user_server_canteen[chat_id]) + '_' + str(user_server_day[chat_id]) + ".pdf" + ".txt"
+                    # qrcode_filename never used, do we need it?
+                    now = datetime.datetime.now()
+                    qrcode_filename = generate_qr_code(chat_id, result_menu, Dirs.QRCODE, str(now.strftime("%d/%m %H:%M")), self._day_menu['canteen'], command_input)
 
+                    keyboard = ""
+
+                    if db.get_user(chat_id)['role'] == 5:
                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                     [dict(text='PDF del menù del giorno', url=get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                     [dict(text="Segnala l'errore ai developer", callback_data=callback_name)]])
+                                    [dict(text='Prenota con il QR Code!', callback_data='qrcode')]])
+                    elif random_donation:
+                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                    [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
-                        # Prints the menu in a kawaii way
-                        self.sender.sendMessage(msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                    # Prints the menu in a kawaii way
+                    if keyboard:
+                        self.sender.sendMessage(result_menu, parse_mode="Markdown", reply_markup=keyboard)
                     else:
-                        # Take random number for the donation
-                        random_donation = random.randint(0, 5)
-
-                        # qrcode_filename never used, do we need it?
-                        now = datetime.datetime.now()
-                        qrcode_filename = generate_qr_code(chat_id, msg_menu, Dirs.QRCODE, str(now.strftime("%d/%m %H:%M")), str(user_server_canteen[chat_id]), command_input)
-
-                        if random_donation and db.get_user(chat_id)['role'] == 5:
-                            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                        [dict(text='Prenota con il QR Code!', callback_data='qrcode')],
-                                        [dict(text='PDF del menù del giorno', url=get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
-                        elif random_donation:
-                            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                        [dict(text='PDF del menù del giorno', url=get_url(user_server_canteen[chat_id], user_server_day[chat_id]))]])
-                        else:
-                            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                        [dict(text='PDF del menù del giorno', url=get_url(user_server_canteen[chat_id], user_server_day[chat_id]))],
-                                        [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
-
-                        # Prints the menu in a kawaii way
-                        self.sender.sendMessage(msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                        self.sender.sendMessage(result_menu, parse_mode="Markdown")
                 else:
-                    self.sender.sendMessage("*I menu non sono stati ancora aggiornati sul sito dell'ERSU*, riprova più tardi", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                    fail_conversion_msg = "Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. \n\n_Segnala gentilmente l'errore agli sviluppatori "\
+                                          "che provederrano a risolvere quest'ultimo_"
 
+                    callback_name = 'notification_developer - ' + self._day_menu['canteen'] + ' - ' + self._day_menu['day']
+
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                 [dict(text="Segnala l'errore ai developer", callback_data=callback_name)]])
+
+                    # Prints the menu in a kawaii way
+                    self.sender.sendMessage(msg_menu, parse_mode="Markdown", reply_markup=keyboard)
                 # Set user state
                 self._user_state = 0
             else:
@@ -668,7 +639,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.bot.sendChatAction(from_id, "upload_photo")
 
                 # Creation of the png photo to send
-                graph_name = "temp_graph.png"
+                graph_name = Dirs.TEMP + "temp_graph.png"
                 create_graph(db, 31, graph_name)
 
                 number_total_user = len(db.get_all_users_id())
@@ -796,8 +767,8 @@ class UnicamEat(telepot.helper.ChatHandler):
         if command_input == "/start" or command_input == "/start" + BOT_NAME:
             start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
                         "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al *Bot*. "\
-                        "Se hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
-                        "\n\n_Il Bot e' stato creato in collaborazione con l'ERSU di Camerino_"
+                        "\nSe hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
+                        "\n\n_Il Bot e' stato creato in collaborazione ufficiale con l'ERSU di Camerino_"
 
             self.sender.sendMessage(start_msg, parse_mode="Markdown")
             return True
@@ -891,61 +862,78 @@ class UnicamEat(telepot.helper.ChatHandler):
             return False
 
 
-def update():
+def update(upd_time):
     """
     Send the notification to the users
     """
     now = datetime.datetime.now()
     curr_time = {now.time().hour, now.time().minute}
 
-    if today_weekend() != 0:
-        write_bool("#22")
-    elif get_bool() != "True":
-        write_bool("False")
-
     # Supper or lunch
     have_to_send = ""
 
     # Error message
-    err_msg = "Si è verificato un errore all'interno di UnicamEatBot, il menù non è stato convertito correttamente"
+    err_msg = "Si è verificato un errore all'interno di *@UnicamEatBot*, il menù non è stato convertito correttamente"
 
     if curr_time == notification_lunch:
         have_to_send = "Pranzo"
     elif curr_time == notification_dinner:
         have_to_send = "Cena"
 
+    per_bene = {
+        0 : "Lunedì",
+        1 : "Martedì",
+        2 : "Mercoledì",
+        3 : "Giovedì",
+        4 : "Venerdì",
+        5 : "Sabato",
+        6 : "Domenica"
+    }
+
     if have_to_send:
         # Get the day
-        day = days_week[get_day(today_weekend())]
+        day_week_day = datetime.datetime.today().weekday()
+        day = per_bene[day_week_day]
 
         # Sending to Avack users
-        if (day == "lunedi" or day == "martedi" or day == "mercoledi" or day == "giovedi") and have_to_send == "Pranzo" and canteen_closed_da == False:
-            canteen = "Avack"
-            msg_menu = get_menu_updated(canteen, day, have_to_send)
+        if (day == "Lunedì" or day == "Martedì" or day == "Mercoledì" or day == "Giovedì") and have_to_send == "Pranzo" and canteen_closed_da == False:
+            canteen = "D'Avack"
+            msg_menu = get_updated_menu(canteen, day, have_to_send)
 
             if msg_menu == "Errore":
                 for chat_id in db.get_admins():
-                    bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    try:
+                        bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
             else:
                 for chat_id in db.get_users_with_pref("notif_da", True):
                     print(Fore.YELLOW + "[SENDING AVACK] Sto inviando un messaggio a: " + chat_id)
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                [dict(text='PDF del menù del giorno', url=get_url(canteen, day))],
                                 [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
                     # Prints the menu in a kawaii way
-                    bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                    try:
+                        bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
 
         # Sending to ColleParadiso users
-        if (day == "sabato" or day == "domenica") and have_to_send == "Cena" and canteen_closed_cp is True:
+        if (day == "sabato" or day == "domenica") and have_to_send == "Cena" and canteen_closed_cp == True:
             pass
         else:
-            canteen = "ColleParadiso"
-            msg_menu = get_menu_updated(canteen, day, have_to_send)
+            canteen = "Colle Paradiso"
+            msg_menu = get_updated_menu(canteen, day, have_to_send)
 
             if msg_menu == "Errore":
                 for chat_id in db.get_admins():
-                    bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    try:
+                        bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
             else:
                 if have_to_send == "Pranzo":
                     l_or_d = "l"
@@ -955,13 +943,15 @@ def update():
                 for chat_id in db.get_users_with_pref("notif_cp_" + l_or_d, True):
                     print(Fore.YELLOW + "[SENDING COLLEPARADISO] Sto inviando un messaggio a: " + chat_id)
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                [dict(text='PDF del menù del giorno', url=get_url(canteen, day))],
                                 [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
-                    # Prints the menu in a kawaii way
-                    bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                    try:
+                        bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
 
-    time.sleep(60)
+    time.sleep(upd_time)
 
 
 # Initializing Colorama utility
@@ -1014,6 +1004,6 @@ try:
 
     # Notification system as a different thread
     while(1):
-        update()
+        update(updating_time)
 finally:
     os.unlink(pidfile)
