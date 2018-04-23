@@ -10,4 +10,4 @@ settings.py
 credentials_db.json
 credentials_db_develop.json
 Temp/
-menu_data.xml
+parsing_xml.py
