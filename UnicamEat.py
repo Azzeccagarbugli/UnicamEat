@@ -314,7 +314,6 @@ class UnicamEat(telepot.helper.ChatHandler):
                 if check_updated_txt(pdfFileName) is True:
                     # Send the message that contain the meaning of the life
                     msg_menu = advanced_read_txt(str(user_server_canteen[chat_id]), str(user_server_day[chat_id]), command_input)
-                    msg_menu = "Errore!"
 
                     # Try to see if there is a possible error
                     if "Errore!" in msg_menu:
@@ -370,7 +369,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                       "\nMediante tale registrazione ti sarà possibile effettuare *prenotazioni del menù del giorno* quindi ti invitiamo, "\
                       "onde evitare problematiche, all'inserimento di *dati veritieri*."\
                       "\n\n_I tuoi personali innanzitutto sono al sicuro grazie alla crittografia offerta da Telegram e in secondo luogo, carissimo utente, "\
-                      "noi teniamo a te davvero molto e vogliamo garantirti la migliore esperienza d'uso possibile._"
+                      "noi teniamo a te davvero molto e vogliamo garantirti la migliore esperienza d'uso possibile_"
 
                 self.sender.sendMessage(msg, parse_mode="Markdown")
                 self.sender.sendMessage("Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
@@ -401,7 +400,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             # Inserimento Cognome
             db.edit_user(chat_id, "info/first_name", command_input)
 
-            self.sender.sendMessage("Inserisci il tuo *cognome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+            self.sender.sendMessage("Inserisci il tuo *cognome*. _Ti sarà chiesta una conferma prima di renderlo definitivo_", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
             self._user_state = 32
 
         elif self._user_state == 32:
@@ -415,7 +414,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             user_info = db.get_user(chat_id)
             msg = "Confermi che il seguente profilo corrisponde alla tua identità reale?"\
                   "\n\n*NOME:* {}\n*COGNOME:* {}"\
-                  "\n\n*ATTENZIONE:* una volta confermati non potrai più modificarli.".format(user_info['info']['first_name'], user_info['info']['last_name'])
+                  "\n\n*ATTENZIONE:* una volta confermati non potrai più modificarli".format(user_info['info']['first_name'], user_info['info']['last_name'])
             self.sender.sendMessage(msg, parse_mode="Markdown", reply_markup=markup)
             self._user_state = 33
 
@@ -431,7 +430,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self._user_state = 0
 
             elif command_input == "Modifica dati":
-                self.sender.sendMessage("Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo._", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
+                self.sender.sendMessage("Inserisci il tuo *nome*. _Ti sarà chiesta una conferma prima di renderlo definitivo_", parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
                 self._user_state = 31
 
             else:
@@ -440,8 +439,8 @@ class UnicamEat(telepot.helper.ChatHandler):
         # Report a bug to the developers
         elif command_input == "/report" or command_input == "/report" + BOT_NAME:
             msg = "Tramite questo comando potrai inviare un *errore* che hai trovato agli sviluppatori,"\
-                  "o semplicemente inviargli il tuo *parere* su questo self.sender."\
-                  "\n\nTi basta scrivere qui sotto il testo che vuoi inviargli e la tua richiesta sarà immediatamente salvata nel server e rigirata agli sviluppatori."\
+                  "o semplicemente inviargli il tuo *parere* su questo Bot."\
+                  "\n\n_Ti basta scrivere qui sotto il testo che vuoi inviargli e la tua richiesta sarà immediatamente salvata nel server e rigirata agli sviluppatori._"\
                   "\n\nPer cominciare digita il *titolo* del messaggio da inviare"
             self.sender.sendMessage(msg, parse_mode="Markdown", reply_markup=ForceReply(force_reply=True))
 
@@ -465,7 +464,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             user_info = db.get_user(chat_id)
             msg = "Confermi di voler inviare il seguente messaggio?"\
                   "\n\n🏷 *TITOLO:* {}\n📝 *Messaggio*:\n_{}_"\
-                  "\n\n*ATTENZIONE:* una volta confermato non potrai più modificarlo.".format(self._report_texts['title'], self._report_texts['text'])
+                  "\n\n*ATTENZIONE:* Una volta confermato non potrai più modificarlo".format(self._report_texts['title'], self._report_texts['text'])
             self.sender.sendMessage(msg, parse_mode="Markdown", reply_markup=markup)
             self._user_state = 43
 
@@ -473,7 +472,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             if command_input == "Confermo":
                 db.report_error(chat_id, self._report_texts['title'], self._report_texts['text'], high_priority=False)
 
-                msg = "Il tuo messaggio è stato inviato *con successo*, ti ringraziamo per la collaborazione."
+                msg = "Il tuo messaggio è stato inviato *con successo*, ti ringraziamo per la collaborazione"
                 self.sender.sendMessage(msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
                 self._user_state = 0
@@ -796,9 +795,9 @@ class UnicamEat(telepot.helper.ChatHandler):
     def basic_cmds(self, command_input):
         if command_input == "/start" or command_input == "/start" + BOT_NAME:
             start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
-                        "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al self.sender. "\
+                        "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al *Bot*. "\
                         "Se hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
-                        "\n\n_Il Bot e' stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo._"
+                        "\n\n_Il Bot e' stato creato in collaborazione con l'ERSU di Camerino_"
 
             self.sender.sendMessage(start_msg, parse_mode="Markdown")
             return True
