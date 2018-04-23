@@ -98,7 +98,10 @@ def get_updated_menu(canteen, day, meal):
                     courses[4].append(product.attrib.get('Descrizione'))
                 # Bevande
                 if product.attrib.get('TipoProdotto') == 'B':
-                    courses[5].append(product.attrib.get('Descrizione'))
+                    temp = product.attrib.get('Descrizione')
+                    if "The" in temp:
+                        temp = temp.replace("The", "Tè")
+                    courses[5].append(temp)
 
     if not courses[0] and not courses[1] and not courses[2] and not courses[3] and not courses[4] and not courses[5]:
         return "Error"
