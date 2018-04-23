@@ -42,7 +42,7 @@ from telepot.delegate import per_chat_id, include_callback_query_chat_id, create
 
 from firebase_db import Firebase
 from functions import *
-from settings import TOKEN, BOT_NAME, Dirs, notification_lunch, notification_dinner
+from settings import TOKEN, BOT_NAME, Dirs, updating_time, notification_lunch, notification_dinner
 
 # Bool to check if we want to close canteens or not
 canteen_closed_da = False
@@ -862,7 +862,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             return False
 
 
-def update():
+def update(upd_time):
     """
     Send the notification to the users
     """
@@ -873,7 +873,7 @@ def update():
     have_to_send = ""
 
     # Error message
-    err_msg = "Si è verificato un errore all'interno di UnicamEatBot, il menù non è stato convertito correttamente"
+    err_msg = "Si è verificato un errore all'interno di *@UnicamEatBot*, il menù non è stato convertito correttamente"
 
     if curr_time == notification_lunch:
         have_to_send = "Pranzo"
@@ -902,7 +902,11 @@ def update():
 
             if msg_menu == "Errore":
                 for chat_id in db.get_admins():
-                    bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    try:
+                        bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
             else:
                 for chat_id in db.get_users_with_pref("notif_da", True):
                     print(Fore.YELLOW + "[SENDING AVACK] Sto inviando un messaggio a: " + chat_id)
@@ -910,7 +914,11 @@ def update():
                                 [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
                     # Prints the menu in a kawaii way
-                    bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                    try:
+                        bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
 
         # Sending to ColleParadiso users
         if (day == "sabato" or day == "domenica") and have_to_send == "Cena" and canteen_closed_cp == True:
@@ -921,7 +929,11 @@ def update():
 
             if msg_menu == "Errore":
                 for chat_id in db.get_admins():
-                    bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    try:
+                        bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
             else:
                 if have_to_send == "Pranzo":
                     l_or_d = "l"
@@ -933,10 +945,13 @@ def update():
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                 [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
-                    # Prints the menu in a kawaii way
-                    bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                    try:
+                        bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown")
+                    except telepot.exception.TelegramError as e:
+                        if e.error_code == 400:
+                            print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
 
-    time.sleep(60)
+    time.sleep(upd_time)
 
 
 # Initializing Colorama utility
@@ -989,6 +1004,6 @@ try:
 
     # Notification system as a different thread
     while(1):
-        update()
+        update(updating_time)
 finally:
     os.unlink(pidfile)
