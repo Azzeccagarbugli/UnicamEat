@@ -154,7 +154,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                 for user_chat_id in db.get_all_users_id():
                     if str(user_chat_id) != str(chat_id):
                         try:
-                            self.sender.sendMessage(user_chat_id, command_input, parse_mode="Markdown")
+                            self.bot.sendMessage(user_chat_id, command_input, parse_mode="Markdown")
                         except telepot.exception.TelegramError as e:
                             if e.error_code == 400:
                                 print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + user_chat_id)
@@ -318,13 +318,13 @@ class UnicamEat(telepot.helper.ChatHandler):
                     fail_conversion_msg = "Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. \n\n_Segnala gentilmente l'errore agli sviluppatori "\
                                           "che provederrano a risolvere quest'ultimo_"
 
-                    callback_name = 'notification_developer - ' + self._day_menu['canteen'] + ' - ' + self._day_menu['day']
+                    callback_name = 'notification_developer ' + self._day_menu['canteen'] + ' - ' + self._day_menu['day']
 
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                  [dict(text="Segnala l'errore ai developer", callback_data=callback_name)]])
 
                     # Prints the menu in a kawaii way
-                    self.sender.sendMessage(msg_menu, parse_mode="Markdown", reply_markup=keyboard)
+                    self.sender.sendMessage(fail_conversion_msg, parse_mode="Markdown", reply_markup=keyboard)
                 # Set user state
                 self._user_state = 0
             else:
@@ -645,7 +645,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                 number_total_user = len(db.get_all_users_id())
 
                 try:
-                    self.bot.sendPhoto(from_id, photo=open("temp_graph.png", 'rb'), caption="Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode="Markdown")
+                    self.bot.sendPhoto(from_id, photo=open(graph_name, 'rb'), caption="Il numero totale di utenti è: *{}*".format(str(number_total_user)), parse_mode="Markdown")
                 except TypeError:
                     self.bot.sendMessage(from_id, "Per inviare correttamente l'immagine è necessario aggiornare Telepot ad una versione maggiore della 12.6")
 

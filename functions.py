@@ -83,22 +83,22 @@ def get_updated_menu(canteen, day, meal):
             for product in child:
                 # Primi
                 if product.attrib.get('TipoProdotto') == 'P':
-                    courses[0].append(product.attrib.get('Descrizione'))
+                    courses[0].append(product.attrib.get('Descrizione').capitalize())
                 # Secondi
                 if product.attrib.get('TipoProdotto') == 'S':
-                    courses[1].append(product.attrib.get('Descrizione'))
+                    courses[1].append(product.attrib.get('Descrizione').capitalize())
                 # Pizza e panini
                 if product.attrib.get('TipoProdotto') == 'Z':
-                    courses[2].append(product.attrib.get('Descrizione'))
+                    courses[2].append(product.attrib.get('Descrizione').capitalize())
                 # Altro
                 if product.attrib.get('TipoProdotto') == 'A':
-                    courses[3].append(product.attrib.get('Descrizione'))
+                    courses[3].append(product.attrib.get('Descrizione').capitalize())
                 # Extra
                 if product.attrib.get('TipoProdotto') == 'E':
-                    courses[4].append(product.attrib.get('Descrizione'))
+                    courses[4].append(product.attrib.get('Descrizione').capitalize())
                 # Bevande
                 if product.attrib.get('TipoProdotto') == 'B':
-                    temp = product.attrib.get('Descrizione')
+                    temp = product.attrib.get('Descrizione').capitalize()
                     if "The" in temp:
                         temp = temp.replace("The", "Tè")
                     courses[5].append(temp)
