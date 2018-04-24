@@ -76,48 +76,66 @@ def get_updated_menu(canteen, day, meal):
     canteen_data = 'MensaCP' if canteen == "Colle Paradiso" else 'MensaDA'
     meal_data = "S" if meal == 'Cena' else "N"
 
-    courses = [ [], [], [], [], [], [] ]
+    courses = [[], [], [], [], [], []]
+
+    def append_product(index, product):
+        """
+        Internal function to append products to courses list
+        """
+        # Getting product_name
+        product_name = product.attrib.get('Descrizione').capitalize()
+
+        # Fixing typo error
+        if index == 5:
+            if "The" in product_name:
+                product_name = product_name.replace("The", "Tè")
+
+        # Concatenating prices
+        if product.attrib.get('FlagPrezzo') == 'S':
+            product_name += " _[{} €]_".format(product.attrib.get('Prezzo'))
+        else:
+            product_name += " _[{} pt]_".format(product.attrib.get('Punti'))
+
+        # Appending product
+        courses[index].append(product_name)
 
     for child in root:
         if day_data in child.attrib.get('Data').split('T')[0] and child.attrib.get(canteen_data) == "S" and child.attrib.get('FlagCena') == meal_data:
             for product in child:
                 # Primi
                 if product.attrib.get('TipoProdotto') == 'P':
-                    courses[0].append(product.attrib.get('Descrizione').capitalize())
+                    append_product(0, product)
                 # Secondi
                 if product.attrib.get('TipoProdotto') == 'S':
-                    courses[1].append(product.attrib.get('Descrizione').capitalize())
+                    append_product(1, product)
                 # Pizza e panini
                 if product.attrib.get('TipoProdotto') == 'Z':
-                    courses[2].append(product.attrib.get('Descrizione').capitalize())
+                    append_product(2, product)
                 # Altro
                 if product.attrib.get('TipoProdotto') == 'A':
-                    courses[3].append(product.attrib.get('Descrizione').capitalize())
+                    append_product(3, product)
                 # Extra
                 if product.attrib.get('TipoProdotto') == 'E':
-                    courses[4].append(product.attrib.get('Descrizione').capitalize())
+                    append_product(4, product)
                 # Bevande
                 if product.attrib.get('TipoProdotto') == 'B':
-                    temp = product.attrib.get('Descrizione').capitalize()
-                    if "The" in temp:
-                        temp = temp.replace("The", "Tè")
-                    courses[5].append(temp)
+                    append_product(5, product)
 
     if not courses[0] and not courses[1] and not courses[2] and not courses[3] and not courses[4] and not courses[5]:
         return "Error"
-    else:
-        # Courses names
-        courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
 
-        msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(canteen, day, meal)
-        for course_text, course in zip(courses_texts, courses):
-            msg_menu += course_text
-            for el in course:
-                msg_menu += "• " + el + "\n"
-            msg_menu += "\n"
-        msg_menu += "_Il menù potrebbe subire variazioni_"
+    # Courses names
+    courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
 
-        return msg_menu
+    msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(canteen, day, meal)
+    for course_text, course in zip(courses_texts, courses):
+        msg_menu += course_text
+        for el in course:
+            msg_menu += "• " + el + "\n"
+        msg_menu += "\n"
+    msg_menu += "_Il menù potrebbe subire variazioni_"
+
+    return msg_menu
 
 
 def create_graph(db, days, graph_name):

@@ -3,13 +3,14 @@ import os
 # Your token Bot, you can get it on Telegram Bot Father
 TOKEN = ''
 BOT_NAME = "@UnicamEatBot"
-MENU_URL = "URL of the menu in a .xml format"
+MENU_URL = ""  # Your URL of the menu in a .xml format
 
 
 class Dirs:
     CURRENT = os.path.dirname(os.path.abspath(__file__))
     QRCODE = CURRENT + "/QRCode/"
     TEMP = CURRENT + "/Temp/"
+
 
 # Updating time in secs
 updating_time = 60

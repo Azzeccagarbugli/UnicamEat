@@ -7,9 +7,6 @@ Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
 
 TO DO:
 - Espandere l'utilizzo del comando /admin per il db in Firebase                                  []
-- Richiesta tramite query dei vari files .xml per la lettura dei menù                            []
-- Creare ramo nel db per la chiusura della mensa, e in generale dello stato di cose belline      []
-- Se possibile migliorare la gestione della funzione /registrati                                 []
 - Modificare funzione invia messaggio, vorrei che:
     - permetta di scegliere un'ora di pubblicazione
     - permetta di scegliere se inviare con notifica all'utente o no
