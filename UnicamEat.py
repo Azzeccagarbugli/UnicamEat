@@ -870,7 +870,7 @@ def update(upd_time):
     have_to_send = ""
 
     # Error message
-    err_msg = "Si è verificato un errore all'interno di *@UnicamEatBot*, il menù non è stato convertito correttamente"
+    err_msg = "Si è verificato un *errore* all'interno di @UnicamEatBot, controllare il *menù* del _giorno odierno_"
 
     if curr_time == notification_lunch:
         have_to_send = "Pranzo"
@@ -897,7 +897,7 @@ def update(upd_time):
             canteen = "D'Avack"
             msg_menu = get_updated_menu(canteen, day, have_to_send)
 
-            if msg_menu == "Errore":
+            if msg_menu == "Error":
                 for chat_id in db.get_admins():
                     try:
                         bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
@@ -924,7 +924,7 @@ def update(upd_time):
             canteen = "Colle Paradiso"
             msg_menu = get_updated_menu(canteen, day, have_to_send)
 
-            if msg_menu == "Errore":
+            if msg_menu == "Error":
                 for chat_id in db.get_admins():
                     try:
                         bot.sendMessage(chat_id, err_msg, parse_mode="Markdown")
