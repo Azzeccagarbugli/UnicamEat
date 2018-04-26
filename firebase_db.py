@@ -257,6 +257,83 @@ class Firebase:
 
         return (new_numb, old_numb)
 
+    def update_menues(self):
+        """
+        - menues
+            - data
+                - mensa
+                    - pranzo/Cena
+                        - Primi
+                            - Pasta alla paolocannone [22 €]
+                        - Secondi
+        """
+        request = requests.get(MENU_URL)
+
+        # Writing pdf
+        filename = os.path.dirname(os.path.abspath(__file__)) + '/Temp/menu_data.xml'
+        with open(filename, 'wb') as f:
+            f.write(request.content)
+
+        tree = ET.parse(filename)
+        root = tree.getroot()
+
+        for child in root:
+            courses = [[], [], [], [], [], []]
+
+            for product in child:
+                product.attrib.get('Descrizione').capitalize()
+
+
+            product.attrib.get('Descrizione').capitalize()
+
+            data = "/" + str(child.attrib.get('Data').split('T')[0])
+            canteen_cp = True if child.attrib.get('MensaCP') == 'S' else False
+            canteen_da = True if child.attrib.get('MensaDA') == 'S' else False
+            meal = "/Pranzo" if child.attrib.get('FlagCena') == 'N' else "/Cena"
+
+            if cateen_cp:
+                db.reference('/menues' + data + "/Colle Paradiso" + meal).update({
+                    "Primi": {
+                        "Nome": "prezzo"
+                    },
+                    "Secondi": {
+
+                    },
+                    "Pizza/Panini": {
+
+                    },
+                    "Altro": {
+
+                    },
+                    "Extra": {
+
+                    },
+                    "Bevande": {
+
+                    }
+                })
+            if cateen_da:
+                db.reference('/menues' + data + "/D'Avack" + meal).update({
+                    "Primi": {
+
+                    },
+                    "Secondi": {
+
+                    },
+                    "Pizza/Panini": {
+
+                    },
+                    "Altro": {
+
+                    },
+                    "Extra": {
+
+                    },
+                    "Bevande": {
+
+                    }
+                })
+
     def rename_users_key(self, key_to_edit, new_key_val, start_val):
         """
         Utility function to rename a key for all the users in the db
