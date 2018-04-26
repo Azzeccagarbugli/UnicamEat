@@ -19,29 +19,30 @@ Fondamentalmente i menù universitari dell'ERSU di Camerino, vengono **esclusiva
 
 ## Caratteristiche
 
-*Look at the menu of the day, but do it with style*
+*“Look at the menu of the day, but do it with style”*
 
 Di seguito le principali caratteristiche di **Unicam Eat!**:
-* Ottenere il menù del giorno, o di un giorno qualsiasi della settimana
-* Piattaforma basata su un software solido e affidabile
+* Ottenere il menù di un qualsiasi giorno della settimana in maniera intuitiva
+* Software basato su un framework solido e affidabile
 * Possibilità di ricevere notifiche per il menù del giorno
 * Controllare prezzi, orari e molto altro grazie a un semplice click
-* Condividere il menù del giorno
+* Condividere il menù del giorno grazie alle funzionalità di Telegram
+* Utilizzo del database di Google, Firebase per la gestione in real-time dei dati
 * Servizio dinamico ed elegante
 
 ## Utilizzo del Bot
 
 <img align="left" width="300" src="https://i.imgur.com/qDUExac.jpg">
 
-Come primo step è fondamentale andare ad aggiungere il **bot** nella prorpia lista dei contatti all'interno di Telegram, è possibile infatti raggiungere **Unicam Eat!** mediante il seguente [**link**](https://t.me/UnicamEatBot/).
+Come primo step è fondamentale andare ad aggiungere il **Bot** nella prorpia lista dei contatti all'interno di Telegram, è possibile infatti raggiungere **Unicam Eat!** mediante il seguente [**link**](https://t.me/UnicamEatBot/).
 
 Una volta aggiunto il servizio all'interno dell'applicazione di messaggistica basterà usufruire dei comandi, elencati all'interno del comando di riferimento ``/help``, per effettuare le richieste desiderate.
 
-Sicuramente la feature più interessante offerta da **Unicam Eat!** è quella di andare a _inoltare messaggi di testo_ contenenti il menù del giorno per permettere una **maggiore rapidità di visualizzazione** e soprattutto una **maggiore efficenza nell'andare a reperire il menù selezionato**.
+Sicuramente la feature più interessante offerta da **Unicam Eat!** è quella di andare a _inviare messaggi di testo_ contenenti il menù del giorno per permettere una **maggiore rapidità di visualizzazione** rispetto ai servizi presenti attualmente sul sito del **ERSU** e soprattutto una **maggiore efficenza nell'andare a reperire il menù selezionato**.
 
-Per accedere a questa feature basterà digitare il comando ``/menu`` e a questo punto il bot guiderà l'utente verso la selezione innanzitutto della mensa in cui si desidera mangiare, e in seguito chiederà all'utente di quale giorno necessita il menù.
+Per accedere a questa feature basterà digitare il comando ``/menu`` e a questo punto il Bot guiderà l'utente verso la selezione innanzitutto della mensa in cui si desidera mangiare, e in seguito chiederà all'utente di quale giorno necessita il menù.
 
-Durante l'intera procedura di selezione l'utente verrà aiutato nella scelta dei parametri disponibili grazie a delle tastiera dinamiche che andranno a migliorare la **User Experience** per rendere l'utilizzo di **Unicam Eat!** decisamente _user friendly_.
+Durante l'intera procedura di selezione l'utente verrà aiutato nella scelta dei parametri disponibili grazie a tastiera dinamiche che andranno a migliorare la **User Experience**, per rendere l'utilizzo di **Unicam Eat!** decisamente più _user friendly_.
 <br><br><br>
 
 ## Struttura di Unicam Eat!
@@ -57,66 +58,32 @@ Abbiamo strutturato il nostro codice sorgente seguendo dei canoni **scrupolosi**
 
 In questo modo il software è diviso in sezioni, ben distinguibili tra loro. Questo **stile di coding** consente una maggiore facilità di studio e sopratutto una fase di *debugging* davvero alla portata di chiunque.
 
+#### Query al file .xml
 
-#### Il download dei file
+Grazie ai file fornitici dall'**ERSU** siamo in grado di effettuare una query su un file .xml che ci restituirà come risultato le pietanze relative a ogni giorno della settimana con allegata descrizione e costo di quest'ultimi.
 
-Il core del progetto sta nell'andare a scaricare, attraverso delle request, i file PDF contenenti il menù richiesto e convertirli, grazie all'aiuto di **PDFMiner**, in semplici file di testo con i quali è possibile lavorare in maniera decisamente più semplice.
-
+È possibile accedere a questa parte del codice consultando la funzione *get_updated_menu()* all'interno del file [functions.py](https://github.com/Azzeccagarbugli/UnicamEat/blob/master/functions.py).
 ```python
-def convert_in_txt(fname, pages = None):
-    """
-    Convert a .PDF file in a .txt file
-    """
-    if not pages:
-        pagenums = set()
-    else:
-        pagenums = set(pages)
+def append_product(index, product):
+      """
+      Internal function to append products to courses list
+      """
+      # Getting product_name
+      product_name = product.attrib.get('Descrizione').capitalize()
 
-    output = StringIO()
-    manager = PDFResourceManager()
-    converter = TextConverter(manager, output, laparams = LAParams())
-    interpreter = PDFPageInterpreter(manager, converter)
+      # Fixing typo error
+      if index == 5:
+          if "The" in product_name:
+              product_name = product_name.replace("The", "Tè")
 
-    infile = open(pdfDir + fname, 'rb')
-    for page in PDFPage.get_pages(infile, pagenums):
-        interpreter.process_page(page)
-    infile.close()
-    converter.close()
-    text = output.getvalue()
-    output.close()
+      # Concatenating prices
+      if product.attrib.get('FlagPrezzo') == 'S':
+          product_name += " _[{} €]_".format(product.attrib.get('Prezzo'))
+      else:
+          product_name += " _[{} pt]_".format(product.attrib.get('Punti'))
 
-    textFilename = txtDir + "converted.txt"
-    textFile = open(textFilename, "w")
-    textFile.write(text)
-    textFile.close()
-```
-#### Algoritmo di sorting
-
-Una volta effettuata la conversione, e quindi ottenuto il file di testo desiderato, si passa alla fase più delicata dell'intero processo, ovvero, andare a riordinare in maniera più affidabile possibile il menù del giorno seguendo le linee guida del PDF originale.
-
-Questa parte del software viene gestita in maniera davvero dettagliata e meticolosa per evitare eventuali problemi di qualsiasi genere.
-
-
-È possibile accedere a questa parte del codice consultando la funzione *advanced_read_txt()* all'interno del file [functions.py](https://github.com/Azzeccagarbugli/UnicamEat/blob/master/functions.py).
-```python
-def advanced_read_txt(canteen, day, launch_or_dinner = "Pranzo"):
-    """
-    Format the messagge of the selected menu
-    """
-    txtName = txtDir + str(canteen) + "_" +  str(day) + ".pdf.txt"
-
-    # Convert in the right day and the right canteen, just for good appaerence
-    msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(clean_canteen(canteen), clean_day(day), launch_or_dinner)
-
-    # Getting ready to work
-    my_file = open(txtName, "r")
-    out = my_file.readlines()
-    my_file.close()
-
-    # Divides by sections the .txt
-    my_char = '\n'.encode("unicode_escape").decode("utf-8")
-    secs = []
-    current_sec = []
+      # Appending product
+      courses[index].append(product_name)
 
     ...
 ```
@@ -128,33 +95,83 @@ Una volta completate le prime due fasi si può passare alla fase finale cioè, s
 Come già affermato in precedenza, grazie all'uso di **Telepot**, possiamo utilizzare le API messe a disposizione da Telegram e quindi andare ad usufruire una serie davvero molto ampia di *features* che vanno a costituire la struttura stessa del bot.
 
 ```python
-try:
-    # Start working
-    bot = telepot.Bot(TOKEN)
+if result_menu != "Error":
+            # Take random number for the donation
+            random_donation = random.randint(0, 5)
 
-    # Checking if some messages has been sent to the bot
-    updates = bot.getUpdates()
-    if updates:
-        last_update_id = updates[-1]['update_id']
-        bot.getUpdates(offset = last_update_id + 1)
+            # qrcode_filename never used, do we need it?
+            now = datetime.datetime.now()
+            qrcode_filename = generate_qr_code(chat_id, result_menu, Dirs.QRCODE, str(now.strftime("%d/%m %H:%M")), self._day_menu['canteen'], command_input)
 
-    # Starting message_loop
-    bot.message_loop({'chat': handle,
-                      'callback_query': on_callback_query})
+            keyboard = ""
 
-    print("Da grandi poteri derivano grandi responsabilità")
+            if db.get_user(chat_id)['role'] == 5:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                            [dict(text='Prenota con il QR Code!', callback_data='qrcode')]])
+            elif random_donation:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                            [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
-    # Notification system
-    while(1):
-        update()
-finally:
-    os.unlink(pidfile)
+            # Prints the menu in a kawaii way
+            if keyboard:
+                self.sender.sendMessage(result_menu, parse_mode="Markdown", reply_markup=keyboard)
+            else:
+                self.sender.sendMessage(result_menu, parse_mode="Markdown")
 ```
 
+#### Controllo e sicurezza dell'intero sistema attraverso Firebase
+
+Grazie all'utilizzo di Firebase, tecnologia molto recente basata su piattaforme di casa Google, possiamo garantire **sicurezza** e **privacy** a tutti i dati degli utenti e gestire le risorse del database in una maniera davvero efficente.
+
+```python
+class Firebase:
+.
+.
+.
+  def add_user(self, user_info):
+        """
+        Adds a new user under /users
+        """
+        if not self.exists_user(user_info['id']):
+            # Trying to get first name
+            if 'first_name' in user_info:
+                first_name = user_info['first_name']
+            else:
+                first_name = "Not Defined"
+
+            # Trying to get last name
+            if 'last_name' in user_info:
+                last_name = user_info['last_name']
+            else:
+                last_name = "Not Defined"
+
+            # Trying to get username
+            if 'username' in user_info:
+                username = user_info['username']
+            else:
+                username = "Not Defined"
+
+            db.reference('users/' + str(user_info['id'])).update({
+                "info": {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "username": username
+                },
+                "preferences": {
+                    "language": "IT",
+                    "notif_cp_d": True,
+                    "notif_cp_l": True,
+                    "notif_da": True
+                },
+                "role": 0  # Default user
+            })
+            return True
+        return False
+```
 
 ## Installazione
 
-Il bot viene rilasciato con licenza **MIT**, ciò significa che chiunque voglia modificare o proporre suggerimenti per implementare nuove funzionalità o per risolvere eventuali problemi, può farlo liberamente utilizzando GitHub.
+Il Bot viene rilasciato con licenza **MIT**, ciò significa che chiunque voglia modificare o proporre suggerimenti per implementare nuove funzionalità o per risolvere eventuali problemi, può farlo liberamente utilizzando GitHub.
 
 ---
 
@@ -173,4 +190,4 @@ $ python3 UnicamEat.py
 
 Lo sviluppo del codice è stato effettuato da [Francesco Coppola](https://github.com/Azzeccagarbugli) e da [Antonio Strippoli](https://github.com/Porchetta).
 
-*Il bot è stato creato in modo non ufficiale, né ERSU Camerino né Unicam sono responsabili in alcun modo*
+*Il Bot è stato creato in modo non ufficiale, per poi diventarlo grazie alla collaborazione con lo stuff dell'ERSU di Camerino*
