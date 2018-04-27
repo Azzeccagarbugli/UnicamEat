@@ -18,3 +18,7 @@ updating_time = 60
 # Times for the notification
 notification_lunch = {12, 30}
 notification_dinner = {18, 30}
+
+# Times for updating menues
+update_first = [{12, 10}, {12, 11}, {12, 12}, {12, 13}, {12, 14}, {12, 15}, {12, 16}, {12, 17}, {12, 18}, {12, 19}]
+update_second = [{19, 10}, {19, 11}, {19, 12}, {19, 13}, {19, 14}, {19, 15}, {19, 16}, {19, 17}, {19, 18}, {19, 19}]

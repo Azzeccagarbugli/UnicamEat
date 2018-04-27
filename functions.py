@@ -47,7 +47,7 @@ def server_status():
         return False
 
 
-def get_updated_menu(canteen, day, meal):
+def get_updated_menu_xml(canteen, day, meal):
     """
     Get the updated menu parsing an xml file
     """
@@ -92,7 +92,7 @@ def get_updated_menu(canteen, day, meal):
 
         # Concatenating prices
         if product.attrib.get('FlagPrezzo') == 'S':
-            product_name += " _[{} €]_".format(product.attrib.get('Prezzo'))
+            product_name += " _[{} €]_".format(product.attrib.get('Prezzo')[0:4])
         else:
             product_name += " _[{} pt]_".format(product.attrib.get('Punti'))
 
