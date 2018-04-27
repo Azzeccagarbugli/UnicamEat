@@ -3,13 +3,21 @@ Unicam Eat! - Telegram Bot (FireBase framework file)
 Authors: Azzeccagarbugli (f.coppola1998@gmail.com)
          Porchetta       (clarantonio98@gmail.com)
 """
+import os
+import requests
+import filecmp
+
 import firebase_admin
 from firebase_admin import credentials, db
 
 from colorama import Fore
 
+import xml.etree.ElementTree as ET
+
 import datetime
 from calendar import monthrange
+
+from settings import MENU_URL, Dirs
 
 
 class Firebase:
@@ -258,81 +266,159 @@ class Firebase:
         return (new_numb, old_numb)
 
     def update_menues(self):
+        try:
+            request = requests.get(MENU_URL)
+
+            # Writing pdf
+            filename = Dirs.TEMP + 'menu_data.xml'
+            filename_old = Dirs.TEMP + 'menu_data_old.xml'
+            with open(filename, 'wb') as f:
+                f.write(request.content)
+
+            # Checking the existance of an old menu
+            gotta_update = False
+            if not os.path.isfile(filename_old):
+                gotta_update = True
+            else:
+                # Check if files are equal
+                if not filecmp.cmp(filename, filename_old):
+                    gotta_update = True
+                os.unlink(filename_old)
+
+            if gotta_update:
+                tree = ET.parse(filename)
+                root = tree.getroot()
+
+                for child in root:
+                    courses = [{}, {}, {}, {}, {}, {}]
+                    for product in child:
+                        # Getting product name
+                        name = self.correct_keyname(product.attrib.get('Descrizione').capitalize())
+
+                        # Getting prices
+                        if product.attrib.get('FlagPrezzo') == 'S':
+                            price = "[{} €]".format(product.attrib.get('Prezzo')[0:4])
+                        else:
+                            price = "[{} pt]".format(product.attrib.get('Punti'))
+
+                        # Getting the type of the meal
+                        if product.attrib.get('TipoProdotto') == 'P':    # Primi
+                            index = 0
+                        elif product.attrib.get('TipoProdotto') == 'S':  # Secondi
+                            index = 1
+                        elif product.attrib.get('TipoProdotto') == 'Z':  # Pizza e panini
+                            index = 2
+                        elif product.attrib.get('TipoProdotto') == 'A':  # Altro
+                            index = 3
+                        elif product.attrib.get('TipoProdotto') == 'E':  # Extra
+                            index = 4
+                        elif product.attrib.get('TipoProdotto') == 'B':  # Bevande
+                            index = 5
+
+                        courses[index][name] = price
+
+                    # Really good suff ;)
+                    data = "/" + str(child.attrib.get('Data').split('T')[0])
+                    canteen_cp = True if child.attrib.get('MensaCP') == 'S' else False
+                    canteen_da = True if child.attrib.get('MensaDA') == 'S' else False
+                    meal = "/Pranzo" if child.attrib.get('FlagCena') == 'N' else "/Cena"
+
+                    if canteen_cp:
+                        db.reference('/menues' + data + "/Colle Paradiso" + meal).update({
+                            "Primi": courses[0],
+                            "Secondi": courses[1],
+                            "Pizza\Panini": courses[2],
+                            "Altro": courses[3],
+                            "Extra": courses[4],
+                            "Bevande": courses[5]
+                        })
+                    if canteen_da:
+                        db.reference('/menues' + data + "/D'Avack" + meal).update({
+                            "Primi": courses[0],
+                            "Secondi": courses[1],
+                            "Pizza\Panini": courses[2],
+                            "Altro": courses[3],
+                            "Extra": courses[4],
+                            "Bevande": courses[5]
+                        })
+
+                os.rename(filename, filename_old)
+
+                return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def correct_keyname(self, keyname, reverse=False):
         """
-        - menues
-            - data
-                - mensa
-                    - pranzo/Cena
-                        - Primi
-                            - Pasta alla paolocannone [22 €]
-                        - Secondi
+        Utility function that fix the invalid characters that are not supported by Firebase
+        . $ # ] [ /
         """
-        request = requests.get(MENU_URL)
+        invalid_chrs = [
+            [".", ","],
+            ["$", "€"],
+            ["#", "\\\\"],
+            ["[", "("],
+            ["]", ")"],
+            ["/", "\\"]
+        ]
+        if not reverse:
+            keyname = keyname.replace(invalid_chrs[0][0], invalid_chrs[0][1]).replace(invalid_chrs[1][0], invalid_chrs[1][1])
+            keyname = keyname.replace(invalid_chrs[2][0], invalid_chrs[2][1]).replace(invalid_chrs[3][0], invalid_chrs[3][1])
+            keyname = keyname.replace(invalid_chrs[4][0], invalid_chrs[4][1]).replace(invalid_chrs[5][0], invalid_chrs[5][1])
+            return keyname
+        else:
+            keyname = keyname.replace(invalid_chrs[0][1], invalid_chrs[0][0]).replace(invalid_chrs[1][1], invalid_chrs[1][0])
+            keyname = keyname.replace(invalid_chrs[2][1], invalid_chrs[2][0]).replace(invalid_chrs[3][1], invalid_chrs[3][0])
+            keyname = keyname.replace(invalid_chrs[4][1], invalid_chrs[4][0]).replace(invalid_chrs[5][1], invalid_chrs[5][0])
+            return keyname
 
-        # Writing pdf
-        filename = os.path.dirname(os.path.abspath(__file__)) + '/Temp/menu_data.xml'
-        with open(filename, 'wb') as f:
-            f.write(request.content)
+    def get_updated_menu(self, canteen, day, meal):
+        per_bene = {
+            "Lunedì": 0,
+            "Martedì": 1,
+            "Mercoledì": 2,
+            "Giovedì": 3,
+            "Venerdì": 4,
+            "Sabato": 5,
+            "Domenica": 6
+        }
 
-        tree = ET.parse(filename)
-        root = tree.getroot()
+        tua_mozzarella = {
+            "Primi": 0,
+            "Secondi": 1,
+            "Pizza\\Panini": 2,
+            "Altro": 3,
+            "Extra": 4,
+            "Bevande": 5
+        }
 
-        for child in root:
-            courses = [[], [], [], [], [], []]
+        day_data = (datetime.datetime.today() - datetime.timedelta(days=datetime.datetime.today().weekday()) + datetime.timedelta(days=per_bene[day])).strftime("%Y-%m-%d")
+        menu_data = db.reference('/menues/{}/{}/{}'.format(day_data, canteen, meal)).get()
 
-            for product in child:
-                product.attrib.get('Descrizione').capitalize()
+        if menu_data == None:
+            return "Error"
 
+        courses = [[], [], [], [], [], []]
 
-            product.attrib.get('Descrizione').capitalize()
+        for el in menu_data:
+            all_courses_in_franco = menu_data[el]
+            for course in all_courses_in_franco:
+                course_name = "{} _{}_".format(self.correct_keyname(course, reverse=True), menu_data[el][course])
+                courses[tua_mozzarella[el]].append(course_name)
 
-            data = "/" + str(child.attrib.get('Data').split('T')[0])
-            canteen_cp = True if child.attrib.get('MensaCP') == 'S' else False
-            canteen_da = True if child.attrib.get('MensaDA') == 'S' else False
-            meal = "/Pranzo" if child.attrib.get('FlagCena') == 'N' else "/Cena"
+        # Courses names
+        courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
 
-            if cateen_cp:
-                db.reference('/menues' + data + "/Colle Paradiso" + meal).update({
-                    "Primi": {
-                        "Nome": "prezzo"
-                    },
-                    "Secondi": {
+        msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(canteen, day, meal)
+        for course_text, course in zip(courses_texts, courses):
+            msg_menu += course_text
+            for el in course:
+                msg_menu += "• " + el + "\n"
+            msg_menu += "\n"
+        msg_menu += "_Il menù potrebbe subire variazioni_"
 
-                    },
-                    "Pizza/Panini": {
-
-                    },
-                    "Altro": {
-
-                    },
-                    "Extra": {
-
-                    },
-                    "Bevande": {
-
-                    }
-                })
-            if cateen_da:
-                db.reference('/menues' + data + "/D'Avack" + meal).update({
-                    "Primi": {
-
-                    },
-                    "Secondi": {
-
-                    },
-                    "Pizza/Panini": {
-
-                    },
-                    "Altro": {
-
-                    },
-                    "Extra": {
-
-                    },
-                    "Bevande": {
-
-                    }
-                })
+        return msg_menu
 
     def rename_users_key(self, key_to_edit, new_key_val, start_val):
         """

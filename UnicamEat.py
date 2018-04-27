@@ -39,7 +39,7 @@ from telepot.delegate import per_chat_id, include_callback_query_chat_id, create
 
 from firebase_db import Firebase
 from functions import *
-from settings import TOKEN, BOT_NAME, Dirs, updating_time, notification_lunch, notification_dinner
+from settings import TOKEN, BOT_NAME, Dirs, updating_time, notification_lunch, notification_dinner, update_first, update_second
 
 # Bool to check if we want to close canteens or not
 canteen_closed_da = False
@@ -141,7 +141,7 @@ class UnicamEat(telepot.helper.ChatHandler):
         elif self._user_state == 11:
             text_approved = True
             try:
-                self.sender.sendMessage("*ANTEPRIMA DEL TESTO:*\n_22 22 22 22 22 22 22 22 22_\n" + command_input + "\n_22 22 22 22 22 22 22 22 22_\n*Invio in corso*, _attendere..._", parse_mode="Markdown")
+                self.sender.sendMessage("*ANTEPRIMA DEL TESTO:*\n➖➖➖➖➖➖➖➖➖➖\n" + command_input + "\n➖➖➖➖➖➖➖➖➖➖\n*Invio in corso*, _attendere..._", parse_mode="Markdown")
             except telepot.exception.TelegramError:
                 self.sender.sendMessage("Il testo che hai inviato non è formattato correttamente, riprova")
                 text_approved = False
@@ -287,8 +287,14 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.sender.sendChatAction("upload_document")
                 self.sender.sendMessage("_Stiamo processando la tua richiesta..._", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
-                result_menu = get_updated_menu(self._day_menu['canteen'], self._day_menu['day'], self._day_menu['meal'])
+                # Getting updated menu
+                result_menu = db.get_updated_menu(self._day_menu['canteen'], self._day_menu['day'], self._day_menu['meal'])
 
+                # Second Try
+                if result_menu == "Error":
+                    result_menu = get_updated_menu_xml(self._day_menu['canteen'], self._day_menu['day'], self._day_menu['meal'])
+
+                result_menu = "Error"
                 if result_menu != "Error":
                     # Take random number for the donation
                     random_donation = random.randint(0, 5)
@@ -312,13 +318,15 @@ class UnicamEat(telepot.helper.ChatHandler):
                     else:
                         self.sender.sendMessage(result_menu, parse_mode="Markdown")
                 else:
-                    fail_conversion_msg = "Carissimo utente, ci dispiace che la conversione del menù non sia andata a buon fine. \n\n_Segnala gentilmente l'errore agli sviluppatori "\
-                                          "che provederrano a risolvere quest'ultimo_"
+                    fail_conversion_msg = "Carissimo utente, attualmente nel database *non è presente* il menù da te selezionato. "\
+                                          "Si ricorda che la mensa in questione potrebbe anche *non essere in funzione* nella giornata richiesta. "\
+                                          "\n\n_Nel caso in cui pensi che si sia verificato un errore segnalalo gentilmente agli sviluppatori "\
+                                          "che provederanno a risolvere quest'ultimo_"
 
                     callback_name = 'notification_developer ' + self._day_menu['canteen'] + ' - ' + self._day_menu['day']
 
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                 [dict(text="Segnala l'errore ai developer", callback_data=callback_name)]])
+                                 [dict(text="⚠️ Segnala l'errore ai developer", callback_data=callback_name)]])
 
                     # Prints the menu in a kawaii way
                     self.sender.sendMessage(fail_conversion_msg, parse_mode="Markdown", reply_markup=keyboard)
@@ -587,7 +595,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                     self.bot.answerCallbackQuery(query_id, text="Non sono presenti messaggi")
 
             elif query_data == 'cmd_send_msg':
-                self.bot.sendMessage(from_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo bot")
+                self.bot.sendMessage(from_id, "Digita il testo che vorresti inoltrare a tutti gli utenti usufruitori di questo *Bot*", parse_mode="Markdown")
 
                 self.bot.answerCallbackQuery(query_id)
                 self._user_state = 11
@@ -898,7 +906,7 @@ def update(upd_time):
         # Sending to Avack users
         if (day == "Lunedì" or day == "Martedì" or day == "Mercoledì" or day == "Giovedì") and have_to_send == "Pranzo" and canteen_closed_da == False:
             canteen = "D'Avack"
-            msg_menu = get_updated_menu(canteen, day, have_to_send)
+            msg_menu = db.get_updated_menu(canteen, day, have_to_send)
 
             if msg_menu == "Error":
                 for chat_id in db.get_admins():
@@ -925,7 +933,7 @@ def update(upd_time):
             pass
         else:
             canteen = "Colle Paradiso"
-            msg_menu = get_updated_menu(canteen, day, have_to_send)
+            msg_menu = db.get_updated_menu(canteen, day, have_to_send)
 
             if msg_menu == "Error":
                 for chat_id in db.get_admins():
@@ -944,12 +952,13 @@ def update(upd_time):
                     print(Fore.YELLOW + "[SENDING COLLEPARADISO] Sto inviando un messaggio a: " + chat_id)
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                 [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
-
                     try:
                         bot.sendMessage(chat_id, msg_menu, parse_mode="Markdown", reply_markup=keyboard)
                     except telepot.exception.TelegramError as e:
                         if e.error_code == 400:
                             print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + chat_id)
+    elif curr_time in update_first or curr_time in update_second:
+        db.update_menues()
 
     time.sleep(upd_time)
 
