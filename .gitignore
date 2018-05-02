@@ -10,4 +10,3 @@ settings.py
 credentials_db.json
 credentials_db_develop.json
 Temp/
-parsing_xml.py
