@@ -53,6 +53,7 @@ class UnicamEat(telepot.helper.ChatHandler):
         self._user_state = 0
         self._report_texts = {'title': "", 'text': ""}
         self._day_menu = {'canteen': "", 'day': "", 'meal': ""}
+        self.temp_bool = True
 
         # Updating daily users for graph construction
         db.update_daily_users(self.bot.getChat(args[0][-1]))
@@ -61,11 +62,12 @@ class UnicamEat(telepot.helper.ChatHandler):
         """
         Resetting user due to inactivity, deleting the thread
         """
-        msg = self.sender.sendMessage(
-            "...", disable_notification=True,
-            reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
-
-        self.bot.deleteMessage(telepot.message_identifier(msg))
+        if self._user_state > 0:
+            msg = self.sender.sendMessage(
+                "_Le tue azioni sono state resettate, questo messaggio si autodistruggerà a breve_", disable_notification=True,
+                reply_markup=ReplyKeyboardRemove(remove_keyboard=True), parse_mode="Markdown")
+            time.sleep(5)
+            self.bot.deleteMessage(telepot.message_identifier(msg))
         self.close()
 
     def on_close(self, ex):
@@ -141,23 +143,16 @@ class UnicamEat(telepot.helper.ChatHandler):
         elif self._user_state == 11:
             text_approved = True
             try:
-                self.sender.sendMessage("*ANTEPRIMA DEL TESTO:*\n➖➖➖➖➖➖➖➖➖➖\n" + command_input + "\n➖➖➖➖➖➖➖➖➖➖\n*Invio in corso*, _attendere..._", parse_mode="Markdown")
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                             [dict(text="🔕 Notifica silenziosa", callback_data="cmd_send_msg_notif")],
+                             [dict(text="✅ Conferma", callback_data="cmd_send_msg_confirm")]])
+                self.sender.sendMessage("*ANTEPRIMA DEL TESTO:*\n➖➖➖➖➖➖➖➖➖➖\n" + command_input + "\n➖➖➖➖➖➖➖➖➖➖\n*Invio in corso*, _attendere..._",
+                                        parse_mode="Markdown", reply_markup=keyboard)
             except telepot.exception.TelegramError:
                 self.sender.sendMessage("Il testo che hai inviato non è formattato correttamente, riprova")
                 text_approved = False
 
             if text_approved:
-                # Tries to send the message
-                for user_chat_id in db.get_all_users_id():
-                    if str(user_chat_id) != str(chat_id):
-                        try:
-                            self.bot.sendMessage(user_chat_id, command_input, parse_mode="Markdown")
-                        except telepot.exception.TelegramError as e:
-                            if e.error_code == 400:
-                                print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + user_chat_id)
-
-                self.sender.sendMessage("_Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo_", parse_mode="Markdown")
-
                 # Set user state
                 self._user_state = 0
 
@@ -603,6 +598,28 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                 self.bot.answerCallbackQuery(query_id)
                 self._user_state = 11
+
+            elif query_data == 'cmd_send_msg_confirm':
+                msg_to_send = msg['message']['text'].replace("ANTEPRIMA DEL TESTO:\n➖➖➖➖➖➖➖➖➖➖\n", "").replace("\n➖➖➖➖➖➖➖➖➖➖\nInvio in corso, attendere...", "")
+
+                # Tries to send the message
+                for user_chat_id in db.get_all_users_id():
+                    if str(user_chat_id) != str(from_id):
+                        try:
+                            self.bot.sendMessage(user_chat_id, msg_to_send, parse_mode="Markdown", disable_notification=self.temp_bool)
+                        except telepot.exception.TelegramError as e:
+                            if e.error_code == 400:
+                                print(Fore.YELLOW + "[WARNING] Non sono riuscito ad inviare il messaggio a: " + user_chat_id)
+
+                self.bot.answerCallbackQuery(query_id, text="Ho inoltrato il messaggio che mi hai inviato a tutti gli utenti con successo")
+
+            elif query_data == 'cmd_send_msg_notif':
+                if self.temp_bool is True:
+                    self.temp_bool = False
+                    self.bot.answerCallbackQuery(query_id, text="Il messaggio verrà inviato con notifica silenziosa")
+                else:
+                    self.temp_bool = True
+                    self.bot.answerCallbackQuery(query_id, text="Il messaggio verrà inviato con la classica notifica")
 
             elif query_data == 'cmd_close_canteen':
                 global canteen_closed_da, canteen_closed_cp
