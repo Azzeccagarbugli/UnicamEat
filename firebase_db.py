@@ -439,7 +439,7 @@ class Firebase:
                             if food_wanted.lower() in food.lower():  # Cotoletta found! :P
                                 if result != "":
                                     result += "\n"
-                                result += "Il giorno *{}* alla mensa *{}* nel menù *{}* nella tipologia *{}*".format(day, canteen, meal, dish)
+                                result += "• Il giorno *{}* alla mensa *{}* nel menù *{}* nella tipologia *{}*\n".format(day, canteen, meal, dish)
         return result
 
     def rename_users_key(self, key_to_edit, new_key_val, start_val):

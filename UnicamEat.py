@@ -495,6 +495,7 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
+            self.sender.sendDocument("https://media.giphy.com/media/1xmX8N6srlfdMI45bs/giphy.gif")
             self.sender.sendMessage(db.get_food_in_menu("cotoletta"), parse_mode="Markdown")
 
         # Fun messages
