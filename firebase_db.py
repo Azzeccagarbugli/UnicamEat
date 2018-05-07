@@ -371,7 +371,7 @@ class Firebase:
             keyname = keyname.replace(invalid_chrs[4][1], invalid_chrs[4][0]).replace(invalid_chrs[5][1], invalid_chrs[5][0])
             return keyname
 
-    def get_updated_menu(self, canteen, day, meal):
+    def get_updated_menu(self, canteen, day, meal, getlist=False):
         per_bene = {
             "Lunedì": 0,
             "Martedì": 1,
@@ -404,6 +404,10 @@ class Firebase:
             for course in all_courses_in_franco:
                 course_name = "{} _{}_".format(self.correct_keyname(course, reverse=True), menu_data[el][course])
                 courses[tua_mozzarella[el]].append(course_name)
+
+        # Return the list, useful for the order function
+        if getlist:
+            return courses
 
         # Courses names
         courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
