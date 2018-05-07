@@ -51,6 +51,7 @@ class UnicamEat(telepot.helper.ChatHandler):
         super(UnicamEat, self).__init__(*args, **kwargs)
 
         self._user_state = 0
+        self._user_order = []
         self._report_texts = {'title': "", 'text': ""}
         self._day_menu = {'canteen': "", 'day': "", 'meal': ""}
         self.temp_bool = True
@@ -486,7 +487,22 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Order menu
         elif command_input == "/order" or command_input == "/order" + BOT_NAME:
-            self.sender.sendPhoto(photo="https://i.ytimg.com/vi/g7dviOox_D0/hqdefault.jpg", caption="*JUST 22 FOR NOW*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+            """
+            Primo 1
+            Primo 2
+            Vai ai secondi
+
+            Secondo 1
+            Secondo 2
+            Torna ai primi - Vai a pizza/panini
+
+            """
+            markup = InlineKeyboardMarkup(inline_keyboard=[
+                    [dict(text="D'Avack", callback_data='order_da')],
+                    [dict(text="Colle Paradiso", callback_data='order_cp')]])
+            self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+
+            #self.sender.sendPhoto(photo="https://i.ytimg.com/vi/g7dviOox_D0/hqdefault.jpg", caption="*JUST 22 FOR NOW*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
@@ -782,6 +798,57 @@ class UnicamEat(telepot.helper.ChatHandler):
             elif query_data == 'cmd_position_cp':
                 self.bot.sendLocation(from_id, "43.1437097", "13.0822057")
                 self.bot.answerCallbackQuery(query_id, text="La posizione di Colle Paradiso è stata condivisa")
+
+            elif 'order' in query_data:
+                minidizionario = {
+                    'cp': "Colle Paradiso",
+                    'da': "D'Avack"
+                }
+                per_benino = {
+                    0: "Lunedì",
+                    1: "Martedì",
+                    2: "Mercoledì",
+                    3: "Giovedì",
+                    4: "Venerdì",
+                    5: "Sabato",
+                    6: "Domenica"
+                }
+
+                canteen = minidizionario[query_data.replace("order_", "")]
+                day = per_benino[datetime.datetime.today().weekday()]
+                meal = "Pranzo"
+
+                self._user_order = db.get_updated_menu(canteen, day, meal, getlist=True)
+                current_course = []
+                for course_name in self._user_order[0]:
+                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_' + course_name)])
+
+                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_1')])
+
+                markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                self.editor.editMessageText("Anche stupido se vuoi, vedi tu", parse_mode="Markdown", reply_markup=markup)
+
+                self.bot.answerCallbackQuery(query_id)
+
+            elif 'request_ord_' in query_data:
+                to_do = query_data.replace("request_ord_", "")
+                if(to_do in ["0", "1", "2", "3", "4", "5"]):
+                    to_do = int(to_do)
+                    current_course = []
+                    for course_name in self._user_order[to_do]:
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_' + course_name)])
+
+                    if to_do > 0 and to_do < len(self._user_order)-1:
+                        current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_'+str(to_do-1)), dict(text="Vai avanti  >>", callback_data='request_ord_'+str(to_do+1))])
+                    elif to_do == 0:
+                        current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_1')])
+                    elif to_do == len(self._user_order)-1:
+                        current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_4')])
+
+                    markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                    self.editor.editMessageText("Anche stupido se vuoi, vedi tu", parse_mode="Markdown", reply_markup=markup)
+                else:
+                    pass
 
         except telepot.exception.TelegramError as e:
             """
