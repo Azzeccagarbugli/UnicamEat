@@ -51,7 +51,6 @@ class UnicamEat(telepot.helper.ChatHandler):
         super(UnicamEat, self).__init__(*args, **kwargs)
 
         self._user_state = 0
-        self._user_order = []
         self._report_texts = {'title': "", 'text': ""}
         self._day_menu = {'canteen': "", 'day': "", 'meal': ""}
         self.temp_bool = True
@@ -443,7 +442,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             if command_input == "Confermo":
                 db.report_error(chat_id, self._report_texts['title'], self._report_texts['text'], high_priority=False)
 
-                msg = "Il tuo messaggio è stato inviato *con successo*, ti ringraziamo per la collaborazione"
+                msg = "Il tuo messaggio è stato inviato *correttamente*, ti ringraziamo per la collaborazione"
                 self.sender.sendMessage(msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
                 self._user_state = 0
@@ -818,37 +817,67 @@ class UnicamEat(telepot.helper.ChatHandler):
                 day = per_benino[datetime.datetime.today().weekday()]
                 meal = "Pranzo"
 
-                self._user_order = db.get_updated_menu(canteen, day, meal, getlist=True)
+                self._db_menu_for_order = db.get_updated_menu(canteen, day, meal, getlist=True)
                 current_course = []
-                for course_name in self._user_order[0]:
-                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_' + course_name)])
+                for course_name in self._db_menu_for_order[0]:
+                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + course_name + "_0")])
 
-                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_1')])
+                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
 
                 markup = InlineKeyboardMarkup(inline_keyboard=current_course)
-                self.editor.editMessageText("Anche stupido se vuoi, vedi tu", parse_mode="Markdown", reply_markup=markup)
+                self.editor.editMessageText("*Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla tastiera_", parse_mode="Markdown", reply_markup=markup)
 
                 self.bot.answerCallbackQuery(query_id)
 
             elif 'request_ord_' in query_data:
-                to_do = query_data.replace("request_ord_", "")
-                if(to_do in ["0", "1", "2", "3", "4", "5"]):
-                    to_do = int(to_do)
-                    current_course = []
-                    for course_name in self._user_order[to_do]:
-                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_' + course_name)])
+                """
+                WIP
+                """
+                to_do = query_data.split("_")[2]
+                if to_do == "select":
+                    # Updating order_mem
+                    course_name = query_data.split("_")[3].split("[")[0]
+                    course_price = query_data.split("_")[4].split("[")[1].split("]")[0]
 
-                    if to_do > 0 and to_do < len(self._user_order)-1:
-                        current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_'+str(to_do-1)), dict(text="Vai avanti  >>", callback_data='request_ord_'+str(to_do+1))])
-                    elif to_do == 0:
-                        current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_1')])
-                    elif to_do == len(self._user_order)-1:
-                        current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_4')])
+                    try:
+                        if course_name in self._order_mem:
+                            if self._order_mem[course_name][1] + 1 > 2:
+                                self.bot.answerCallbackQuery(query_id, text="Numero massimo di questa pietanza raggiunto")
+                            else:
+                                self._order_mem[course_name][1] += 1
+                                self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
+                        else:
+                            to_append = {course_name: [course_price, 1]}
+                            self._order_mem.append(to_append)
+                            self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
+                    except AttributeError:
+                        to_append = {course_name: [course_price, 1]}
+                        self._order_mem = [to_append]
+                        self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
 
-                    markup = InlineKeyboardMarkup(inline_keyboard=current_course)
-                    self.editor.editMessageText("Anche stupido se vuoi, vedi tu", parse_mode="Markdown", reply_markup=markup)
-                else:
-                    pass
+                num_pg = int(query_data.split("_")[-1])
+                current_course = []
+                for course_name in self._db_menu_for_order[num_pg]:
+                    print(course_name.split("_")[0])
+                    print(self._order_mem)
+                    if course_name.split("_")[0] in self._order_mem:
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + course_name + "_" + str(num_pg)), dict(text="❌", callback_data='remove_ord_' + course_name + "_" + str(num_pg))])
+                    else:
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + course_name + "_" + str(num_pg))])
+
+                if num_pg > 0 and num_pg < len(self._db_menu_for_order)-1:
+                    current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(num_pg-1)), dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(num_pg+1))])
+                elif num_pg == 0:
+                    current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
+                elif num_pg == len(self._db_menu_for_order)-1:
+                    current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_4')])
+
+                current_order = ""
+                markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                self.editor.editMessageText("*Ordine corrente:*\n\n"+current_order, parse_mode="Markdown", reply_markup=markup)
+
+            elif 'remove_ord_' in query_data:
+                pass
 
         except telepot.exception.TelegramError as e:
             """
