@@ -55,6 +55,9 @@ class UnicamEat(telepot.helper.ChatHandler):
         self._day_menu = {'canteen': "", 'day': "", 'meal': ""}
         self.temp_bool = True
 
+        self._db_menu_for_order = []
+        self._order_mem = {}
+
         # Updating daily users for graph construction
         db.update_daily_users(self.bot.getChat(args[0][-1]))
 
@@ -270,6 +273,11 @@ class UnicamEat(telepot.helper.ChatHandler):
                     # Set user state
                     self._user_state = 23
             else:
+                if self._day_menu['canteen'] == "Colle Paradiso":
+                    markup = ReplyKeyboardMarkup(keyboard=get_cp_keyboard())
+                else:
+                    markup = ReplyKeyboardMarkup(keyboard=get_da_keyboard())
+
                 self.sender.sendMessage("La data inserita non è valida, riprova inserendone una valida", parse_mode="Markdown", reply_markup=markup)
 
         # Print menu
@@ -818,14 +826,16 @@ class UnicamEat(telepot.helper.ChatHandler):
                 meal = "Pranzo"
 
                 self._db_menu_for_order = db.get_updated_menu(canteen, day, meal, getlist=True)
+                self._order_mem = {}
+
                 current_course = []
-                for course_name in self._db_menu_for_order[0]:
-                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + course_name + "_0")])
+                for course_i, course_name in enumerate(self._db_menu_for_order[0]):
+                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_0")])
 
                 current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
 
                 markup = InlineKeyboardMarkup(inline_keyboard=current_course)
-                self.editor.editMessageText("*Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla tastiera_", parse_mode="Markdown", reply_markup=markup)
+                self.editor.editMessageText("📃 *Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla tastiera_", parse_mode="Markdown", reply_markup=markup)
 
                 self.bot.answerCallbackQuery(query_id)
 
@@ -834,36 +844,43 @@ class UnicamEat(telepot.helper.ChatHandler):
                 WIP
                 """
                 to_do = query_data.split("_")[2]
+                num_pg = int(query_data.split("_")[-1])
+
                 if to_do == "select":
                     # Updating order_mem
-                    course_name = query_data.split("_")[3].split("[")[0]
-                    course_price = query_data.split("_")[4].split("[")[1].split("]")[0]
+                    course_name = self._db_menu_for_order[num_pg][int(query_data.split("_")[3])].split(" _[")[0]
+                    course_price = self._db_menu_for_order[num_pg][int(query_data.split("_")[3])].split("[")[1].split("]")[0]
 
-                    try:
-                        if course_name in self._order_mem:
-                            if self._order_mem[course_name][1] + 1 > 2:
-                                self.bot.answerCallbackQuery(query_id, text="Numero massimo di questa pietanza raggiunto")
-                            else:
-                                self._order_mem[course_name][1] += 1
-                                self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
+                    print("Name: " + str(course_name))
+                    print("Price: " + str(course_price))
+
+                    #try:
+                    print(self._order_mem)
+                    if course_name in self._order_mem:
+                        if self._order_mem[course_name][1] + 1 > 2:
+                            self.bot.answerCallbackQuery(query_id, text="Numero massimo di questa pietanza raggiunto")
                         else:
-                            to_append = {course_name: [course_price, 1]}
-                            self._order_mem.append(to_append)
+                            self._order_mem[course_name][1] += 1
                             self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
+                    else:
+                        self._order_mem[course_name] = [course_price, 1]
+                        self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
+                    """
                     except AttributeError:
                         to_append = {course_name: [course_price, 1]}
                         self._order_mem = [to_append]
                         self.bot.answerCallbackQuery(query_id, text="La pietanza: "+course_name+" è stata aggiunta")
+                    """
 
-                num_pg = int(query_data.split("_")[-1])
+                # print("Ciaoooo: " + str(query_data.split("_")[-1]))
+                # print("db menu for tua...: " + str(self._db_menu_for_order[num_pg]))
+
                 current_course = []
-                for course_name in self._db_menu_for_order[num_pg]:
-                    print(course_name.split("_")[0])
-                    print(self._order_mem)
-                    if course_name.split("_")[0] in self._order_mem:
-                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + course_name + "_" + str(num_pg)), dict(text="❌", callback_data='remove_ord_' + course_name + "_" + str(num_pg))])
+                for course_i, course_name in enumerate(self._db_menu_for_order[num_pg]):
+                    if course_name.split(" _")[0] in self._order_mem:
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_" + str(num_pg)), dict(text="❌", callback_data='remove_ord_' + str(course_i) + "_" + str(num_pg))])
                     else:
-                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + course_name + "_" + str(num_pg))])
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_" + str(num_pg))])
 
                 if num_pg > 0 and num_pg < len(self._db_menu_for_order)-1:
                     current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(num_pg-1)), dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(num_pg+1))])
@@ -872,9 +889,29 @@ class UnicamEat(telepot.helper.ChatHandler):
                 elif num_pg == len(self._db_menu_for_order)-1:
                     current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_4')])
 
-                current_order = ""
+                current_order = "_Vuoto, seleziona le pietanze dalla tastiera_"
+                total = {'euro': 0.0, 'points': 0.0}
+
+                for key, value in self._order_mem.items():
+                    if "€" in value[0]:
+                        total['euro'] += float(value[0].replace(" €", ""))*value[1]
+                    elif "pt" in value[0]:
+                        total['points'] += float(value[0].replace(" pt", ""))*value[1]
+                    else:
+                        print("Un messaggio funny")
+
+                    #courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
+                    if current_order == "_Vuoto, seleziona le pietanze dalla tastiera_":
+                        current_order = "|{}| *{}* _{}_\n".format(value[1], key, value[0])
+                    else:
+                        current_order += "|{}| *{}* _{}_\n".format(value[1], key, value[0])
+
+                if current_order != "_Vuoto, seleziona le pietanze dalla tastiera_":
+                    current_order += "\n_Totale_: *{} pt*, *{} €*".format(total['points'], total['euro'])
+
+                print("Current_course = " + str(current_course))
                 markup = InlineKeyboardMarkup(inline_keyboard=current_course)
-                self.editor.editMessageText("*Ordine corrente:*\n\n"+current_order, parse_mode="Markdown", reply_markup=markup)
+                self.editor.editMessageText("📃 *Ordine corrente:*\n\n"+current_order, parse_mode="Markdown", reply_markup=markup)
 
             elif 'remove_ord_' in query_data:
                 pass
