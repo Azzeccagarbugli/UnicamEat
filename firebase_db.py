@@ -414,10 +414,11 @@ class Firebase:
 
         msg_menu = "🗓 - *{}* - *{}* - *{}*\n\n".format(canteen, day, meal)
         for course_text, course in zip(courses_texts, courses):
-            msg_menu += course_text
-            for el in course:
-                msg_menu += "• " + el + "\n"
-            msg_menu += "\n"
+            if course:
+                msg_menu += course_text
+                for el in course:
+                    msg_menu += "• " + el + "\n"
+                msg_menu += "\n"
         msg_menu += "_Il menù potrebbe subire variazioni_"
 
         return msg_menu
