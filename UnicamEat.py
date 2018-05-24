@@ -499,10 +499,8 @@ class UnicamEat(telepot.helper.ChatHandler):
             """
             markup = InlineKeyboardMarkup(inline_keyboard=[
                     [dict(text="D'Avack", callback_data='order_da')],
-                    [dict(text="Colle Paradiso", callback_data='order_cp')]])
+                    [dict(text="Colle Paradiso", callback_data='special_request')]])
             self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
-
-            #self.sender.sendPhoto(photo="https://i.ytimg.com/vi/g7dviOox_D0/hqdefault.jpg", caption="*JUST 22 FOR NOW*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
@@ -823,10 +821,27 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.bot.sendLocation(from_id, "43.1437097", "13.0822057")
                 self.bot.answerCallbackQuery(query_id, text="La posizione di Colle Paradiso è stata condivisa")
 
+            elif query_data == 'special_request':
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text="Pranzo", callback_data='order_cp_lunch')],
+                        [dict(text="Cena", callback_data='order_cp_supper')],
+                        [dict(text="<<  Indietro", callback_data='cmd_back_order')]])
+                self.editor.editMessageText(text="Seleziona di ordinare *pranzo* o *cena* in base alle tue esigenze", parse_mode="Markdown", reply_markup=markup)
+
+            elif query_data == 'cmd_back_order':
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text="D'Avack", callback_data='order_da')],
+                        [dict(text="Colle Paradiso", callback_data='special_request')]])
+                self.editor.editMessageText(text="Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+
             elif 'order' in query_data:
                 minidizionario = {
                     'cp': "Colle Paradiso",
                     'da': "D'Avack"
+                }
+                minidizionario_carino = {
+                    'lunch' : "Pranzo",
+                    'supper' : "Cena"
                 }
                 per_benino = {
                     0: "Lunedì",
@@ -838,25 +853,38 @@ class UnicamEat(telepot.helper.ChatHandler):
                     6: "Domenica"
                 }
 
+                if query_data == 'order_da':
+                    self._day_menu['meal'] = "Pranzo"
+                    query_data = 'order_da'
+                elif query_data == 'order_cp_lunch':
+                    self._day_menu['meal'] = "Pranzo"
+                    query_data = 'order_cp'
+                elif query_data == 'order_cp_supper':
+                    self._day_menu['meal'] = "Cena"
+                    query_data = 'order_cp'
+
                 self._day_menu['canteen'] = minidizionario[query_data.replace("order_", "")]
                 self._day_menu['day'] = datetime.datetime.now().strftime("%d/%m %H:%M")
-                self._day_menu['meal'] = "Pranzo"
 
-                day = per_benino[datetime.datetime.today().weekday()]
-                self._db_menu_for_order = [course for course in db.get_updated_menu(self._day_menu['canteen'], day, self._day_menu['meal'], getlist=True) if course]
+                if not self._day_menu['day'] in [1, 2, 3, 4] and self._day_menu['canteen'] == "D'Avack":
+                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack è chiusa, non è possibile ordinare il menù")
+                else:
+                    day = per_benino[datetime.datetime.today().weekday()]
 
-                self._order_mem = {"points": 0.0, "euro": 0.0}
+                    self._db_menu_for_order = [course for course in db.get_updated_menu(self._day_menu['canteen'], day, self._day_menu['meal'], getlist=True) if course]
 
-                current_course = []
-                for course_i, course_name in enumerate(self._db_menu_for_order[0]):
-                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_0")])
+                    self._order_mem = {"points": 0.0, "euro": 0.0}
 
-                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
+                    current_course = []
+                    for course_i, course_name in enumerate(self._db_menu_for_order[0]):
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_0")])
 
-                markup = InlineKeyboardMarkup(inline_keyboard=current_course)
-                self.editor.editMessageText("📃 *Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla tastiera_", parse_mode="Markdown", reply_markup=markup)
+                    current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
 
-                self.bot.answerCallbackQuery(query_id)
+                    markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                    self.editor.editMessageText("📃 *Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla tastiera_", parse_mode="Markdown", reply_markup=markup)
+
+                    self.bot.answerCallbackQuery(query_id)
 
             elif 'request_ord_' in query_data:
                 """
