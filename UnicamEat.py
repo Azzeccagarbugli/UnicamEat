@@ -564,13 +564,23 @@ class UnicamEat(telepot.helper.ChatHandler):
 
             current_order = "_Vuoto, seleziona le pietanze dalla tastiera_"
 
+            def kawaii_order(x):
+                return{
+                    0 : "🍝 - *Primi:*\n",
+                    1 : "🍖 - *Secondi:*\n",
+                    2 : "🍕 - *Pizza/Panini:*\n",
+                    3 : "🍰 - *Altro:*\n",
+                    4 : "🧀 - *Extra:*\n",
+                    5 : "🍺 - *Bevande:*\n"
+                }.get(x, 0)
+
             for key, value in self._order_mem.items():
                 if key != "euro" and key != "points":
                     #courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
                     if current_order == "_Vuoto, seleziona le pietanze dalla tastiera_":
-                        current_order = "|{}| *{}* _{}_\n".format(value[1], key, value[0])
+                        current_order = "• |{} pz.| *{}* _{}_\n".format(value[1], key, value[0])
                     else:
-                        current_order += "|{}| *{}* _{}_\n".format(value[1], key, value[0])
+                        current_order += "• |{} pz.| *{}* _{}_\n".format(value[1], key, value[0])
 
             if current_order != "_Vuoto, seleziona le pietanze dalla tastiera_":
                 current_course.append([dict(text="✅ Ordina il menù!", callback_data='generateQR_ord')])
@@ -866,8 +876,20 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self._day_menu['canteen'] = minidizionario[query_data.replace("order_", "")]
                 self._day_menu['day'] = datetime.datetime.now().strftime("%d/%m %H:%M")
 
-                if not self._day_menu['day'] in [1, 2, 3, 4] and self._day_menu['canteen'] == "D'Avack":
+                temp_day = datetime.datetime.today().weekday()
+
+                hour_time = datetime.datetime.now().hour
+
+                #print(str(temp_day) + " - " + self._day_menu['canteen'] + " - " + self._day_menu['meal'])
+
+                if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack":
                     self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack è chiusa, non è possibile ordinare il menù")
+                elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena":
+                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso rimarrà chiusa durante il turno di cena")
+                elif (self._day_menu['canteen'] == "D'Avack" or self._day_menu['canteen'] == "Colle Paradiso") and self._day_menu['meal'] == "Pranzo" and hour_time >= 13:
+                    self.bot.answerCallbackQuery(query_id, text="Non è più possibile ordinare il menù per il turno del pranzo")
+                elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20):
+                    self.bot.answerCallbackQuery(query_id, text="Non è più possibile ordinare il menù per il turno della cena")
                 else:
                     day = per_benino[datetime.datetime.today().weekday()]
 
@@ -961,7 +983,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                 current_order = ""
                 for key, value in self._order_mem.items():
                     if key != "euro" and key != "points":
-                        current_order += "|{}| {}\n".format(value[1], key)
+                        current_order += "• |{}| {}\n".format(value[1], key)
 
                 # Generate QR Code
                 generate_qr_code(from_id, current_order, Dirs.QRCODE, self._day_menu['day'], self._day_menu['canteen'], self._day_menu['meal'])
@@ -986,10 +1008,10 @@ class UnicamEat(telepot.helper.ChatHandler):
 
     def basic_cmds(self, command_input):
         if command_input == "/start" or command_input == "/start" + BOT_NAME:
-            start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
+            start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERDIS, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
                         "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al *Bot*. "\
                         "\nSe hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
-                        "\n\n_Il Bot e' stato creato in collaborazione ufficiale con l'ERSU di Camerino_"
+                        "\n\n_Il Bot e' stato creato in collaborazione ufficiale con l'ERDIS di Camerino_"
 
             self.sender.sendMessage(start_msg, parse_mode="Markdown")
             return True
@@ -1036,7 +1058,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                          [dict(text='Offrici una birra!', url='https://www.paypal.me/azzeccagarbugli')]])
 
             info_msg = "*Unicam Eat!* nasce con l'idea di aiutare tutti gli studenti di Unicam nella visualizzazione dei menù "\
-                       "offerti dal servizio di ristorazione dell'Ersu, presso le mense di *Colle Paradiso* e *D'Avack*. "\
+                       "offerti dal servizio di ristorazione dell'ERDIS, presso le mense di *Colle Paradiso* e *D'Avack*. "\
                        "\nÈ possibile utilizzare i pulsanti disponibili di seguito per ottenere informazioni riguardo il codice sorgente del Bot e "\
                        "per segnalare direttamente un problema di malfunzionamento al team di sviluppo. "\
                        "\n\nInfine, se sei soddisfatto del servizio messo a dispozione e della qualità di quest'ultimo puoi donare una birra agli sviluppatori, "\
