@@ -138,7 +138,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                              [dict(text="✉️ Invia messaggio", callback_data="cmd_send_msg"), dict(text="🔒 Chiudi mensa", callback_data="cmd_close_canteen")],
                              [dict(text="🗑 Pulisci cartelle", callback_data="cmd_clean_folders"), dict(text="📈 Grafico", callback_data="cmd_graph")]])
 
-                self.sender.sendMessage("*PANNELLO ADMIN*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
+                self.sender.sendMessage("*Pannello Admin*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
             else:
                 self.sender.sendMessage("Non disponi dei permessi per usare questo comando")
 
@@ -499,7 +499,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             """
             markup = InlineKeyboardMarkup(inline_keyboard=[
                     [dict(text="D'Avack", callback_data='order_da')],
-                    [dict(text="Colle Paradiso", callback_data='special_request')]])
+                    [dict(text="Colle Paradiso", callback_data='order_cp')]])
             self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
 
         # Fun command
@@ -555,36 +555,61 @@ class UnicamEat(telepot.helper.ChatHandler):
                 else:
                     current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_" + str(num_pg))])
 
-            if num_pg > 0 and num_pg < len(self._db_menu_for_order)-1:
-                current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(num_pg-1)), dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(num_pg+1))])
-            elif num_pg == 0:
-                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
-            elif num_pg == len(self._db_menu_for_order)-1:
-                current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_4')])
+            def get_inc_dec(inc=True):
+                try:
+                    if not inc:
+                        if not self._db_menu_for_order[num_pg - 1]:
+                            return 2
+                        else:
+                            return 1
+                    else:
+                        if not self._db_menu_for_order[num_pg + 1]:
+                            return 2
+                        else:
+                            return 1
+                except IndexError:
+                    return 0
 
-            current_order = "_Vuoto, seleziona le pietanze dalla tastiera_"
+            if num_pg > 0 and num_pg < len(self._db_menu_for_order)-1:
+                current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(num_pg-get_inc_dec(inc=False))), dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(num_pg+get_inc_dec(inc=True)))])
+            elif num_pg == 0:
+                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(get_inc_dec(inc=True)))])
+            elif num_pg == len(self._db_menu_for_order)-1:
+                current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(len(self._db_menu_for_order)-1-get_inc_dec(inc=False)))])
+
+            current_order = "_Vuoto, seleziona le pietanze dalla lista_"
 
             def kawaii_order(x):
                 return{
-                    0 : "🍝 - *Primi:*\n",
-                    1 : "🍖 - *Secondi:*\n",
-                    2 : "🍕 - *Pizza/Panini:*\n",
-                    3 : "🍰 - *Altro:*\n",
-                    4 : "🧀 - *Extra:*\n",
-                    5 : "🍺 - *Bevande:*\n"
+                    "0" : "🍝 - *Primi:*\n",
+                    "1" : "🍖 - *Secondi:*\n",
+                    "2" : "🍕 - *Pizza/Panini:*\n",
+                    "3" : "🍰 - *Altro:*\n",
+                    "4" : "🧀 - *Extra:*\n",
+                    "5" : "🍺 - *Bevande:*\n"
                 }.get(x, 0)
 
+            # Preliminary for to predict the typology of the meal
+            predict_list = {"0": [], "1": [], "2": [], "3": [], "4": [], "5": []}
             for key, value in self._order_mem.items():
                 if key != "euro" and key != "points":
-                    #courses_texts = ["🍝 - *Primi:*\n", "🍖 - *Secondi:*\n", "🍕 - *Pizza/Panini:*\n", "🍰 - *Altro:*\n", "🧀 - *Extra:*\n", "🍺 - *Bevande:*\n"]
-                    if current_order == "_Vuoto, seleziona le pietanze dalla tastiera_":
-                        current_order = "• |{} pz.| *{}* _{}_\n".format(value[1], key, value[0])
-                    else:
-                        current_order += "• |{} pz.| *{}* _{}_\n".format(value[1], key, value[0])
+                    temp_robetta = "• |{} pz.| *{}* _{}_\n".format(value[2], key, value[1])
+                    predict_list[str(value[0])].append(temp_robetta)
 
-            if current_order != "_Vuoto, seleziona le pietanze dalla tastiera_":
+            for key, value in sorted(predict_list.items()):
+                # If, at least, one course of this typology has been added to the order
+                if value:
+                    if current_order == "_Vuoto, seleziona le pietanze dalla lista_":
+                        current_order = kawaii_order(key)
+                    else:
+                        current_order += kawaii_order(key)
+                    for course in value:
+                        current_order += course
+                    current_order += "\n"
+
+            if current_order != "_Vuoto, seleziona le pietanze dalla lista_":
                 current_course.append([dict(text="✅ Ordina il menù!", callback_data='generateQR_ord')])
-                current_order += "\n_Totale_: *{} pt*, *{} €*".format(self._order_mem['points'], self._order_mem['euro'])
+                current_order += "_Totale_: *{} pt*, *{:.2f} €*".format(self._order_mem['points'], self._order_mem['euro'])
 
             return (current_course, current_order)
 
@@ -606,7 +631,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                              [dict(text="✉️ Invia messaggio", callback_data="cmd_send_msg"), dict(text="🔒 Chiudi mensa", callback_data="cmd_close_canteen")],
                              [dict(text="🗑 Pulisci cartelle", callback_data="cmd_clean_folders"), dict(text="📈 Grafico", callback_data="cmd_graph")]])
 
-                self.editor.editMessageText(text="*PANNELLO ADMIN*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
+                self.editor.editMessageText(text="*Pannello Admin*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
                 self.bot.answerCallbackQuery(query_id)
 
             elif query_data == 'cmd_reports':
@@ -831,7 +856,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.bot.sendLocation(from_id, "43.1437097", "13.0822057")
                 self.bot.answerCallbackQuery(query_id, text="La posizione di Colle Paradiso è stata condivisa")
 
-            elif query_data == 'special_request':
+            elif query_data == 'order_cp':
                 markup = InlineKeyboardMarkup(inline_keyboard=[
                         [dict(text="Pranzo", callback_data='order_cp_lunch')],
                         [dict(text="Cena", callback_data='order_cp_supper')],
@@ -841,7 +866,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             elif query_data == 'cmd_back_order':
                 markup = InlineKeyboardMarkup(inline_keyboard=[
                         [dict(text="D'Avack", callback_data='order_da')],
-                        [dict(text="Colle Paradiso", callback_data='special_request')]])
+                        [dict(text="Colle Paradiso", callback_data='order_cp')]])
                 self.editor.editMessageText(text="Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
 
             elif 'order' in query_data:
@@ -877,24 +902,20 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self._day_menu['day'] = datetime.datetime.now().strftime("%d/%m %H:%M")
 
                 temp_day = datetime.datetime.today().weekday()
-
                 hour_time = datetime.datetime.now().hour
 
-                #print(str(temp_day) + " - " + self._day_menu['canteen'] + " - " + self._day_menu['meal'])
-
                 if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack":
-                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack è chiusa, non è possibile ordinare il menù")
+                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù")
                 elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena":
-                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso rimarrà chiusa durante il turno di cena")
-                elif (self._day_menu['canteen'] == "D'Avack" or self._day_menu['canteen'] == "Colle Paradiso") and self._day_menu['meal'] == "Pranzo" and hour_time >= 13:
-                    self.bot.answerCallbackQuery(query_id, text="Non è più possibile ordinare il menù per il turno del pranzo")
+                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù")
+                elif self._day_menu['meal'] == "Pranzo" and (hour_time < 8 or hour_time > 13):
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo")
                 elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20):
-                    self.bot.answerCallbackQuery(query_id, text="Non è più possibile ordinare il menù per il turno della cena")
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena")
                 else:
                     day = per_benino[datetime.datetime.today().weekday()]
 
-                    self._db_menu_for_order = [course for course in db.get_updated_menu(self._day_menu['canteen'], day, self._day_menu['meal'], getlist=True) if course]
-
+                    self._db_menu_for_order = db.get_updated_menu(self._day_menu['canteen'], day, self._day_menu['meal'], getlist=True)
                     self._order_mem = {"points": 0.0, "euro": 0.0}
 
                     current_course = []
@@ -904,14 +925,11 @@ class UnicamEat(telepot.helper.ChatHandler):
                     current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
 
                     markup = InlineKeyboardMarkup(inline_keyboard=current_course)
-                    self.editor.editMessageText("📃 *Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla tastiera_", parse_mode="Markdown", reply_markup=markup)
+                    self.editor.editMessageText("📃 *Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla lista_", parse_mode="Markdown", reply_markup=markup)
 
                     self.bot.answerCallbackQuery(query_id)
 
             elif 'request_ord_' in query_data:
-                """
-                WIP
-                """
                 to_do = query_data.split("_")[2]
                 num_pg = int(query_data.split("_")[-1])
 
@@ -930,15 +948,16 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                     if "€" in course_price or self._order_mem['points'] + float(course_price.replace(" pt", "")) <= 100:
                         if course_name in self._order_mem:
-                            if self._order_mem[course_name][1] + 1 > 2:
+                            if self._order_mem[course_name][2] + 1 > 2:
                                 self.bot.answerCallbackQuery(query_id, text="Numero massimo di questa pietanza raggiunto")
                             else:
                                 update_total_prices(course_price)
-                                self._order_mem[course_name][1] += 1
+                                self._order_mem[course_name][2] += 1
                                 self.bot.answerCallbackQuery(query_id, text="La pietanza: " + course_name + " è stata aggiunta")
                         else:
                             update_total_prices(course_price)
-                            self._order_mem[course_name] = [course_price, 1]
+                            # [Tipologia, prezzo, numero occorrenze]
+                            self._order_mem[course_name] = [num_pg, course_price, 1]
                             self.bot.answerCallbackQuery(query_id, text="La pietanza: " + course_name + " è stata aggiunta")
                     else:
                         self.bot.answerCallbackQuery(query_id, text="Il numero massimo di punti spendibili è stato raggiunto")
@@ -953,10 +972,10 @@ class UnicamEat(telepot.helper.ChatHandler):
                 num_pg = int(query_data.split("_")[-1])
 
                 course_name = self._db_menu_for_order[num_pg][course_id].split(" _[")[0]
-                course_price = self._order_mem[course_name][0]
+                course_price = self._order_mem[course_name][1]
 
-                if self._order_mem[course_name][1] == 2:
-                    self._order_mem[course_name][1] -= 1
+                if self._order_mem[course_name][2] == 2:
+                    self._order_mem[course_name][2] -= 1
                 else:
                     del self._order_mem[course_name]
 
@@ -982,8 +1001,9 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                 current_order = ""
                 for key, value in self._order_mem.items():
+                    # Scrolling the order ignoring the total euros and points keys
                     if key != "euro" and key != "points":
-                        current_order += "• |{}| {}\n".format(value[1], key)
+                        current_order += "• |{}| {}\n".format(value[2], key)
 
                 # Generate QR Code
                 generate_qr_code(from_id, current_order, Dirs.QRCODE, self._day_menu['day'], self._day_menu['canteen'], self._day_menu['meal'])
