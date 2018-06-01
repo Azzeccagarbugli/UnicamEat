@@ -31,6 +31,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+from telepot.exception import TelegramError
+
+
 
 def server_status():
     """
@@ -334,3 +337,36 @@ def generate_qr_code(chat_id, msg, folder_dir, date, canteen, meal):
     img.save(filename)
 
     return filename
+
+
+class OrderCountdown:
+    def __init__(self, seconds, msg_id, my_bot):
+        self._original_seconds = seconds
+        self._current_seconds = seconds
+        self._msg_id = msg_id
+        self._my_bot = my_bot
+
+    def order_timeout(self):
+        """
+        Reset the message after a determinate number of seconds
+
+        :param seconds: The number of the seconds.
+        :type seconds: int.
+        :param msg_id: A string containing the previous message.
+        :type msg_id: str.
+        """
+        while self._current_seconds:
+            time.sleep(1)
+            self._current_seconds -= 1
+
+        try:
+            self._my_bot.bot.deleteMessage(self._msg_id)
+            self._my_bot.sender.sendMessage("_Il comando è stato resettato in maniera automatica_", parse_mode="Markdown", disable_notification=True)
+        except TelegramError as e:
+            if e.description == 'Bad Request: message to delete not found':
+                pass
+
+        del self
+
+    def reset(self):
+        self._current_seconds = self._original_seconds

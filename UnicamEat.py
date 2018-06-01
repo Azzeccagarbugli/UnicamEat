@@ -32,7 +32,6 @@ import colorama
 from colorama import Fore, Style
 
 from threading import Thread
-from time import sleep
 
 import logging
 import telepot
@@ -491,32 +490,17 @@ class UnicamEat(telepot.helper.ChatHandler):
         # Order menu
         elif command_input == "/order" or command_input == "/order" + BOT_NAME:
             """
-            Primo 1
-            Primo 2
-            Vai ai secondi
-
-            Secondo 1
-            Secondo 2
-            Torna ai primi - Vai a pizza/panini
-
-            https://stackoverflow.com/questions/22180915/non-polling-non-blocking-timer
+            Order the menu
             """
-            def myTimer(seconds, msg):
-                sleep(seconds)
-                try:
-                    self.bot.deleteMessage(telepot.message_identifier(msg))
-                    self.sender.sendMessage("_Il comando è stato resettato in maniera automatica_", parse_mode="Markdown")
-                except telepot.exception.TelegramError as e:
-                    if e.description == 'Bad Request: message to delete not found':
-                        pass
-
             markup = InlineKeyboardMarkup(inline_keyboard=[
                     [dict(text="D'Avack", callback_data='order_da')],
                     [dict(text="Colle Paradiso", callback_data='order_cp')]])
             msg = self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
 
-            myThread = Thread(target=myTimer, args=(180, msg))
-            myThread.start()
+            # Starting the thread
+            self._user_countdown = OrderCountdown(120, telepot.message_identifier(msg), self)
+            user_countdown_thread = Thread(target=self._user_countdown.order_timeout)
+            user_countdown_thread.start()
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
@@ -873,6 +857,8 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.bot.answerCallbackQuery(query_id, text="La posizione di Colle Paradiso è stata condivisa")
 
             elif query_data == 'order_cp':
+                self._user_countdown.reset()
+
                 markup = InlineKeyboardMarkup(inline_keyboard=[
                         [dict(text="Pranzo", callback_data='order_cp_lunch')],
                         [dict(text="Cena", callback_data='order_cp_supper')],
@@ -880,12 +866,16 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.editor.editMessageText(text="Seleziona di ordinare *pranzo* o *cena* in base alle tue esigenze", parse_mode="Markdown", reply_markup=markup)
 
             elif query_data == 'cmd_back_order':
+                self._user_countdown.reset()
+
                 markup = InlineKeyboardMarkup(inline_keyboard=[
                         [dict(text="D'Avack", callback_data='order_da')],
                         [dict(text="Colle Paradiso", callback_data='order_cp')]])
                 self.editor.editMessageText(text="Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
 
             elif 'order' in query_data:
+                self._user_countdown.reset()
+
                 minidizionario = {
                     'cp': "Colle Paradiso",
                     'da': "D'Avack"
@@ -946,6 +936,8 @@ class UnicamEat(telepot.helper.ChatHandler):
                     self.bot.answerCallbackQuery(query_id)
 
             elif 'request_ord_' in query_data:
+                self._user_countdown.reset()
+
                 to_do = query_data.split("_")[2]
                 num_pg = int(query_data.split("_")[-1])
 
@@ -984,6 +976,8 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.editor.editMessageText("📃 *Ordine corrente:*\n\n"+current_order, parse_mode="Markdown", reply_markup=markup)
 
             elif 'remove_ord_' in query_data:
+                self._user_countdown.reset()
+
                 course_id = int(query_data.split("_")[2])
                 num_pg = int(query_data.split("_")[-1])
 
