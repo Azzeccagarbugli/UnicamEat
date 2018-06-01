@@ -31,6 +31,9 @@ import xml.etree.ElementTree as ET
 import colorama
 from colorama import Fore, Style
 
+from threading import Thread
+from time import sleep
+
 import logging
 import telepot
 from telepot.loop import MessageLoop
@@ -496,11 +499,24 @@ class UnicamEat(telepot.helper.ChatHandler):
             Secondo 2
             Torna ai primi - Vai a pizza/panini
 
+            https://stackoverflow.com/questions/22180915/non-polling-non-blocking-timer
             """
+            def myTimer(seconds, msg):
+                sleep(seconds)
+                try:
+                    self.bot.deleteMessage(telepot.message_identifier(msg))
+                    self.sender.sendMessage("_Il comando è stato resettato in maniera automatica_", parse_mode="Markdown")
+                except telepot.exception.TelegramError as e:
+                    if e.description == 'Bad Request: message to delete not found':
+                        pass
+
             markup = InlineKeyboardMarkup(inline_keyboard=[
                     [dict(text="D'Avack", callback_data='order_da')],
                     [dict(text="Colle Paradiso", callback_data='order_cp')]])
-            self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+            msg = self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+
+            myThread = Thread(target=myTimer, args=(180, msg))
+            myThread.start()
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
