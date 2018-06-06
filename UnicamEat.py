@@ -31,6 +31,8 @@ import xml.etree.ElementTree as ET
 import colorama
 from colorama import Fore, Style
 
+from threading import Thread
+
 import logging
 import telepot
 from telepot.loop import MessageLoop
@@ -54,6 +56,9 @@ class UnicamEat(telepot.helper.ChatHandler):
         self._report_texts = {'title': "", 'text': ""}
         self._day_menu = {'canteen': "", 'day': "", 'meal': ""}
         self.temp_bool = True
+
+        self._db_menu_for_order = []
+        self._order_mem = {}
 
         # Updating daily users for graph construction
         db.update_daily_users(self.bot.getChat(args[0][-1]))
@@ -135,7 +140,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                              [dict(text="✉️ Invia messaggio", callback_data="cmd_send_msg"), dict(text="🔒 Chiudi mensa", callback_data="cmd_close_canteen")],
                              [dict(text="🗑 Pulisci cartelle", callback_data="cmd_clean_folders"), dict(text="📈 Grafico", callback_data="cmd_graph")]])
 
-                self.sender.sendMessage("*PANNELLO ADMIN*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
+                self.sender.sendMessage("*Pannello Admin*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
             else:
                 self.sender.sendMessage("Non disponi dei permessi per usare questo comando")
 
@@ -270,6 +275,11 @@ class UnicamEat(telepot.helper.ChatHandler):
                     # Set user state
                     self._user_state = 23
             else:
+                if self._day_menu['canteen'] == "Colle Paradiso":
+                    markup = ReplyKeyboardMarkup(keyboard=get_cp_keyboard())
+                else:
+                    markup = ReplyKeyboardMarkup(keyboard=get_da_keyboard())
+
                 self.sender.sendMessage("La data inserita non è valida, riprova inserendone una valida", parse_mode="Markdown", reply_markup=markup)
 
         # Print menu
@@ -293,16 +303,9 @@ class UnicamEat(telepot.helper.ChatHandler):
                     # Take random number for the donation
                     random_donation = random.randint(0, 5)
 
-                    # qrcode_filename never used, do we need it?
-                    now = datetime.datetime.now()
-                    qrcode_filename = generate_qr_code(chat_id, result_menu, Dirs.QRCODE, str(now.strftime("%d/%m %H:%M")), self._day_menu['canteen'], command_input)
-
                     keyboard = ""
 
-                    if db.get_user(chat_id)['role'] == 5:
-                        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                    [dict(text='Prenota con il QR Code!', callback_data='qrcode')]])
-                    elif random_donation:
+                    if random_donation:
                         keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                     [dict(text='Offrici una birra!', url="https://www.paypal.me/azzeccagarbugli")]])
 
@@ -331,6 +334,12 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Register command
         elif command_input == "/register" or command_input == "/register" + BOT_NAME:
+            """
+            Roles: 0 -> unregistered user
+                   1 -> registered user, waiting for erdis approvation
+                   2 -> approved user, can order
+                   5 -> admin
+            """
             role = db.get_user(chat_id)['role']
 
             if role == 0:
@@ -393,10 +402,15 @@ class UnicamEat(telepot.helper.ChatHandler):
             if command_input == "Confermo":
                 db.edit_user(chat_id, "role", 1)
 
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[[dict(text="Guida dettagliata", callback_data='cmd_guide')]])
+
                 user_info = db.get_user(chat_id)
                 msg_lol = "*" + user_info['info']['first_name'] + " " + user_info['info']['last_name'] + "* welcome in the family ❤️"
+                msg_conf = "_La registrazione è avvenuta con successo_. \n\nPer poter iniziare a usare il comando /order e quindi ordinare, "\
+                           "sarà necessario effettuare la verifica della tua identità presso la mensa"
 
-                self.sender.sendPhoto("https://i.imgur.com/tFUZ984.jpg", caption=msg_lol, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                self.sender.sendMessage(text=msg_lol, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                self.sender.sendMessage(text=msg_conf, parse_mode="Markdown", reply_markup=keyboard)
                 self._user_state = 0
 
             elif command_input == "Modifica dati":
@@ -408,7 +422,7 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Report a bug to the developers
         elif command_input == "/report" or command_input == "/report" + BOT_NAME:
-            msg = "Tramite questo comando potrai inviare un *errore* che hai trovato agli sviluppatori,"\
+            msg = "Tramite questo comando potrai inviare un *errore* che hai trovato agli sviluppatori, "\
                   "o semplicemente inviargli il tuo *parere* su questo Bot."\
                   "\n\n_Ti basta scrivere qui sotto il testo che vuoi inviargli e la tua richiesta sarà immediatamente salvata nel server e rigirata agli sviluppatori._"\
                   "\n\nPer cominciare digita il *titolo* del messaggio da inviare"
@@ -442,7 +456,7 @@ class UnicamEat(telepot.helper.ChatHandler):
             if command_input == "Confermo":
                 db.report_error(chat_id, self._report_texts['title'], self._report_texts['text'], high_priority=False)
 
-                msg = "Il tuo messaggio è stato inviato *con successo*, ti ringraziamo per la collaborazione"
+                msg = "Il tuo messaggio è stato inviato *correttamente*, ti ringraziamo per la collaborazione"
                 self.sender.sendMessage(msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
 
                 self._user_state = 0
@@ -486,12 +500,31 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Order menu
         elif command_input == "/order" or command_input == "/order" + BOT_NAME:
-            self.sender.sendPhoto(photo="https://i.ytimg.com/vi/g7dviOox_D0/hqdefault.jpg", caption="*JUST 22 FOR NOW*", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+            """
+            Order the menu
+            """
+            if db.get_user(chat_id)['role'] >= 2:
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text="D'Avack", callback_data='order_da')],
+                        [dict(text="Colle Paradiso", callback_data='order_cp')]])
+                msg = self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+
+                # Starting the thread
+                self._user_countdown = OrderCountdown(120, telepot.message_identifier(msg), self)
+                user_countdown_thread = Thread(target=self._user_countdown.order_timeout)
+                user_countdown_thread.start()
+
+            else:
+                msg_text = "Il ruolo che ho trovato nel database *(" + str(role) + ")* non ti permette di effettuare ordinazioni."\
+                           "\n\n_Se pensi che ci sia stato un problema contatta il developer_"
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                             [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
+                self.sender.sendMessage(msg_text, parse_mode="Markdown", reply_markup=keyboard)
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
             self.sender.sendDocument("https://media.giphy.com/media/1xmX8N6srlfdMI45bs/giphy.gif")
-            self.sender.sendMessage(db.get_food_in_menu("cotoletta"), parse_mode="Markdown")
+            self.sender.sendMessage(db.get_food_in_menu("cotolett"), parse_mode="Markdown")
 
         # Fun messages
         elif command_input.lower() == "questa mensa fa schifo" or command_input.lower() == "che schifo" or command_input.lower() == "siete inutili":
@@ -532,6 +565,73 @@ class UnicamEat(telepot.helper.ChatHandler):
         msg_identifier = (msg['from']['id'], msg['message']['message_id'])
         self.editor = telepot.helper.Editor(self.bot, msg_identifier)
 
+        # Questa funzione qui non ci piace molto, ma per le nostre mamme è più che bella
+        def update_inline_keyboard_order(num_pg):
+            current_course = []
+            for course_i, course_name in enumerate(self._db_menu_for_order[num_pg]):
+                if course_name.split(" _")[0] in self._order_mem:
+                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_" + str(num_pg)), dict(text="❌", callback_data='remove_ord_' + str(course_i) + "_" + str(num_pg))])
+                else:
+                    current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_" + str(num_pg))])
+
+            def get_inc_dec(inc=True):
+                try:
+                    if not inc:
+                        if not self._db_menu_for_order[num_pg - 1]:
+                            return 2
+                        else:
+                            return 1
+                    else:
+                        if not self._db_menu_for_order[num_pg + 1]:
+                            return 2
+                        else:
+                            return 1
+                except IndexError:
+                    return 0
+
+            if num_pg > 0 and num_pg < len(self._db_menu_for_order)-1:
+                current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(num_pg-get_inc_dec(inc=False))), dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(num_pg+get_inc_dec(inc=True)))])
+            elif num_pg == 0:
+                current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_'+str(get_inc_dec(inc=True)))])
+            elif num_pg == len(self._db_menu_for_order)-1:
+                current_course.append([dict(text="<<  Torna indietro", callback_data='request_ord_skip_'+str(len(self._db_menu_for_order)-1-get_inc_dec(inc=False)))])
+
+            current_order = "_Vuoto, seleziona le pietanze dalla lista_"
+
+            def kawaii_order(x):
+                return{
+                    "0" : "🍝 - *Primi:*\n",
+                    "1" : "🍖 - *Secondi:*\n",
+                    "2" : "🍕 - *Pizza/Panini:*\n",
+                    "3" : "🍰 - *Altro:*\n",
+                    "4" : "🧀 - *Extra:*\n",
+                    "5" : "🍺 - *Bevande:*\n"
+                }.get(x, 0)
+
+            # Preliminary for to predict the typology of the meal
+            predict_list = {"0": [], "1": [], "2": [], "3": [], "4": [], "5": []}
+            for key, value in self._order_mem.items():
+                if key != "euro" and key != "points":
+                    temp_robetta = "• |{} pz.| *{}* _{}_\n".format(value[2], key, value[1])
+                    predict_list[str(value[0])].append(temp_robetta)
+
+            for key, value in sorted(predict_list.items()):
+                # If, at least, one course of this typology has been added to the order
+                if value:
+                    if current_order == "_Vuoto, seleziona le pietanze dalla lista_":
+                        current_order = kawaii_order(key)
+                    else:
+                        current_order += kawaii_order(key)
+                    for course in value:
+                        current_order += course
+                    current_order += "\n"
+
+            if current_order != "_Vuoto, seleziona le pietanze dalla lista_":
+                current_course.append([dict(text="✅ Ordina il menù!", callback_data='generateQR_ord')])
+                current_order += "_Totale_: *{} pt*, *{:.2f} €*".format(self._order_mem['points'], self._order_mem['euro'])
+
+            return (current_course, current_order)
+
         try:
             if query_data == 'notification_prices':
                 msg_text_prices = "Studenti: 5,50€ - Non studenti: 8,00€"
@@ -544,21 +644,13 @@ class UnicamEat(telepot.helper.ChatHandler):
                 msg_text_warn = "La segnalazione è stata inviata ai developer"
                 self.bot.answerCallbackQuery(query_id, text=msg_text_warn)
 
-            elif query_data == 'qrcode':
-                self.bot.sendPhoto(
-                    from_id,
-                    photo=open(Dirs.QRCODE + str(from_id) + "_" + "QRCode.png", 'rb'),
-                    caption="In allegato il tuo *QR Code* contenente i pasti da te selezionati",
-                    parse_mode="Markdown")
-                self.bot.answerCallbackQuery(query_id)
-
             elif query_data == "cmd_back_admin":
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                              [dict(text="⚠️ Segnalazioni", callback_data="cmd_reports")],
                              [dict(text="✉️ Invia messaggio", callback_data="cmd_send_msg"), dict(text="🔒 Chiudi mensa", callback_data="cmd_close_canteen")],
                              [dict(text="🗑 Pulisci cartelle", callback_data="cmd_clean_folders"), dict(text="📈 Grafico", callback_data="cmd_graph")]])
 
-                self.editor.editMessageText(text="*PANNELLO ADMIN*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
+                self.editor.editMessageText(text="*Pannello Admin*\n\nSeleziona un _comando_ dalla lista sottostante", parse_mode="Markdown", reply_markup=keyboard)
                 self.bot.answerCallbackQuery(query_id)
 
             elif query_data == 'cmd_reports':
@@ -783,6 +875,190 @@ class UnicamEat(telepot.helper.ChatHandler):
                 self.bot.sendLocation(from_id, "43.1437097", "13.0822057")
                 self.bot.answerCallbackQuery(query_id, text="La posizione di Colle Paradiso è stata condivisa")
 
+            elif query_data == 'order_cp':
+                self._user_countdown.reset()
+
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text="Pranzo", callback_data='order_cp_lunch')],
+                        [dict(text="Cena", callback_data='order_cp_supper')],
+                        [dict(text="<<  Indietro", callback_data='cmd_back_order')]])
+                self.editor.editMessageText(text="Seleziona di ordinare *pranzo* o *cena* in base alle tue esigenze", parse_mode="Markdown", reply_markup=markup)
+
+            elif query_data == 'cmd_back_order':
+                self._user_countdown.reset()
+
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text="D'Avack", callback_data='order_da')],
+                        [dict(text="Colle Paradiso", callback_data='order_cp')]])
+                self.editor.editMessageText(text="Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+
+            elif 'order' in query_data:
+                self._user_countdown.reset()
+
+                minidizionario = {
+                    'cp': "Colle Paradiso",
+                    'da': "D'Avack"
+                }
+                minidizionario_carino = {
+                    'lunch' : "Pranzo",
+                    'supper' : "Cena"
+                }
+                per_benino = {
+                    0: "Lunedì",
+                    1: "Martedì",
+                    2: "Mercoledì",
+                    3: "Giovedì",
+                    4: "Venerdì",
+                    5: "Sabato",
+                    6: "Domenica"
+                }
+
+                if query_data == 'order_da':
+                    self._day_menu['meal'] = "Pranzo"
+                    query_data = 'order_da'
+                elif query_data == 'order_cp_lunch':
+                    self._day_menu['meal'] = "Pranzo"
+                    query_data = 'order_cp'
+                elif query_data == 'order_cp_supper':
+                    self._day_menu['meal'] = "Cena"
+                    query_data = 'order_cp'
+
+                self._day_menu['canteen'] = minidizionario[query_data.replace("order_", "")]
+                self._day_menu['day'] = datetime.datetime.now().strftime("%d/%m %H:%M")
+
+                temp_day = datetime.datetime.today().weekday()
+                hour_time = datetime.datetime.now().hour
+                role = db.get_user(from_id)['role']
+
+                if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack" and role < 2:
+                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù")
+                elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena"  and role < 2:
+                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù")
+                elif self._day_menu['meal'] == "Pranzo" and (hour_time < 8 or hour_time > 13)  and role < 2:
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo")
+                elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20) and role < 2:
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena")
+                else:
+                    day = per_benino[datetime.datetime.today().weekday()]
+
+                    self._db_menu_for_order = db.get_updated_menu(self._day_menu['canteen'], day, self._day_menu['meal'], getlist=True)
+                    self._order_mem = {"points": 0.0, "euro": 0.0}
+
+                    current_course = []
+                    for course_i, course_name in enumerate(self._db_menu_for_order[0]):
+                        current_course.append([dict(text=course_name.replace("_", ""), callback_data='request_ord_select_' + str(course_i) + "_0")])
+
+                    current_course.append([dict(text="Vai avanti  >>", callback_data='request_ord_skip_1')])
+
+                    markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                    self.editor.editMessageText("📃 *Ordine corrente:*\n\n_Vuoto, seleziona le pietanze dalla lista_", parse_mode="Markdown", reply_markup=markup)
+
+                    self.bot.answerCallbackQuery(query_id)
+
+            elif 'request_ord_' in query_data:
+                self._user_countdown.reset()
+
+                to_do = query_data.split("_")[2]
+                num_pg = int(query_data.split("_")[-1])
+
+                if to_do == "select":
+                    # Updating order_mem
+                    course_name = self._db_menu_for_order[num_pg][int(query_data.split("_")[3])].split(" _[")[0]
+                    course_price = self._db_menu_for_order[num_pg][int(query_data.split("_")[3])].split("[")[1].split("]")[0]
+
+                    def update_total_prices(course_price):
+                        if "€" in course_price:
+                            self._order_mem['euro'] += float(course_price.replace(" €", ""))
+                        elif "pt" in course_price:
+                            self._order_mem['points'] += float(course_price.replace(" pt", ""))
+                        else:
+                            print("Un messaggio funny")
+
+                    meals_numbers = 1
+                    for key, value in self._order_mem.items():
+                        if key != "euro" and key != "points":
+                            if value[0] == num_pg:
+                                meals_numbers += 1
+
+                    if meals_numbers > 2:
+                        self.bot.answerCallbackQuery(query_id, text="Non è possibile ordinare più di 2 piatti relativi alla stessa categoria")
+                    elif "€" in course_price or self._order_mem['points'] + float(course_price.replace(" pt", "")) <= 100:
+                        if course_name in self._order_mem:
+                            if self._order_mem[course_name][2] + 1 > 2:
+                                self.bot.answerCallbackQuery(query_id, text="Numero massimo di questa pietanza raggiunto")
+                            else:
+                                update_total_prices(course_price)
+                                self._order_mem[course_name][2] += 1
+                                self.bot.answerCallbackQuery(query_id, text="La pietanza: " + course_name + " è stata aggiunta")
+                        else:
+                            update_total_prices(course_price)
+                            # [Tipologia, prezzo, numero occorrenze]
+                            self._order_mem[course_name] = [num_pg, course_price, 1]
+                            self.bot.answerCallbackQuery(query_id, text="La pietanza: " + course_name + " è stata aggiunta")
+                    else:
+                        self.bot.answerCallbackQuery(query_id, text="Il numero massimo di punti spendibili è stato raggiunto")
+
+                current_course, current_order = update_inline_keyboard_order(num_pg)
+
+                markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                self.editor.editMessageText("📃 *Ordine corrente:*\n\n"+current_order, parse_mode="Markdown", reply_markup=markup)
+
+            elif 'remove_ord_' in query_data:
+                self._user_countdown.reset()
+
+                course_id = int(query_data.split("_")[2])
+                num_pg = int(query_data.split("_")[-1])
+
+                course_name = self._db_menu_for_order[num_pg][course_id].split(" _[")[0]
+                course_price = self._order_mem[course_name][1]
+
+                if self._order_mem[course_name][2] == 2:
+                    self._order_mem[course_name][2] -= 1
+                else:
+                    del self._order_mem[course_name]
+
+                if "€" in course_price:
+                    self._order_mem['euro'] -= float(course_price.replace(" €", ""))
+                elif "pt" in course_price:
+                    self._order_mem['points'] -= float(course_price.replace(" pt", ""))
+                else:
+                    print("Un messaggio funny")
+
+                self.bot.answerCallbackQuery(query_id, text="La pietanza è stata rimossa")
+
+                current_course, current_order = update_inline_keyboard_order(num_pg)
+
+                markup = InlineKeyboardMarkup(inline_keyboard=current_course)
+                self.editor.editMessageText("📃 *Ordine corrente:*\n\n"+current_order, parse_mode="Markdown", reply_markup=markup)
+
+            elif query_data == 'generateQR_ord':
+                # Bot send activity for nice appaerence
+                self.editor.deleteMessage()
+                self.bot.sendChatAction(from_id, "upload_document")
+                self.bot.sendMessage(from_id, "_Stiamo processando la tua richiesta..._", parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+
+                current_order = ""
+                for key, value in self._order_mem.items():
+                    # Scrolling the order ignoring the total euros and points keys
+                    if key != "euro" and key != "points":
+                        current_order += "• |{}| {}\n".format(value[2], key)
+
+                # Generate QR Code
+                generate_qr_code(from_id, current_order, Dirs.QRCODE, self._day_menu['day'], self._day_menu['canteen'], self._day_menu['meal'])
+
+                self.bot.sendPhoto(
+                    from_id,
+                    photo=open(Dirs.QRCODE + str(from_id) + "_" + "QRCode.png", 'rb'),
+                    caption="In allegato il *QR Code* contenente il menù da te ordinato, buon appetito!",
+                    parse_mode="Markdown")
+
+                os.remove(Dirs.QRCODE + str(from_id) + "_" + "QRCode.png")
+                self.bot.answerCallbackQuery(query_id, text = "Menù ordinato correttamente")
+
+            elif query_data == 'cmd_guide':
+                # Qualcosa
+                self.bot.answerCallbackQuery(query_id, text = "Funzione non ancora implementata")
+
         except telepot.exception.TelegramError as e:
             """
             Managing multiple click on an inline query by ignoring this exception
@@ -794,10 +1070,10 @@ class UnicamEat(telepot.helper.ChatHandler):
 
     def basic_cmds(self, command_input):
         if command_input == "/start" or command_input == "/start" + BOT_NAME:
-            start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERSU, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
+            start_msg = "*Benvenuto su @UnicamEatBot!*\nQui troverai il menù del giorno offerto dall'ERDIS, per gli studenti di Unicam, per le mense di Colle Paradiso e del D'Avack. "\
                         "\nInizia digitando il comando /menu per accedere al menu o prova altri comandi per scoprire maggiori informazioni riguardo al *Bot*. "\
                         "\nSe hai qualche dubbio o perplessità prova il comando /help per ulteriori dettagli."\
-                        "\n\n_Il Bot e' stato creato in collaborazione ufficiale con l'ERSU di Camerino_"
+                        "\n\n_Il Bot e' stato creato in collaborazione ufficiale con l'ERDIS di Camerino_"
 
             self.sender.sendMessage(start_msg, parse_mode="Markdown")
             return True
@@ -844,7 +1120,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                          [dict(text='Offrici una birra!', url='https://www.paypal.me/azzeccagarbugli')]])
 
             info_msg = "*Unicam Eat!* nasce con l'idea di aiutare tutti gli studenti di Unicam nella visualizzazione dei menù "\
-                       "offerti dal servizio di ristorazione dell'Ersu, presso le mense di *Colle Paradiso* e *D'Avack*. "\
+                       "offerti dal servizio di ristorazione dell'ERDIS, presso le mense di *Colle Paradiso* e *D'Avack*. "\
                        "\nÈ possibile utilizzare i pulsanti disponibili di seguito per ottenere informazioni riguardo il codice sorgente del Bot e "\
                        "per segnalare direttamente un problema di malfunzionamento al team di sviluppo. "\
                        "\n\nInfine, se sei soddisfatto del servizio messo a dispozione e della qualità di quest'ultimo puoi donare una birra agli sviluppatori, "\

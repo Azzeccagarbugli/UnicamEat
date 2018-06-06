@@ -7,7 +7,7 @@
 [![forthebadge](http://forthebadge.com/images/badges/powered-by-water.svg)](https://it.wikipedia.org/wiki/Acqua)
 [![forthebadge](http://forthebadge.com/images/badges/cc-by-nd.svg)](https://opensource.org/licenses/MIT)
 
-**Unicam Eat!** è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERSU** agli studenti Unicam.
+**Unicam Eat!** è un bot Telegram ideato per la gestione dei menù settimanali offerti dal servizio di ristorazione dell'**ERDIS** agli studenti Unicam.
 
 ***
 
@@ -15,7 +15,7 @@
 
 L'idea e lo scopo che ci alla base del servizio sono molto semplici: *fornire con una maggiore efficienza i menù agli studenti universitari, e soprattutto, rendere più accessibile l'accesso a quest'ultimi,* utilizzando una piattaforma come Telegram che è in grado di mettere in simbiosi questi due aspetti.
 
-Fondamentalmente i menù universitari dell'ERSU di Camerino, vengono **esclusivamente** distribuiti mediante il sito ufficiale di quest'ultimo attraverso dei semplici file PDF e quindi abbiamo pensato di andare a rendere il servizio più *usufruibile* e *istantaneo*.
+Fondamentalmente i menù universitari dell'ERDIS di Camerino, vengono **esclusivamente** distribuiti mediante il sito ufficiale di quest'ultimo attraverso dei semplici file PDF e quindi abbiamo pensato di andare a rendere il servizio più *usufruibile* e *istantaneo*.
 
 ## Caratteristiche
 
@@ -38,7 +38,7 @@ Come primo step è fondamentale andare ad aggiungere il **Bot** nella prorpia li
 
 Una volta aggiunto il servizio all'interno dell'applicazione di messaggistica basterà usufruire dei comandi, elencati all'interno del comando di riferimento ``/help``, per effettuare le richieste desiderate.
 
-Sicuramente la feature più interessante offerta da **Unicam Eat!** è quella di andare a _inviare messaggi di testo_ contenenti il menù del giorno per permettere una **maggiore rapidità di visualizzazione** rispetto ai servizi presenti attualmente sul sito del **ERSU** e soprattutto una **maggiore efficenza nell'andare a reperire il menù selezionato**.
+Sicuramente la feature più interessante offerta da **Unicam Eat!** è quella di andare a _inviare messaggi di testo_ contenenti il menù del giorno per permettere una **maggiore rapidità di visualizzazione** rispetto ai servizi presenti attualmente sul sito dell' **ERDIS** e soprattutto una **maggiore efficenza nell'andare a reperire il menù selezionato**.
 
 Per accedere a questa feature basterà digitare il comando ``/menu`` e a questo punto il Bot guiderà l'utente verso la selezione innanzitutto della mensa in cui si desidera mangiare, e in seguito chiederà all'utente di quale giorno necessita il menù.
 
@@ -60,7 +60,7 @@ In questo modo il software è diviso in sezioni, ben distinguibili tra loro. Que
 
 #### Query al file .xml
 
-Grazie ai file fornitici dall'**ERSU** siamo in grado di effettuare una query su un file .xml che ci restituirà come risultato le pietanze relative a ogni giorno della settimana con allegata descrizione e costo di quest'ultimi.
+Grazie ai file fornitici dall'**ERDIS** siamo in grado di effettuare una query su un file .xml che ci restituirà come risultato le pietanze relative a ogni giorno della settimana con allegata descrizione e costo di quest'ultimi.
 
 È possibile accedere a questa parte del codice consultando la funzione *get_updated_menu()* all'interno del file [functions.py](https://github.com/Azzeccagarbugli/UnicamEat/blob/master/functions.py).
 ```python
@@ -190,4 +190,4 @@ $ python3 UnicamEat.py
 
 Lo sviluppo del codice è stato effettuato da [Francesco Coppola](https://github.com/Azzeccagarbugli) e da [Antonio Strippoli](https://github.com/Porchetta).
 
-*Il Bot è stato creato in modo non ufficiale, per poi diventarlo grazie alla collaborazione con lo stuff dell'ERSU di Camerino*
+*Il Bot è stato creato in modo non ufficiale, per poi diventarlo grazie alla collaborazione con lo stuff dell'ERDIS di Camerino*
