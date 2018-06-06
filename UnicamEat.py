@@ -334,6 +334,12 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Register command
         elif command_input == "/register" or command_input == "/register" + BOT_NAME:
+            """
+            Roles: 0 -> unregistered user
+                   1 -> registered user, waiting for erdis approvation
+                   2 -> approved user, can order
+                   5 -> admin
+            """
             role = db.get_user(chat_id)['role']
 
             if role == 0:
@@ -396,10 +402,15 @@ class UnicamEat(telepot.helper.ChatHandler):
             if command_input == "Confermo":
                 db.edit_user(chat_id, "role", 1)
 
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[[dict(text="Guida dettagliata", callback_data='cmd_guide')]])
+
                 user_info = db.get_user(chat_id)
                 msg_lol = "*" + user_info['info']['first_name'] + " " + user_info['info']['last_name'] + "* welcome in the family ❤️"
+                msg_conf = "_La registrazione è avvenuta con successo_. \n\nPer poter iniziare a usare il comando /order e quindi ordinare, "\
+                           "sarà necessario effettuare la verifica della tua identità presso la mensa"
 
-                self.sender.sendPhoto("https://i.imgur.com/tFUZ984.jpg", caption=msg_lol, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                self.sender.sendMessage(text=msg_lol, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
+                self.sender.sendMessage(text=msg_conf, parse_mode="Markdown", reply_markup=keyboard)
                 self._user_state = 0
 
             elif command_input == "Modifica dati":
@@ -411,7 +422,7 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         # Report a bug to the developers
         elif command_input == "/report" or command_input == "/report" + BOT_NAME:
-            msg = "Tramite questo comando potrai inviare un *errore* che hai trovato agli sviluppatori,"\
+            msg = "Tramite questo comando potrai inviare un *errore* che hai trovato agli sviluppatori, "\
                   "o semplicemente inviargli il tuo *parere* su questo Bot."\
                   "\n\n_Ti basta scrivere qui sotto il testo che vuoi inviargli e la tua richiesta sarà immediatamente salvata nel server e rigirata agli sviluppatori._"\
                   "\n\nPer cominciare digita il *titolo* del messaggio da inviare"
@@ -492,15 +503,23 @@ class UnicamEat(telepot.helper.ChatHandler):
             """
             Order the menu
             """
-            markup = InlineKeyboardMarkup(inline_keyboard=[
-                    [dict(text="D'Avack", callback_data='order_da')],
-                    [dict(text="Colle Paradiso", callback_data='order_cp')]])
-            msg = self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
+            if db.get_user(chat_id)['role'] >= 2:
+                markup = InlineKeyboardMarkup(inline_keyboard=[
+                        [dict(text="D'Avack", callback_data='order_da')],
+                        [dict(text="Colle Paradiso", callback_data='order_cp')]])
+                msg = self.sender.sendMessage("Seleziona la mensa nella quale desideri *ordinare* il menù del giorno", parse_mode="Markdown", reply_markup=markup)
 
-            # Starting the thread
-            self._user_countdown = OrderCountdown(120, telepot.message_identifier(msg), self)
-            user_countdown_thread = Thread(target=self._user_countdown.order_timeout)
-            user_countdown_thread.start()
+                # Starting the thread
+                self._user_countdown = OrderCountdown(120, telepot.message_identifier(msg), self)
+                user_countdown_thread = Thread(target=self._user_countdown.order_timeout)
+                user_countdown_thread.start()
+
+            else:
+                msg_text = "Il ruolo che ho trovato nel database *(" + str(role) + ")* non ti permette di effettuare ordinazioni."\
+                           "\n\n_Se pensi che ci sia stato un problema contatta il developer_"
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                             [dict(text='Developer', url='https://t.me/azzeccagarbugli')]])
+                self.sender.sendMessage(msg_text, parse_mode="Markdown", reply_markup=keyboard)
 
         # Fun command
         elif command_input == "/cotoletta" or command_input == "/cotoletta" + BOT_NAME:
@@ -909,14 +928,15 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                 temp_day = datetime.datetime.today().weekday()
                 hour_time = datetime.datetime.now().hour
+                role = db.get_user(from_id)['role']
 
-                if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack":
+                if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack" and role < 2:
                     self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù")
-                elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena":
+                elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena"  and role < 2:
                     self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù")
-                elif self._day_menu['meal'] == "Pranzo" and (hour_time < 8 or hour_time > 13):
+                elif self._day_menu['meal'] == "Pranzo" and (hour_time < 8 or hour_time > 13)  and role < 2:
                     self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo")
-                elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20):
+                elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20) and role < 2:
                     self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena")
                 else:
                     day = per_benino[datetime.datetime.today().weekday()]
@@ -954,7 +974,15 @@ class UnicamEat(telepot.helper.ChatHandler):
                         else:
                             print("Un messaggio funny")
 
-                    if "€" in course_price or self._order_mem['points'] + float(course_price.replace(" pt", "")) <= 100:
+                    meals_numbers = 1
+                    for key, value in self._order_mem.items():
+                        if key != "euro" and key != "points":
+                            if value[0] == num_pg:
+                                meals_numbers += 1
+
+                    if meals_numbers > 2:
+                        self.bot.answerCallbackQuery(query_id, text="Non è possibile ordinare più di 2 piatti relativi alla stessa categoria")
+                    elif "€" in course_price or self._order_mem['points'] + float(course_price.replace(" pt", "")) <= 100:
                         if course_name in self._order_mem:
                             if self._order_mem[course_name][2] + 1 > 2:
                                 self.bot.answerCallbackQuery(query_id, text="Numero massimo di questa pietanza raggiunto")
@@ -1026,6 +1054,10 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                 os.remove(Dirs.QRCODE + str(from_id) + "_" + "QRCode.png")
                 self.bot.answerCallbackQuery(query_id, text = "Menù ordinato correttamente")
+
+            elif query_data == 'cmd_guide':
+                # Qualcosa
+                self.bot.answerCallbackQuery(query_id, text = "Funzione non ancora implementata")
 
         except telepot.exception.TelegramError as e:
             """
