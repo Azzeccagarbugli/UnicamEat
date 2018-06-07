@@ -977,7 +977,7 @@ class UnicamEat(telepot.helper.ChatHandler):
                     meals_numbers = 1
                     for key, value in self._order_mem.items():
                         if key != "euro" and key != "points":
-                            if value[0] == num_pg:
+                            if value[0] == num_pg and (num_pg == 0 or num_pg == 1):
                                 meals_numbers += 1
 
                     if meals_numbers > 2:
