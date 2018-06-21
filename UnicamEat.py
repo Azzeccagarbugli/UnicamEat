@@ -931,13 +931,13 @@ class UnicamEat(telepot.helper.ChatHandler):
                 role = db.get_user(from_id)['role']
 
                 if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack" and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù")
+                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù", show_alert=True)
                 elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena"  and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù")
+                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù", show_alert=True)
                 elif self._day_menu['meal'] == "Pranzo" and (hour_time < 8 or hour_time > 13)  and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo")
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo", show_alert=True)
                 elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20) and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena")
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena", show_alert=True)
                 else:
                     day = per_benino[datetime.datetime.today().weekday()]
 
