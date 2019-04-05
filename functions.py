@@ -186,6 +186,44 @@ def get_cp_keyboard(user_role=0):
     # Check which day is today and so set the right keyboard
     if user_role > 0:
         markup_array = [["Lunedì"],
+                        ["Martedì", "Mercoledì"]
+                        ["Giovedì", "Venerdì"]]
+    elif days_week_normal == 0:
+        markup_array = [["Oggi"],
+                        ["Martedì", "Mercoledì"]
+                        ["Giovedì", "Venerdì"]]
+    elif days_week_normal == 1:
+        markup_array = [["Oggi"],
+                        ["Mercoledì", "Giovedì"]
+                        ["Venerdì"]]
+    elif days_week_normal == 2:
+        markup_array = [["Oggi"],
+                        ["Giovedì", "Venerdì"]]
+    elif days_week_normal == 3:
+        markup_array = [["Oggi"]
+                        ["Venerdì"]]
+    elif days_week_normal == 3:     
+        markup_array = [["Oggi"]]                
+    else:
+        print(Fore.RED + "[COLLEPARADISO KEYBOARD] Nice shit bro :)")
+
+    return markup_array
+
+
+def get_da_keyboard(user_role=0):
+    """
+    Return the custom markup for the keyboard, based on the day of the week.
+
+    :param user_role: The role of the current user.
+    :type user_role: integer.
+    :returns: list -- An array containing the tags to be used for the keyboard of D'Avack.
+    """
+    # Get the day
+    days_week_normal = datetime.datetime.today().weekday()
+
+    # Check which day is today and so set the right keyboard
+    if user_role > 0:
+        markup_array = [["Lunedì"],
                         ["Martedì", "Mercoledì", "Giovedì"],
                         ["Venerdì", "Sabato", "Domenica"]]
     elif days_week_normal == 0:
@@ -210,38 +248,6 @@ def get_cp_keyboard(user_role=0):
         markup_array = [["Oggi"],
                         ["Domenica"]]
     elif days_week_normal == 6:
-        markup_array = [["Oggi"]]
-    else:
-        print(Fore.RED + "[COLLEPARADISO KEYBOARD] Nice shit bro :)")
-
-    return markup_array
-
-
-def get_da_keyboard(user_role=0):
-    """
-    Return the custom markup for the keyboard, based on the day of the week.
-
-    :param user_role: The role of the current user.
-    :type user_role: integer.
-    :returns: list -- An array containing the tags to be used for the keyboard of D'Avack.
-    """
-    # Get the day
-    days_week_normal = datetime.datetime.today().weekday()
-
-    # Check which day is today and so set the right keyboard
-    if user_role > 0:
-        markup_array = [["Lunedì"],
-                        ["Martedì", "Mercoledì", "Giovedì"]]
-    elif days_week_normal == 0:
-        markup_array = [["Oggi"],
-                        ["Martedì", "Mercoledì", "Giovedì"]]
-    elif days_week_normal == 1:
-        markup_array = [["Oggi"],
-                        ["Mercoledì", "Giovedì"]]
-    elif days_week_normal == 2:
-        markup_array = [["Oggi"],
-                        ["Giovedì"]]
-    elif days_week_normal == 3:
         markup_array = [["Oggi"]]
     else:
         print(Fore.RED + "[AVACK KEYBOARD] Nice shit bro :)")
