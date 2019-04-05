@@ -246,10 +246,10 @@ class UnicamEat(telepot.helper.ChatHandler):
                     self._day_menu['day'] = command_input
 
                 # Is D'Avack closed?
-                if (self._day_menu['day'] == "Venerdì" or self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "D'Avack":
-                    closed_msg = "La mensa del D'Avack nei giorni *Venerdì*, *Sabato* e *Domenica* rimane chiusa sia "\
+                if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "Colle Paradiso":
+                    closed_msg = "La mensa di Colle Paradiso nei giorni di *Sabato* e *Domenica* rimane chiusa sia "\
                                  "per pranzo che per cena. Riprova a inserire il comando /menu e controlla la mensa "\
-                                 "di *Colle Pardiso* per ottenere i menù da te desiderati"
+                                 "del *D'Avack* per ottenere i menù da te desiderati"
 
                     self.sender.sendMessage(closed_msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
                     self._user_state = 0
@@ -260,8 +260,8 @@ class UnicamEat(telepot.helper.ChatHandler):
                     # Choose the right time for eat
                     markup = ReplyKeyboardMarkup(keyboard=get_launch_dinner_keyboard(self._day_menu['canteen'], self._day_menu['day']))
 
-                    if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "Colle Paradiso":
-                        msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
+                    if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "D'Avack":
+                        msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa del *D'Avack* rimarrà aperta solo durante "\
                               "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /hours e non scordarti "\
                               "di prendere anche la cena!"
                     elif self._day_menu['canteen'] == "D'Avack":
@@ -1096,11 +1096,11 @@ class UnicamEat(telepot.helper.ChatHandler):
 
         elif command_input == "/hours" or command_input == "/hours" + BOT_NAME:
             opening_msg = "*• D'Avack*\n"\
-                        "Aperta tutti i giorni della settimana durante il pranzo, esclusi *Venerdì*, *Sabato* e *Domenica*, dalle ore *12:30* alle ore *14:15*. \n"\
+                        "Aperta tutti i giorni della settimana per il turno del pranzo dalle ore *12:30* alle ore *14:15*. "\
+                        "\nDurante il week-end la mensa, invece, rimarrà aperta *esclusivamente* per pranzo dalle ore *12:30* alle ore *13:30* e sarà possibile ritirare anche la cena da asporto."\
                         "\n*• Colle Paradiso*\n"\
-                        "Aperta tutti i giorni della settimana dalle ore *12:30* alle ore *14:15* e dalle ore *19:30* alle ore *21:15*."\
-                        "\nDurante il week-end la mensa, invece, rimarrà aperta *esclusivamente* per pranzo dalle ore *12:30* alle ore *13:30*."\
-                        "_\n\nPer le posizioni delle mense di Camerino è possibile consultare il comando_ /position"
+                        "Aperta tutti i giorni della settimana, esclusi il *Sabato* e la *Domenica* dalle ore *12:30* alle ore *14:15* e dalle ore *19:30* alle ore *21:15*."\
+                        "_\n\n Per le posizioni delle mense di Camerino è possibile consultare il comando_ /position"
 
             self.sender.sendMessage(opening_msg, parse_mode="Markdown")
             return True
@@ -1201,7 +1201,7 @@ def update(upd_time):
         day = per_bene[day_week_day]
 
         # Sending to Avack users
-        if (day == "Lunedì" or day == "Martedì" or day == "Mercoledì" or day == "Giovedì") and have_to_send == "Pranzo" and canteen_closed_da == False:
+        if (day == "Lunedì" or day == "Martedì" or day == "Mercoledì" or day == "Giovedì" or day == "Venerdì" or day == "Sabato" or "Domenica") and have_to_send == "Pranzo" and canteen_closed_da == False:
             canteen = "D'Avack"
             msg_menu = db.get_updated_menu(canteen, day, have_to_send)
 
