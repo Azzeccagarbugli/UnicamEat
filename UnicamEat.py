@@ -246,10 +246,10 @@ class UnicamEat(telepot.helper.ChatHandler):
                     self._day_menu['day'] = command_input
 
                 # Is D'Avack closed?
-                if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "Colle Paradiso":
-                    closed_msg = "La mensa di Colle Paradiso nei giorni di *Sabato* e *Domenica* rimane chiusa sia "\
+                if (self._day_menu['day'] == "Venerdì" or self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "D'Avack":
+                    closed_msg = "La mensa del D'Avack nei giorni *Venerdì*, *Sabato* e *Domenica* rimane chiusa sia "\
                                  "per pranzo che per cena. Riprova a inserire il comando /menu e controlla la mensa "\
-                                 "del *D'Avack* per ottenere i menù da te desiderati"
+                                 "di *Colle Pardiso* per ottenere i menù da te desiderati"
 
                     self.sender.sendMessage(closed_msg, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove(remove_keyboard=True))
                     self._user_state = 0
@@ -260,8 +260,8 @@ class UnicamEat(telepot.helper.ChatHandler):
                     # Choose the right time for eat
                     markup = ReplyKeyboardMarkup(keyboard=get_launch_dinner_keyboard(self._day_menu['canteen'], self._day_menu['day']))
 
-                    if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "D'Avack":
-                        msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa del *D'Avack* rimarrà aperta solo durante "\
+                    if (self._day_menu['day'] == "Sabato" or self._day_menu['day'] == "Domenica") and self._day_menu['canteen'] == "Colle Paradiso":
+                        msg = "Ti ricordiamo che durante i giorni di *Sabato* e *Domenica*, la mensa di *Colle Paradiso* rimarrà aperta solo durante "\
                               "il turno del pranzo. \nPer maggiori dettagli riguardo gli orari effettivi delle mense puoi consultare il comando /hours e non scordarti "\
                               "di prendere anche la cena!"
                     elif self._day_menu['canteen'] == "D'Avack":
@@ -635,7 +635,7 @@ class UnicamEat(telepot.helper.ChatHandler):
         try:
             if query_data == 'notification_prices':
                 msg_text_prices = "• Studenti: 5,50€\n• Non studenti: 8,00€"
-                self.bot.answerCallbackQuery(query_id, text=msg_text_prices, show_alert=True)
+-               self.bot.answerCallbackQuery(query_id, text=msg_text_prices, show_alert=True)
 
             elif 'notification_developer' in query_data:
                 txtname = query_data.replace("notification_developer ", "")
@@ -931,13 +931,13 @@ class UnicamEat(telepot.helper.ChatHandler):
                 role = db.get_user(from_id)['role']
 
                 if temp_day in [4, 5, 6] and self._day_menu['canteen'] == "D'Avack" and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù", show_alert=True)
+                    self.bot.answerCallbackQuery(query_id, text="La mensa del D'Avack oggi è chiusa, non è possibile ordinare il menù")
                 elif temp_day in [5, 6] and self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena"  and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù", show_alert=True)
+                    self.bot.answerCallbackQuery(query_id, text="La mensa di Colle Paradiso oggi è chiusa durante il turno di cena, non è possibile ordinare il menù")
                 elif self._day_menu['meal'] == "Pranzo" and (hour_time < 8 or hour_time > 13)  and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo", show_alert=True)
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno del pranzo")
                 elif (self._day_menu['canteen'] == "Colle Paradiso" and self._day_menu['meal'] == "Cena") and not (hour_time >= 13 and hour_time < 20) and role < 2:
-                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena", show_alert=True)
+                    self.bot.answerCallbackQuery(query_id, text="Attualmente non è possibile ordinare il menù per il turno della cena")
                 else:
                     day = per_benino[datetime.datetime.today().weekday()]
 
@@ -1201,7 +1201,7 @@ def update(upd_time):
         day = per_bene[day_week_day]
 
         # Sending to Avack users
-        if (day == "Lunedì" or day == "Martedì" or day == "Mercoledì" or day == "Giovedì" or day == "Venerdì" or day == "Sabato" or "Domenica") and have_to_send == "Pranzo" and canteen_closed_da == False:
+        if (day == "Lunedì" or day == "Martedì" or day == "Mercoledì" or day == "Giovedì") and have_to_send == "Pranzo" and canteen_closed_da == False:
             canteen = "D'Avack"
             msg_menu = db.get_updated_menu(canteen, day, have_to_send)
 
