@@ -635,7 +635,7 @@ class UnicamEat(telepot.helper.ChatHandler):
         try:
             if query_data == 'notification_prices':
                 msg_text_prices = "• Studenti: 5,50€\n• Non studenti: 8,00€"
--               self.bot.answerCallbackQuery(query_id, text=msg_text_prices, show_alert=True)
+                self.bot.answerCallbackQuery(query_id, text=msg_text_prices, show_alert=True)
 
             elif 'notification_developer' in query_data:
                 txtname = query_data.replace("notification_developer ", "")
