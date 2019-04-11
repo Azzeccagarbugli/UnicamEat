@@ -1097,7 +1097,7 @@ class UnicamEat(telepot.helper.ChatHandler):
         elif command_input == "/hours" or command_input == "/hours" + BOT_NAME:
             opening_msg = "*• D'Avack*\n"\
                         "Aperta tutti i giorni della settimana per il turno del pranzo dalle ore *12:30* alle ore *14:15*. "\
-                        "\nDurante il week-end la mensa, invece, rimarrà aperta *esclusivamente* per pranzo dalle ore *12:30* alle ore *13:30* e sarà possibile ritirare anche la cena da asporto."\
+                        "\nDurante il week-end sarà possibile ritirare la cena da asporto."\
                         "\n*• Colle Paradiso*\n"\
                         "Aperta tutti i giorni della settimana, esclusi il *Sabato* e la *Domenica* dalle ore *12:30* alle ore *14:15* e dalle ore *19:30* alle ore *21:15*."\
                         "_\n\n Per le posizioni delle mense di Camerino è possibile consultare il comando_ /position"
