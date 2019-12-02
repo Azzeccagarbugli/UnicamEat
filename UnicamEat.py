@@ -297,7 +297,8 @@ class UnicamEat(telepot.helper.ChatHandler):
 
                 # Second Try
                 if result_menu == "Error":
-                    result_menu = get_updated_menu_xml(self._day_menu['canteen'], self._day_menu['day'], self._day_menu['meal'])
+                    if server_status():
+                        result_menu = get_updated_menu_xml(self._day_menu['canteen'], self._day_menu['day'], self._day_menu['meal'])
 
                 if result_menu != "Error":
                     # Take random number for the donation
