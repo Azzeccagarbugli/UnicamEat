@@ -179,7 +179,9 @@ Per compilare il codice sulla propria macchina basterà installare le dipendenze
 ```bash
 $ sudo pip3 install -r requirements.txt
 ```
-Dopodichè sarà necessario andare a importare nel file ``UnicamEat.py`` il file ``settings_dist.py`` invece che il file ``settings.py``, andando a modificare secondo le prorpie scelte i parametri all'interno del file stesso.
+Dopodichè sarà necessario andare a importare nel file ``UnicamEat.py`` il file ``settings_dist.py`` invece che il file ``settings.py``, andando a modificare secondo le proprie scelte i parametri all'interno del file stesso.
+
+Un' alternativa, consigliata per chi volesse cimentarsi nel development, è quella di creare un file ``settings.py`` copiando il file ``settings_dist.py`` e compilare i vari campi. In questo modo si evita di creare dei commit nei quali il file ``UnicamEat.py`` utilizza il file di impostazioni errato.
 
 Una volta installate le dipendenze e, modificate le varie impostazioni all'interno del file ``settings_dist.py``, basterà lanciare il seguente comando:
 ```bash

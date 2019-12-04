@@ -4,6 +4,7 @@ import os
 TOKEN = ''
 BOT_NAME = "@UnicamEatBot"
 MENU_URL = ""  # Your URL of the menu in a .xml format
+FIREBASE_URL = 'https://unicam-eat.firebaseio.com'
 
 
 class Dirs:

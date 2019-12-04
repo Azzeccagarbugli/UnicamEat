@@ -15,7 +15,7 @@ from calendar import monthrange
 import firebase_admin
 from firebase_admin import credentials, db
 
-from settings import MENU_URL, Dirs
+from settings import MENU_URL, FIREBASE_URL, Dirs
 
 
 class Firebase:
@@ -27,7 +27,7 @@ class Firebase:
 
         try:
             firebase_admin.initialize_app(cred, {
-                'databaseURL': 'https://unicam-eat.firebaseio.com'
+                'databaseURL': FIREBASE_URL
             })
         except ValueError:
             print(Fore.RED + "[ERROR] Il Database è probabilmente già aperto in un'altra istanza, "
